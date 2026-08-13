@@ -57,9 +57,11 @@ make_bmi_risks_for_simulation_runner <- function() {
       "underweight",
       "normal_weight",
       "overweight",
-      "obesity"
+      "obesity_I",
+      "obesity_II",
+      "obesity_III"
     ),
-    stringsAsFactors = FALSE
+stringsAsFactors = FALSE
   )
 
   rr_bmi$rr_bmi <- 1

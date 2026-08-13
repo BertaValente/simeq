@@ -1,6 +1,3 @@
-test_that("multiplication works", {
-  expect_equal(2 * 2, 4)
-})
 test_that(
   "ponte_bmi_category classifies BMI values correctly",
   {
@@ -12,6 +9,10 @@ test_that(
         25.0,
         29.9,
         30.0,
+        34.9,
+        35.0,
+        39.9,
+        40.0,
         NA_real_
       )
     )
@@ -24,7 +25,11 @@ test_that(
         "normal_weight",
         "overweight",
         "overweight",
-        "obesity",
+        "obesity_I",
+        "obesity_I",
+        "obesity_II",
+        "obesity_II",
+        "obesity_III",
         NA_character_
       )
     )

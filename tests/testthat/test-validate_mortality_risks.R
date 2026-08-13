@@ -8,7 +8,9 @@ make_mortality_risks_for_validation <- function() {
       "underweight",
       "normal_weight",
       "overweight",
-      "obesity"
+      "obesity_I",
+      "obesity_II",
+      "obesity_III"
     ),
     stringsAsFactors = FALSE
   )
@@ -21,9 +23,12 @@ make_mortality_risks_for_validation <- function() {
     1.2,
     1.2,
     1.5,
-    1.5
+    1.5,
+    2.0,
+    2.0,
+    3.0,
+    3.0
   )
-
   rr_education <- data.frame(
     education_level2 = c(
       "lower",
@@ -129,7 +134,7 @@ test_that(
     risks <- make_mortality_risks_for_validation()
 
     risks$rr_bmi <- risks$rr_bmi[
-      risks$rr_bmi$bmi_category != "obesity",
+      risks$rr_bmi$bmi_category != "obesity_II",
       ,
       drop = FALSE
     ]

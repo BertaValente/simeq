@@ -1,6 +1,7 @@
 #' Classify BMI values
 #'
-#' Classifies body mass index (BMI) values using adult BMI categories.
+#' Classifies adult body mass index (BMI) values into the six BMI categories
+#' used by the PONTE-PT-O mortality and health-outcomes models.
 #'
 #' @param bmi Numeric vector of body mass index values in kg/m^2.
 #'
@@ -9,7 +10,7 @@
 #'
 #' @examples
 #' ponte_bmi_category(
-#'   c(17.5, 22.0, 27.5, 32.0)
+#'   c(17.5, 22.0, 27.5, 32.0, 37.0, 42.0)
 #' )
 ponte_bmi_category <- function(
     bmi
@@ -28,22 +29,26 @@ ponte_bmi_category <- function(
     )
   }
 
-  category <- rep(
-    NA_character_,
-    length(bmi)
-  )
-
-  category[!is.na(bmi) & bmi < 18.5] <-
-    "underweight"
-
-  category[!is.na(bmi) & bmi >= 18.5 & bmi < 25] <-
-    "normal_weight"
-
-  category[!is.na(bmi) & bmi >= 25 & bmi < 30] <-
-    "overweight"
-
-  category[!is.na(bmi) & bmi >= 30] <-
-    "obesity"
-
-  category
+  cut(
+    bmi,
+    breaks = c(
+      -Inf,
+      18.5,
+      25,
+      30,
+      35,
+      40,
+      Inf
+    ),
+    right = FALSE,
+    labels = c(
+      "underweight",
+      "normal_weight",
+      "overweight",
+      "obesity_I",
+      "obesity_II",
+      "obesity_III"
+    )
+  ) |>
+    as.character()
 }

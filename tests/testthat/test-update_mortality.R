@@ -59,7 +59,9 @@ make_risks_for_mortality_update <- function() {
       "underweight",
       "normal_weight",
       "overweight",
-      "obesity"
+      "obesity_I",
+      "obesity_II",
+      "obesity_III"
     ),
     stringsAsFactors = FALSE
   )

@@ -1,0 +1,20 @@
+Package: pontept
+Title: PONTE-O: Portuguese Obesity Trajectories and Economic Microsimulation
+Version: 0.0.0.9000
+Authors@R:
+    person(given = "Berta",
+           family = "Valente",
+           email = "berta.valente@ispup.up.pt",
+           role = c("aut", "cre"))
+Description: Provides Module 1 of PONTE-O, a person-level open-cohort
+    microsimulation model of historical and projected adult body mass index
+    (BMI), obesity, mortality, ageing, and age-20 population entrants in
+    Portugal. Modules 2 and 3 estimate long-term health and economic
+    outcomes from simulated obesity trajectories.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

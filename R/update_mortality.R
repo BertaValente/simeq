@@ -52,7 +52,9 @@
 #'     "underweight",
 #'     "normal_weight",
 #'     "overweight",
-#'     "obesity"
+#'     "obesity_I",
+#'     "obesity_II",
+#'     "obesity_III"
 #'   ),
 #'   stringsAsFactors = FALSE
 #' )

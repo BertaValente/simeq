@@ -13,10 +13,11 @@ ponte_bmi_category(bmi)
 A character vector of BMI categories.
 }
 \description{
-Classifies body mass index (BMI) values using adult BMI categories.
+Classifies adult body mass index (BMI) values into the six BMI categories
+used by the PONTE-PT-O mortality and health-outcomes models.
 }
 \examples{
 ponte_bmi_category(
-  c(17.5, 22.0, 27.5, 32.0)
+  c(17.5, 22.0, 27.5, 32.0, 37.0, 42.0)
 )
 }

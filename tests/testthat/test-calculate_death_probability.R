@@ -57,7 +57,9 @@ make_mortality_risks_for_death_probability <- function() {
       "underweight",
       "normal_weight",
       "overweight",
-      "obesity"
+      "obesity_I",
+      "obesity_II",
+      "obesity_III"
     ),
     stringsAsFactors = FALSE
   )
@@ -66,7 +68,7 @@ make_mortality_risks_for_death_probability <- function() {
 
   rr_bmi$rr_bmi[
     rr_bmi$sex == "men" &
-      rr_bmi$bmi_category == "obesity"
+      rr_bmi$bmi_category == "obesity_I"
   ] <- 2
 
   rr_education <- data.frame(
@@ -193,7 +195,9 @@ test_that(
         "underweight",
         "normal_weight",
         "overweight",
-        "obesity"
+        "obesity_I",
+        "obesity_II",
+        "obesity_III"
       ),
       stringsAsFactors = FALSE
     )

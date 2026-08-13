@@ -19,7 +19,9 @@
 #'     "underweight",
 #'     "normal_weight",
 #'     "overweight",
-#'     "obesity"
+#'     "obesity_I",
+#'     "obesity_II",
+#'     "obesity_III"
 #'   ),
 #'   stringsAsFactors = FALSE
 #' )
@@ -101,7 +103,9 @@ ponte_validate_mortality_risks <- function(
     "underweight",
     "normal_weight",
     "overweight",
-    "obesity"
+    "obesity_I",
+    "obesity_II",
+    "obesity_III"
   )
 
   required_education_levels <- c(

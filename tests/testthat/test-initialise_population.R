@@ -96,7 +96,7 @@ test_that(
       state$bmi_category,
       c(
         "normal_weight",
-        "obesity"
+        "obesity_I"
       )
     )
 

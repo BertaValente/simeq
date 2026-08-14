@@ -11,7 +11,6 @@ obesity_cost_outcome_mapping <- function() {
     "Diabetes mellitus type 2",                  "diabetes_mellitus_type_2",
     "Ischaemic heart disease",                   "ischaemic_heart_disease",
     "Ischaemic stroke",                          "stroke",
-    "Haemorrhagic stroke",                       "stroke",
     "Intracerebral hemorrhage",                  "stroke",
     "Subarachnoid hemorrhage",                   "stroke",
     "Hypertensive heart disease",                "hypertensive_hd_af",

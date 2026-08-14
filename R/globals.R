@@ -1,0 +1,9 @@
+utils::globalVariables(
+  c(
+    "age",
+    "alive",
+    "obesity",
+    "paf_obesity",
+    "population_n"
+  )
+)

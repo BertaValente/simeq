@@ -92,3 +92,141 @@ extract_simulated_obesity_prevalence <- function(
   prevalence |>
     dplyr::arrange(sex)
 }
+
+
+
+
+#' Extract simulated obesity prevalence by sex and GBD age band
+#'
+#' Summarises a microsimulation output into weighted obesity prevalence and
+#' represented population counts by sex and five-year age bands. The function
+#' is designed for PONTE-PT simulations covering adults aged 20 to 84 years.
+#'
+#' @param simulation_output A data frame containing individual-level simulation
+#'   output.
+#' @param year The simulation year to extract.
+#' @param weight_col Name of the population-weight column.
+#'
+#' @return A tibble with `year`, `sex`, `age_band`, `population_n`, and
+#'   `p_obesity`. Results are limited to living people aged 20 to 84 years.
+#' @export
+extract_simulated_obesity_prevalence_by_age_sex <- function(
+    simulation_output,
+    year = 2025L,
+    weight_col = "surveyweight"
+) {
+  required_columns <- c(
+    "year",
+    "age",
+    "sex",
+    "obesity",
+    "alive",
+    weight_col
+  )
+
+  missing_columns <- setdiff(required_columns, names(simulation_output))
+
+  if (length(missing_columns) > 0L) {
+    stop(
+      "simulation_output is missing required column(s): ",
+      paste(missing_columns, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  year <- as.integer(year)
+
+  if (length(year) != 1L || !is.finite(year)) {
+    stop(
+      "year must be one valid whole-number year.",
+      call. = FALSE
+    )
+  }
+
+  age_band_levels <- c(
+    "20-24", "25-29", "30-34", "35-39",
+    "40-44", "45-49", "50-54", "55-59",
+    "60-64", "65-69", "70-74", "75-79",
+    "80-84"
+  )
+
+  weight_symbol <- rlang::sym(weight_col)
+
+  prevalence <- simulation_output |>
+    dplyr::filter(
+      year == !!year,
+      alive,
+      age >= 20L,
+      age <= 84L,
+      !is.na(age),
+      !is.na(sex),
+      !is.na(obesity),
+      !is.na(!!weight_symbol),
+      !!weight_symbol > 0
+    ) |>
+    dplyr::mutate(
+      sex = dplyr::recode(
+        as.character(sex),
+        men = "Males",
+        women = "Females"
+      ),
+      age_band = paste0(
+        ((as.integer(age) - 20L) %/% 5L) * 5L + 20L,
+        "-",
+        ((as.integer(age) - 20L) %/% 5L) * 5L + 24L
+      ),
+      obesity = as.numeric(obesity)
+    ) |>
+    dplyr::group_by(sex, age_band) |>
+    dplyr::summarise(
+      population_n = sum(!!weight_symbol, na.rm = TRUE),
+      p_obesity = stats::weighted.mean(
+        obesity,
+        w = !!weight_symbol,
+        na.rm = TRUE
+      ),
+      .groups = "drop"
+    ) |>
+    dplyr::mutate(
+      year = year,
+      age_band = factor(age_band, levels = age_band_levels)
+    ) |>
+    dplyr::arrange(sex, age_band)
+
+  expected_strata <- tidyr::expand_grid(
+    sex = c("Males", "Females"),
+    age_band = age_band_levels
+  )
+
+  missing_strata <- expected_strata |>
+    dplyr::anti_join(
+      prevalence |>
+        dplyr::mutate(age_band = as.character(age_band)),
+      by = c("sex", "age_band")
+    )
+
+  if (nrow(missing_strata) > 0L) {
+    stop(
+      "No eligible simulated records were available for: ",
+      paste(
+        paste(missing_strata$sex, missing_strata$age_band, sep = " / "),
+        collapse = ", "
+      ),
+      call. = FALSE
+    )
+  }
+
+  if (any(!is.finite(prevalence$population_n)) ||
+      any(prevalence$population_n <= 0) ||
+      any(!is.finite(prevalence$p_obesity)) ||
+      any(prevalence$p_obesity < 0 | prevalence$p_obesity > 1)) {
+    stop(
+      "Simulated age-sex prevalence contains invalid population weights or ",
+      "obesity proportions.",
+      call. = FALSE
+    )
+  }
+
+  prevalence |>
+    dplyr::select(year, sex, age_band, population_n, p_obesity)
+}

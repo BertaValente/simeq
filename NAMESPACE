@@ -2,7 +2,11 @@
 
 S3method(print,ponte_settings)
 export(calculate_obesity_costs)
+export(calculate_obesity_costs_age_sex)
+export(calculate_obesity_pafs_age_sex)
+export(check_gbd_rr_coverage)
 export(extract_simulated_obesity_prevalence)
+export(extract_simulated_obesity_prevalence_by_age_sex)
 export(format_obesity_cost_table)
 export(obesity_cost_outcome_mapping)
 export(obesity_direct_costs_2018)

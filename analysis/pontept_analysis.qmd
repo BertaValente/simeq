@@ -1261,6 +1261,11 @@ dplyr::bind_rows(
 #| echo: false
 #| tbl-cap: "Published Portuguese direct medical cost inputs for overweight and obesity in 2018, by disease group [@Borges2025]. Values are thousands of 2018 euros, ordered by total cost."
 
+# Load cost data here so this table is self-contained, regardless of chunk
+# execution order. The main load-cost-inputs chunk will reassign the same
+# objects later without conflict.
+costs_2018 <- obesity_direct_costs_2018()
+
 disease_labels <- tibble::tribble(
   ~disease_group,               ~description,
   "obesity_overweight",         "Overweight and obesity treatment (direct)",

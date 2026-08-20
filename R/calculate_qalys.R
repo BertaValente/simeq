@@ -1,15 +1,28 @@
-#' Calculate QALYs from EQ-5D norms and BMI category
+#' Calculate annual QALYs from EQ-5D norms, education, and BMI category
 #'
-#' Calculates annual QALYs for living people aged 20 to 84 years using
-#' age-sex EQ-5D norms, education adjustments, and BMI utility decrements.
+#' Calculates annual quality-adjusted life years (QALYs) for alive simulated
+#' people aged 20 to 84 years. Individual utility is derived from age-specific
+#' EQ-5D norms, education-level utility adjustments, and BMI-category utility
+#' decrements. Population-level QALYs are calculated by applying each person's
+#' survey weight.
 #'
-#' @param simulation_output A data frame returned by
-#'   [ponte_run_simulation()].
+#' The current implementation uses age-specific, rather than sex-specific,
+#' EQ-5D norms. No utility decrement is applied to underweight BMI in the base
+#' case because the selected decrement inputs apply to overweight and obesity
+#' categories only.
+#'
+#' @param simulation_output A data frame returned by [ponte_run_simulation()].
 #' @param min_age Minimum age included in QALY calculations.
 #' @param max_age Maximum age included in QALY calculations.
 #'
-#' @return A list containing individual QALY records, annual results by
-#'   simulation, and annual summaries across simulations.
+#' @return A list containing:
+#' \describe{
+#'   \item{individual}{Individual annual utilities and weighted QALYs.}
+#'   \item{by_year_sim}{Weighted QALY totals by simulation, year, sex, and education.}
+#'   \item{by_year}{Mean weighted QALY totals and simulation quantiles by year, sex, and education.}
+#'   \item{by_year_obesity_sim}{Weighted QALY totals and mean annual QALYs per person by obesity status.}
+#'   \item{by_year_obesity}{Mean annual QALYs per person and simulation quantiles by obesity status.}
+#' }
 #'
 #' @export
 ponte_calculate_qalys <- function(
@@ -29,10 +42,7 @@ ponte_calculate_qalys <- function(
     "alive"
   )
 
-  missing_columns <- setdiff(
-    required_columns,
-    names(simulation_output)
-  )
+  missing_columns <- setdiff(required_columns, names(simulation_output))
 
   if (length(missing_columns) > 0L) {
     stop(
@@ -42,6 +52,89 @@ ponte_calculate_qalys <- function(
       call. = FALSE
     )
   }
+
+  if (!is.numeric(min_age) || length(min_age) != 1L || is.na(min_age)) {
+    stop("`min_age` must be one non-missing numeric value.", call. = FALSE)
+  }
+
+  if (!is.numeric(max_age) || length(max_age) != 1L || is.na(max_age)) {
+    stop("`max_age` must be one non-missing numeric value.", call. = FALSE)
+  }
+
+  if (min_age > max_age) {
+    stop("`min_age` cannot exceed `max_age`.", call. = FALSE)
+  }
+
+  empty_individual <- data.frame(
+    person_id = character(),
+    simulation = integer(),
+    year = integer(),
+    age = integer(),
+    sex = character(),
+    education_level = character(),
+    survey_weight = numeric(),
+    bmi_category = character(),
+    alive = logical(),
+    eq5d_norm = numeric(),
+    education_utility_adjustment = numeric(),
+    bmi_utility_decrement = numeric(),
+    utility_with_bmi = numeric(),
+    qaly_weighted = numeric(),
+    obesity_status = character(),
+    stringsAsFactors = FALSE
+  )
+
+  empty_by_year_sim <- data.frame(
+    simulation = integer(),
+    year = integer(),
+    sex = character(),
+    education_level = character(),
+    weighted_population = numeric(),
+    total_qaly_weighted = numeric(),
+    mean_annual_qaly_per_person = numeric(),
+    stringsAsFactors = FALSE
+  )
+
+  empty_by_year <- data.frame(
+    year = integer(),
+    sex = character(),
+    education_level = character(),
+    mean_weighted_population = numeric(),
+    mean_total_qalys_weighted = numeric(),
+    mean_annual_qaly_per_person = numeric(),
+    qaly_total_lo = numeric(),
+    qaly_total_hi = numeric(),
+    qaly_per_person_lo = numeric(),
+    qaly_per_person_hi = numeric(),
+    stringsAsFactors = FALSE
+  )
+
+  empty_by_year_obesity_sim <- data.frame(
+    simulation = integer(),
+    year = integer(),
+    sex = character(),
+    education_level = character(),
+    obesity_status = character(),
+    weighted_population = numeric(),
+    total_qaly_weighted = numeric(),
+    mean_annual_qaly_per_person = numeric(),
+    stringsAsFactors = FALSE
+  )
+
+  empty_by_year_obesity <- data.frame(
+    year = integer(),
+    sex = character(),
+    education_level = character(),
+    obesity_status = character(),
+    mean_weighted_population = numeric(),
+    mean_total_qalys_weighted = numeric(),
+    mean_annual_qaly_per_person = numeric(),
+    qaly_total_lo = numeric(),
+    qaly_total_hi = numeric(),
+    qaly_per_person_lo = numeric(),
+    qaly_per_person_hi = numeric(),
+    stringsAsFactors = FALSE
+  )
 
   living_population <- simulation_output[
     !is.na(simulation_output$alive) &
@@ -54,38 +147,39 @@ ponte_calculate_qalys <- function(
   ]
 
   if (nrow(living_population) == 0L) {
-    empty_individual <- data.frame(
-      person_id = character(),
-      simulation = integer(),
-      year = integer(),
-      age = integer(),
-      sex = character(),
-      education_level = character(),
-      survey_weight = numeric(),
-      bmi_category = character(),
-      alive = logical(),
-      eq5d_norm = numeric(),
-      delta_utility = numeric(),
-      utility_with_bmi = numeric(),
-      qaly_weighted = numeric(),
-      stringsAsFactors = FALSE
-    )
-
-    empty_by_year <- data.frame(
-      simulation = integer(),
-      year = integer(),
-      sex = character(),
-      education_level = character(),
-      total_qaly_weighted = numeric(),
-      stringsAsFactors = FALSE
-    )
-
     return(
       list(
         individual = empty_individual,
-        by_year_sim = empty_by_year,
-        by_year = empty_by_year
+        by_year_sim = empty_by_year_sim,
+        by_year = empty_by_year,
+        by_year_obesity_sim = empty_by_year_obesity_sim,
+        by_year_obesity = empty_by_year_obesity
       )
+    )
+  }
+
+  if (anyNA(living_population$survey_weight) ||
+      any(!is.finite(living_population$survey_weight)) ||
+      any(living_population$survey_weight <= 0)) {
+    stop(
+      "Living simulated people must have finite, positive `survey_weight` values.",
+      call. = FALSE
+    )
+  }
+
+  valid_education <- c("low", "medium", "high")
+  invalid_education <- setdiff(
+    unique(as.character(living_population$education_level)),
+    valid_education
+  )
+
+  if (length(invalid_education) > 0L) {
+    stop(
+      "Unrecognised education level(s): ",
+      paste(invalid_education, collapse = ", "),
+      ". Expected: ",
+      paste(valid_education, collapse = ", "),
+      call. = FALSE
     )
   }
 
@@ -103,90 +197,75 @@ ponte_calculate_qalys <- function(
     )
   )
 
-  education_delta <- rep(
-    NA_real_,
-    nrow(living_population)
-  )
-
-  education_delta[
-    living_population$education_level == "low"
-  ] <- 0.848 - 0.887
-
-  education_delta[
-    living_population$education_level == "medium"
-  ] <- 0.912 - 0.887
-
-  education_delta[
-    living_population$education_level == "high"
-  ] <- 0.930 - 0.887
+  education_utility_adjustment <- unname(c(
+    low = 0.848 - 0.887,
+    medium = 0.912 - 0.887,
+    high = 0.930 - 0.887
+  )[as.character(living_population$education_level)])
 
   bmi_category <- ponte_harmonise_bmi_category(
     living_population$bmi_category
   )
 
-  delta_utility <- rep(
-    0,
-    nrow(living_population)
-  )
+  bmi_utility_decrement <- unname(c(
+    underweight = 0,
+    normal_weight = 0,
+    overweight = -0.020,
+    obesity_I = -0.047,
+    obesity_II = -0.072,
+    obesity_III = -0.084
+  )[bmi_category])
 
-  delta_utility[
-    bmi_category == "overweight"
-  ] <- -0.020
+  if (anyNA(bmi_utility_decrement)) {
+    invalid_bmi <- unique(bmi_category[is.na(bmi_utility_decrement)])
 
-  delta_utility[
-    bmi_category == "obesity_I"
-  ] <- -0.047
-
-  delta_utility[
-    bmi_category == "obesity_II"
-  ] <- -0.072
-
-  delta_utility[
-    bmi_category == "obesity_III"
-  ] <- -0.084
-
-  eq5d_norm <- age_norm + education_delta
+    stop(
+      "Unrecognised BMI category/categories after harmonisation: ",
+      paste(invalid_bmi, collapse = ", "),
+      call. = FALSE
+    )
+  }
 
   utility_with_bmi <- pmin(
-    pmax(
-      eq5d_norm + delta_utility,
-      0
-    ),
+    pmax(age_norm + education_utility_adjustment + bmi_utility_decrement, 0),
     1
   )
 
   individual <- living_population
-
   individual$bmi_category <- bmi_category
-  individual$eq5d_norm <- eq5d_norm
-  individual$delta_utility <- delta_utility
+  individual$eq5d_norm <- age_norm
+  individual$education_utility_adjustment <- education_utility_adjustment
+  individual$bmi_utility_decrement <- bmi_utility_decrement
   individual$utility_with_bmi <- utility_with_bmi
-  individual$qaly_weighted <- utility_with_bmi *
-    individual$survey_weight
+  individual$qaly_weighted <- utility_with_bmi * individual$survey_weight
   individual$obesity_status <- ifelse(
-    individual$bmi_category %in% c(
-      "obesity_I",
-      "obesity_II",
-      "obesity_III"
-    ),
+    individual$bmi_category %in% c("obesity_I", "obesity_II", "obesity_III"),
     "obesity",
     "no_obesity"
   )
 
   by_year_sim <- stats::aggregate(
-    qaly_weighted ~ simulation + year + sex + education_level,
+    cbind(
+      weighted_population = survey_weight,
+      total_qaly_weighted = qaly_weighted
+    ) ~ simulation + year + sex + education_level,
     data = individual,
     FUN = sum,
     na.rm = TRUE
   )
 
-  names(by_year_sim)[
-    names(by_year_sim) == "qaly_weighted"
-  ] <- "total_qaly_weighted"
+  by_year_sim$mean_annual_qaly_per_person <- with(
+    by_year_sim,
+    ifelse(
+      weighted_population > 0,
+      total_qaly_weighted / weighted_population,
+      NA_real_
+    )
+  )
 
   by_year_obesity_sim <- stats::aggregate(
     cbind(
-      N_weighted = survey_weight,
+      weighted_population = survey_weight,
       total_qaly_weighted = qaly_weighted
     ) ~ simulation + year + sex + education_level + obesity_status,
     data = individual,
@@ -194,116 +273,87 @@ ponte_calculate_qalys <- function(
     na.rm = TRUE
   )
 
-  by_year_obesity_sim$mean_qaly_per_person <- ifelse(
-    by_year_obesity_sim$N_weighted > 0,
-    by_year_obesity_sim$total_qaly_weighted /
-      by_year_obesity_sim$N_weighted,
-    NA_real_
+  by_year_obesity_sim$mean_annual_qaly_per_person <- with(
+    by_year_obesity_sim,
+    ifelse(
+      weighted_population > 0,
+      total_qaly_weighted / weighted_population,
+      NA_real_
+    )
   )
 
-  obesity_summary_keys <- paste(
-    by_year_obesity_sim$year,
-    by_year_obesity_sim$sex,
-    by_year_obesity_sim$education_level,
-    by_year_obesity_sim$obesity_status,
-    sep = "\r"
-  )
+  summarise_across_simulations <- function(data, grouping_variables) {
+    group_key <- do.call(
+      paste,
+      c(data[grouping_variables], sep = "\r")
+    )
 
-  obesity_summary_rows <- lapply(
-    unique(obesity_summary_keys),
-    function(key) {
-      index <- which(obesity_summary_keys == key)
-
-      group_data <- by_year_obesity_sim[
-        index,
-        ,
-        drop = FALSE
-      ]
+    summary_rows <- lapply(unique(group_key), function(key) {
+      group_data <- data[group_key == key, , drop = FALSE]
 
       data.frame(
-        year = group_data$year[1],
-        sex = group_data$sex[1],
-        education_level =
-          group_data$education_level[1],
-        obesity_status =
-          group_data$obesity_status[1],
-        mean_qaly_per_person = mean(
-          group_data$mean_qaly_per_person,
+        group_data[grouping_variables][1, , drop = FALSE],
+        mean_weighted_population = mean(
+          group_data$weighted_population,
           na.rm = TRUE
         ),
-        qaly_lo = as.numeric(
-          stats::quantile(
-            group_data$mean_qaly_per_person,
-            0.025,
-            na.rm = TRUE
-          )
-        ),
-        qaly_hi = as.numeric(
-          stats::quantile(
-            group_data$mean_qaly_per_person,
-            0.975,
-            na.rm = TRUE
-          )
-        ),
-        stringsAsFactors = FALSE
-      )
-    }
-  )
-
-  by_year_obesity <- do.call(
-    rbind,
-    obesity_summary_rows
-  )
-  summary_keys <- paste(
-    by_year_sim$year,
-    by_year_sim$sex,
-    by_year_sim$education_level,
-    sep = "\r"
-  )
-
-  summary_rows <- lapply(
-    unique(summary_keys),
-    function(key) {
-      index <- which(summary_keys == key)
-
-      group_data <- by_year_sim[
-        index,
-        ,
-        drop = FALSE
-      ]
-
-      data.frame(
-        year = group_data$year[1],
-        sex = group_data$sex[1],
-        education_level =
-          group_data$education_level[1],
-        mean_qaly = mean(
+        mean_total_qalys_weighted = mean(
           group_data$total_qaly_weighted,
           na.rm = TRUE
         ),
-        qaly_lo = as.numeric(
-          stats::quantile(
-            group_data$total_qaly_weighted,
-            0.025,
-            na.rm = TRUE
-          )
+        mean_annual_qaly_per_person = mean(
+          group_data$mean_annual_qaly_per_person,
+          na.rm = TRUE
         ),
-        qaly_hi = as.numeric(
-          stats::quantile(
-            group_data$total_qaly_weighted,
-            0.975,
-            na.rm = TRUE
-          )
-        ),
-        stringsAsFactors = FALSE
+        qaly_total_lo = as.numeric(stats::quantile(
+          group_data$total_qaly_weighted,
+          probs = 0.025,
+          na.rm = TRUE,
+          names = FALSE
+        )),
+        qaly_total_hi = as.numeric(stats::quantile(
+          group_data$total_qaly_weighted,
+          probs = 0.975,
+          na.rm = TRUE,
+          names = FALSE
+        )),
+        qaly_per_person_lo = as.numeric(stats::quantile(
+          group_data$mean_annual_qaly_per_person,
+          probs = 0.025,
+          na.rm = TRUE,
+          names = FALSE
+        )),
+        qaly_per_person_hi = as.numeric(stats::quantile(
+          group_data$mean_annual_qaly_per_person,
+          probs = 0.975,
+          na.rm = TRUE,
+          names = FALSE
+        )),
+        stringsAsFactors = FALSE,
+        check.names = FALSE
       )
-    }
+    })
+
+    do.call(rbind, summary_rows)
+  }
+
+  by_year <- summarise_across_simulations(
+    data = by_year_sim,
+    grouping_variables = c("year", "sex", "education_level")
   )
 
-  by_year <- do.call(
-    rbind,
-    summary_rows
+  by_year_obesity <- summarise_across_simulations(
+    data = by_year_obesity_sim,
+    grouping_variables = c(
+      "year",
+      "sex",
+      "education_level",
+      "obesity_status"
+    )
   )
+
+  rownames(by_year) <- NULL
+  rownames(by_year_obesity) <- NULL
 
   list(
     individual = individual,

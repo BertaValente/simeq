@@ -9,10 +9,14 @@ ponte_advance_one_year(
   life_table,
   rr_bmi,
   rr_education,
-  bmi_transition_model,
+  bmi_transition_model = NULL,
   donor_pool,
   entrant_targets,
   n_entrants,
+  hayes_bmi_model = NULL,
+  bmi_update_method = c("legacy", "historical"),
+  min_cell_n = 30L,
+  stochastic_bmi = TRUE,
   education_source = c("existing", "map_3_to_2"),
   entry_age = 20L,
   max_age = 84L,
@@ -33,9 +37,19 @@ and one calendar year.}
 
 \item{donor_pool}{A validated historical entrant donor pool.}
 
-\item{entrant_targets}{A validated entrant-target table.}
+\item{entrant_targets}{A validated entrant-target table for the next year.}
 
 \item{n_entrants}{Integer number of microdata entrants to generate.}
+
+\item{hayes_bmi_model}{Output from \code{\link[=ponte_fit_bmi_transition_hayes]{ponte_fit_bmi_transition_hayes()}}.
+Required when \code{bmi_update_method = "historical"}.}
+
+\item{bmi_update_method}{Either \code{"legacy"} or \code{"historical"}.}
+
+\item{min_cell_n}{Minimum NHS sample size in both interval endpoints for an
+empirical historical BMI transition.}
+
+\item{stochastic_bmi}{Logical; add individual-level stochastic BMI variation.}
 
 \item{education_source}{Either \code{"existing"} or \code{"map_3_to_2"}.}
 
@@ -43,11 +57,10 @@ and one calendar year.}
 
 \item{max_age}{Integer maximum represented age.}
 
-\item{bmi_limits}{Numeric vector of lower and upper permitted BMI values.}
+\item{bmi_limits}{Numeric lower/upper permitted BMI values.}
 }
 \value{
-A named list containing \code{living_state}, \code{deaths}, and
-\code{mortality_probabilities}.
+A list with \code{living_state}, \code{deaths}, and \code{mortality_probabilities}.
 }
 \description{
 Applies annual mortality, updates BMI among survivors, advances survivor

@@ -10,26 +10,26 @@ ponte_build_bmi_synthetic_cohorts(bmi_panel)
 \item{bmi_panel}{A prepared BMI panel containing \code{age_group}.}
 }
 \value{
-A data frame of matched synthetic-cohort BMI transitions.
+A data frame of survey-weighted synthetic-cohort BMI transitions.
 }
 \description{
-Matches records between survey years separated by five years. Records are
-matched on sex, five-year age group, and education level. Each matched pair
-produces an annualized BMI change observation.
+Builds survey-weighted synthetic-cohort BMI transitions from consecutive
+repeated cross-sectional survey waves. Each transition follows an age cohort:
+the follow-up age group is shifted forward by the number of years between
+survey waves. The function returns one weighted transition observation per
+sex, education level, age cohort, and consecutive survey-wave pair.
 }
 \examples{
 bmi_panel <- data.frame(
   year = c(2015L, 2015L, 2020L, 2020L),
   sex = c("men", "women", "men", "women"),
-  age = c(20L, 20L, 20L, 20L),
-  education_level2 = c("low_medium", "higher", "low_medium", "higher"),
+  age = c(20L, 20L, 25L, 25L),
+  education_level2 = c("lower", "higher", "lower", "higher"),
   survey_weight = c(800, 900, 850, 950),
   bmi = c(22.1, 23.8, 25.4, 24.7)
 )
 
 ponte_build_bmi_synthetic_cohorts(
-  bmi_panel = ponte_prepare_bmi_panel(
-    bmi_panel = bmi_panel
-  )
+  bmi_panel = ponte_prepare_bmi_panel(bmi_panel)
 )
 }

@@ -2,23 +2,37 @@
 % Please edit documentation in R/calculate_qalys.R
 \name{ponte_calculate_qalys}
 \alias{ponte_calculate_qalys}
-\title{Calculate QALYs from EQ-5D norms and BMI category}
+\title{Calculate annual QALYs from EQ-5D norms, education, and BMI category}
 \usage{
 ponte_calculate_qalys(simulation_output, min_age = 20L, max_age = 84L)
 }
 \arguments{
-\item{simulation_output}{A data frame returned by
-\code{\link[=ponte_run_simulation]{ponte_run_simulation()}}.}
+\item{simulation_output}{A data frame returned by \code{\link[=ponte_run_simulation]{ponte_run_simulation()}}.}
 
 \item{min_age}{Minimum age included in QALY calculations.}
 
 \item{max_age}{Maximum age included in QALY calculations.}
 }
 \value{
-A list containing individual QALY records, annual results by
-simulation, and annual summaries across simulations.
+A list containing:
+\describe{
+\item{individual}{Individual annual utilities and weighted QALYs.}
+\item{by_year_sim}{Weighted QALY totals by simulation, year, sex, and education.}
+\item{by_year}{Mean weighted QALY totals and simulation quantiles by year, sex, and education.}
+\item{by_year_obesity_sim}{Weighted QALY totals and mean annual QALYs per person by obesity status.}
+\item{by_year_obesity}{Mean annual QALYs per person and simulation quantiles by obesity status.}
+}
 }
 \description{
-Calculates annual QALYs for living people aged 20 to 84 years using
-age-sex EQ-5D norms, education adjustments, and BMI utility decrements.
+Calculates annual quality-adjusted life years (QALYs) for alive simulated
+people aged 20 to 84 years. Individual utility is derived from age-specific
+EQ-5D norms, education-level utility adjustments, and BMI-category utility
+decrements. Population-level QALYs are calculated by applying each person's
+survey weight.
+}
+\details{
+The current implementation uses age-specific, rather than sex-specific,
+EQ-5D norms. No utility decrement is applied to underweight BMI in the base
+case because the selected decrement inputs apply to overweight and obesity
+categories only.
 }

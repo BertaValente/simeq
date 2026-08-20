@@ -3,14 +3,32 @@
 #' Calculates individual and weighted years of life lost (YLL) from
 #' PONTE-PT-O microsimulation output.
 #'
-#' @param simulation_output A data frame returned by
-#'   [ponte_run_simulation()].
-#' @param ref_age Reference age for YLL calculation.
-#' @param min_age Minimum age at death included in YLL calculations.
-#' @param max_age Maximum age at death included in YLL calculations.
+#' YLL is calculated using a fixed reference age:
 #'
-#' @return A list containing individual-level YLL records and weighted
-#'   summaries overall and by death year.
+#' \deqn{
+#'   YLL = \max(\text{ref_age} - \text{age_at_death}, 0)
+#' }
+#'
+#' This is an interim fixed-reference-age approach. A future version should
+#' optionally use a reference life table with age-, sex-, and calendar-year-
+#' specific remaining life expectancy.
+#'
+#' @param simulation_output A data frame returned by
+#'   [ponte_run_simulation()] containing death-history fields.
+#' @param ref_age Integer reference age for YLL calculation.
+#' @param min_age Integer minimum age at death included in YLL calculations.
+#' @param max_age Integer maximum age at death included in YLL calculations.
+#'
+#' @return A named list containing:
+#' \describe{
+#'   \item{individual}{One row per person and simulation with YLL values.}
+#'   \item{overall_sim}{Weighted YLL summaries by simulation, sex, and
+#'     education level.}
+#'   \item{overall}{Mean and 95% simulation interval summaries by sex and
+#'     education level.}
+#'   \item{by_year_sim}{Weighted YLL summaries by death year and simulation.}
+#'   \item{by_year}{Mean annual weighted YLL summaries across simulations.}
+#' }
 #'
 #' @export
 ponte_calculate_yll <- function(
@@ -19,6 +37,13 @@ ponte_calculate_yll <- function(
     min_age = 20L,
     max_age = 84L
 ) {
+  if (!is.data.frame(simulation_output)) {
+    stop(
+      "`simulation_output` must be a data frame.",
+      call. = FALSE
+    )
+  }
+
   required_columns <- c(
     "person_id",
     "simulation",
@@ -43,237 +68,276 @@ ponte_calculate_yll <- function(
     )
   }
 
-  first_non_missing <- function(x) {
-    x_non_missing <- x[!is.na(x)]
-
-    if (length(x_non_missing) == 0L) {
-      return(NA)
-    }
-
-    x_non_missing[[1]]
+  if (
+    length(ref_age) != 1L ||
+    !is.numeric(ref_age) ||
+    !is.finite(ref_age)
+  ) {
+    stop(
+      "`ref_age` must be one finite numeric value.",
+      call. = FALSE
+    )
   }
 
-  person_keys <- paste(
-    simulation_output$person_id,
-    simulation_output$simulation,
-    sep = "\r"
-  )
+  if (
+    length(min_age) != 1L ||
+    length(max_age) != 1L ||
+    !is.numeric(min_age) ||
+    !is.numeric(max_age) ||
+    !is.finite(min_age) ||
+    !is.finite(max_age) ||
+    min_age > max_age
+  ) {
+    stop(
+      "`min_age` and `max_age` must be finite values with ",
+      "`min_age <= max_age`.",
+      call. = FALSE
+    )
+  }
 
-  unique_person_keys <- unique(person_keys)
+  if (
+    any(!is.finite(simulation_output$survey_weight)) ||
+    any(simulation_output$survey_weight < 0)
+  ) {
+    stop(
+      "`survey_weight` must contain finite non-negative values.",
+      call. = FALSE
+    )
+  }
 
-  individual_rows <- lapply(
-    unique_person_keys,
-    function(key) {
-      index <- which(person_keys == key)
+  if (nrow(simulation_output) == 0L) {
+    empty_individual <- tibble::tibble(
+      person_id = character(),
+      simulation = integer(),
+      sex = character(),
+      education_level = character(),
+      survey_weight = numeric(),
+      death_year = integer(),
+      age_at_death = integer(),
+      died = logical(),
+      yll = numeric(),
+      weighted_yll = numeric(),
+      weighted_death = numeric()
+    )
 
-      death_year <- first_non_missing(
-        simulation_output$death_year[index]
-      )
+    empty_overall_sim <- tibble::tibble(
+      simulation = integer(),
+      sex = character(),
+      education_level = character(),
+      total_yll_weighted = numeric(),
+      total_deaths_weighted = numeric(),
+      total_population_weighted = numeric(),
+      mean_yll_per_death = numeric(),
+      mean_yll_per_person = numeric()
+    )
 
-      age_at_death <- first_non_missing(
-        simulation_output$age_at_death[index]
-      )
+    empty_overall <- tibble::tibble(
+      sex = character(),
+      education_level = character(),
+      total_yll_weighted = numeric(),
+      total_deaths_weighted = numeric(),
+      total_population_weighted = numeric(),
+      mean_yll_per_death = numeric(),
+      mean_yll_per_person = numeric(),
+      yll_lo = numeric(),
+      yll_hi = numeric()
+    )
 
-      died <- !is.na(death_year) &&
-        !is.na(age_at_death)
-
-      yll <- if (
-        died &&
-        age_at_death >= min_age &&
-        age_at_death <= max_age
-      ) {
-        max(ref_age - age_at_death, 0)
-      } else {
-        0
-      }
-
-      data.frame(
-        person_id = simulation_output$person_id[index[1]],
-        simulation = simulation_output$simulation[index[1]],
-        sex = simulation_output$sex[index[1]],
-        education_level = simulation_output$education_level[index[1]],
-        survey_weight = simulation_output$survey_weight[index[1]],
-        death_year = as.integer(death_year),
-        age_at_death = as.integer(age_at_death),
-        died = died,
-        yll = yll,
-        stringsAsFactors = FALSE
-      )
-    }
-  )
-
-  individual <- do.call(
-    rbind,
-    individual_rows
-  )
-
-  individual$weighted_yll <- individual$yll *
-    individual$survey_weight
-
-  individual$weighted_death <- ifelse(
-    individual$died,
-    individual$survey_weight,
-    0
-  )
-
-  overall_sim <- stats::aggregate(
-    cbind(
-      total_yll_weighted = weighted_yll,
-      total_deaths_weighted = weighted_death,
-      total_population_weighted = survey_weight
-    ) ~ simulation + sex + education_level,
-    data = individual,
-    FUN = sum
-  )
-
-  overall_sim$mean_yll_per_death <- ifelse(
-    overall_sim$total_deaths_weighted > 0,
-    overall_sim$total_yll_weighted /
-      overall_sim$total_deaths_weighted,
-    NA_real_
-  )
-
-  overall_sim$mean_yll_per_person <- ifelse(
-    overall_sim$total_population_weighted > 0,
-    overall_sim$total_yll_weighted /
-      overall_sim$total_population_weighted,
-    NA_real_
-  )
-
-  overall_keys <- paste(
-    overall_sim$sex,
-    overall_sim$education_level,
-    sep = "\r"
-  )
-
-  overall_rows <- lapply(
-    unique(overall_keys),
-    function(key) {
-      index <- which(overall_keys == key)
-      x <- overall_sim[index, , drop = FALSE]
-
-      data.frame(
-        sex = x$sex[1],
-        education_level = x$education_level[1],
-        total_yll_weighted = mean(
-          x$total_yll_weighted,
-          na.rm = TRUE
-        ),
-        total_deaths_weighted = mean(
-          x$total_deaths_weighted,
-          na.rm = TRUE
-        ),
-        total_population_weighted = mean(
-          x$total_population_weighted,
-          na.rm = TRUE
-        ),
-        mean_yll_per_death = mean(
-          x$mean_yll_per_death,
-          na.rm = TRUE
-        ),
-        mean_yll_per_person = mean(
-          x$mean_yll_per_person,
-          na.rm = TRUE
-        ),
-        yll_lo = as.numeric(
-          stats::quantile(
-            x$mean_yll_per_person,
-            0.025,
-            na.rm = TRUE
-          )
-        ),
-        yll_hi = as.numeric(
-          stats::quantile(
-            x$mean_yll_per_person,
-            0.975,
-            na.rm = TRUE
-          )
-        ),
-        stringsAsFactors = FALSE
-      )
-    }
-  )
-
-  overall <- do.call(
-    rbind,
-    overall_rows
-  )
-
-  deaths <- individual[
-    individual$died &
-      !is.na(individual$death_year),
-    ,
-    drop = FALSE
-  ]
-
-  if (nrow(deaths) == 0L) {
-    by_year_sim <- data.frame(
+    empty_by_year_sim <- tibble::tibble(
       simulation = integer(),
       death_year = integer(),
       sex = character(),
       education_level = character(),
       total_yll_weighted = numeric(),
-      total_deaths_weighted = numeric(),
-      stringsAsFactors = FALSE
+      total_deaths_weighted = numeric()
     )
 
-    by_year <- data.frame(
+    empty_by_year <- tibble::tibble(
       death_year = integer(),
       sex = character(),
       education_level = character(),
       total_yll_weighted = numeric(),
-      total_deaths_weighted = numeric(),
-      stringsAsFactors = FALSE
+      total_deaths_weighted = numeric()
+    )
+
+    return(
+      list(
+        individual = empty_individual,
+        overall_sim = empty_overall_sim,
+        overall = empty_overall,
+        by_year_sim = empty_by_year_sim,
+        by_year = empty_by_year
+      )
+    )
+  }
+
+  individual <- simulation_output |>
+    dplyr::group_by(
+      person_id,
+      simulation,
+      sex,
+      education_level,
+      survey_weight
+    ) |>
+    dplyr::summarise(
+      death_year   = dplyr::first(death_year[!is.na(death_year)]),
+      age_at_death = dplyr::first(age_at_death[!is.na(age_at_death)]),
+      .groups = "drop"
+    ) |>
+    dplyr::mutate(
+      simulation   = as.integer(simulation),
+      sex          = as.character(sex),
+      education_level = as.character(education_level),
+      survey_weight   = as.numeric(survey_weight),
+      death_year      = as.integer(death_year),
+      age_at_death    = as.integer(age_at_death),
+      died = !is.na(death_year) & !is.na(age_at_death),
+      yll  = dplyr::if_else(
+        died &
+          age_at_death >= min_age &
+          age_at_death <= max_age,
+        pmax(as.numeric(ref_age) - as.numeric(age_at_death), 0),
+        0
+      ),
+      weighted_yll   = yll * survey_weight,
+      weighted_death = dplyr::if_else(died, survey_weight, 0)
+    )
+
+  overall_sim <- individual |>
+    dplyr::group_by(
+      simulation,
+      sex,
+      education_level
+    ) |>
+    dplyr::summarise(
+      total_yll_weighted = sum(
+        weighted_yll,
+        na.rm = TRUE
+      ),
+      total_deaths_weighted = sum(
+        weighted_death,
+        na.rm = TRUE
+      ),
+      total_population_weighted = sum(
+        survey_weight,
+        na.rm = TRUE
+      ),
+      .groups = "drop"
+    ) |>
+    dplyr::mutate(
+      mean_yll_per_death = dplyr::if_else(
+        total_deaths_weighted > 0,
+        total_yll_weighted / total_deaths_weighted,
+        NA_real_
+      ),
+      mean_yll_per_person = dplyr::if_else(
+        total_population_weighted > 0,
+        total_yll_weighted / total_population_weighted,
+        NA_real_
+      )
+    )
+
+  overall <- overall_sim |>
+    dplyr::group_by(
+      sex,
+      education_level
+    ) |>
+    dplyr::summarise(
+      total_yll_weighted = mean(
+        total_yll_weighted,
+        na.rm = TRUE
+      ),
+      total_deaths_weighted = mean(
+        total_deaths_weighted,
+        na.rm = TRUE
+      ),
+      total_population_weighted = mean(
+        total_population_weighted,
+        na.rm = TRUE
+      ),
+      mean_yll_per_death = mean(
+        mean_yll_per_death,
+        na.rm = TRUE
+      ),
+      mean_yll_per_person = mean(
+        mean_yll_per_person,
+        na.rm = TRUE
+      ),
+      yll_lo = stats::quantile(
+        mean_yll_per_person,
+        probs = 0.025,
+        na.rm = TRUE,
+        names = FALSE
+      ),
+      yll_hi = stats::quantile(
+        mean_yll_per_person,
+        probs = 0.975,
+        na.rm = TRUE,
+        names = FALSE
+      ),
+      .groups = "drop"
+    )
+
+  deaths <- individual |>
+    dplyr::filter(
+      died,
+      !is.na(death_year)
+    )
+
+  if (nrow(deaths) == 0L) {
+    by_year_sim <- tibble::tibble(
+      simulation = integer(),
+      death_year = integer(),
+      sex = character(),
+      education_level = character(),
+      total_yll_weighted = numeric(),
+      total_deaths_weighted = numeric()
+    )
+
+    by_year <- tibble::tibble(
+      death_year = integer(),
+      sex = character(),
+      education_level = character(),
+      total_yll_weighted = numeric(),
+      total_deaths_weighted = numeric()
     )
   } else {
-    by_year_sim <- stats::aggregate(
-      cbind(
-        total_yll_weighted = weighted_yll,
-        total_deaths_weighted = weighted_death
-      ) ~ simulation + death_year + sex + education_level,
-      data = deaths,
-      FUN = sum
-    )
+    by_year_sim <- deaths |>
+      dplyr::group_by(
+        simulation,
+        death_year,
+        sex,
+        education_level
+      ) |>
+      dplyr::summarise(
+        total_yll_weighted = sum(
+          weighted_yll,
+          na.rm = TRUE
+        ),
+        total_deaths_weighted = sum(
+          weighted_death,
+          na.rm = TRUE
+        ),
+        .groups = "drop"
+      )
 
-    by_year_keys <- paste(
-      by_year_sim$death_year,
-      by_year_sim$sex,
-      by_year_sim$education_level,
-      sep = "\r"
-    )
-
-    by_year_rows <- lapply(
-      unique(by_year_keys),
-      function(key) {
-        index <- which(by_year_keys == key)
-
-        x <- by_year_sim[
-          index,
-          ,
-          drop = FALSE
-        ]
-
-        data.frame(
-          death_year = x$death_year[1],
-          sex = x$sex[1],
-          education_level = x$education_level[1],
-          total_yll_weighted = mean(
-            x$total_yll_weighted,
-            na.rm = TRUE
-          ),
-          total_deaths_weighted = mean(
-            x$total_deaths_weighted,
-            na.rm = TRUE
-          ),
-          stringsAsFactors = FALSE
-        )
-      }
-    )
-
-    by_year <- do.call(
-      rbind,
-      by_year_rows
-    )
+    by_year <- by_year_sim |>
+      dplyr::group_by(
+        death_year,
+        sex,
+        education_level
+      ) |>
+      dplyr::summarise(
+        total_yll_weighted = mean(
+          total_yll_weighted,
+          na.rm = TRUE
+        ),
+        total_deaths_weighted = mean(
+          total_deaths_weighted,
+          na.rm = TRUE
+        ),
+        .groups = "drop"
+      )
   }
 
   list(

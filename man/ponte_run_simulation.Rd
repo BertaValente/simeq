@@ -10,9 +10,14 @@ ponte_run_simulation(
   life_table,
   rr_bmi,
   rr_education,
-  bmi_transition_model,
   donor_pool,
+  donor_pools = NULL,
   entrant_targets,
+  bmi_transition_model = NULL,
+  hayes_bmi_model = NULL,
+  bmi_update_method = c("legacy", "historical"),
+  min_cell_n = 30L,
+  stochastic_bmi = TRUE,
   education_source = c("existing", "map_3_to_2"),
   bmi_limits = c(10, 80)
 )
@@ -28,11 +33,31 @@ ponte_run_simulation(
 
 \item{rr_education}{A validated education mortality relative-risk table.}
 
-\item{bmi_transition_model}{A \code{ponte_bmi_transition_model} object.}
+\item{donor_pool}{A validated historical entrant donor pool used for all
+entry years unless \code{donor_pools} is supplied.}
 
-\item{donor_pool}{A validated historical entrant donor pool.}
+\item{donor_pools}{Optional named list of period-specific donor pools.
+Each element must be a list with integer fields \code{from} and \code{to}
+(inclusive entry-year range) and a data frame field \code{pool}. When
+supplied, the pool whose range brackets the current entry year is used;
+\code{donor_pool} acts as a fallback if no range matches.}
 
 \item{entrant_targets}{A validated annual entrant-target table.}
+
+\item{bmi_transition_model}{Optional legacy \code{ponte_bmi_transition_model}
+object. Required only when \code{bmi_update_method = "legacy"}.}
+
+\item{hayes_bmi_model}{Optional output from
+\code{\link[=ponte_fit_bmi_transition_hayes]{ponte_fit_bmi_transition_hayes()}}. Required when
+\code{bmi_update_method = "historical"}.}
+
+\item{bmi_update_method}{BMI update strategy: \code{"legacy"} or \code{"historical"}.}
+
+\item{min_cell_n}{Minimum NHS sample size required at both endpoints of an
+empirical BMI-transition cell.}
+
+\item{stochastic_bmi}{Logical; whether to add individual random BMI
+variation during historical updates.}
 
 \item{education_source}{Either \code{"existing"} or \code{"map_3_to_2"}.}
 

@@ -35,7 +35,8 @@ ponte_fit_bmi_transition <- function(
     "age_t",
     "bmi_t",
     "education_level2",
-    "year_t"
+    "year_t",
+    "transition_weight"
   )
 
   missing_columns <- setdiff(
@@ -187,6 +188,20 @@ ponte_fit_bmi_transition <- function(
     )
   }
 
+  transition_weight <- bmi_transitions$transition_weight
+
+  if (
+    !is.numeric(transition_weight) ||
+    any(is.na(transition_weight)) ||
+    any(!is.finite(transition_weight)) ||
+    any(transition_weight <= 0)
+  ) {
+    stop(
+      "`bmi_transitions$transition_weight` must contain positive, finite numeric values.",
+      call. = FALSE
+    )
+  }
+
   model_data <- data.frame(
     annual_bmi_change = as.numeric(
       bmi_transitions$annual_bmi_change
@@ -211,18 +226,25 @@ ponte_fit_bmi_transition <- function(
       as.integer(
         bmi_transitions$year_t
       )
-    )
+    ),
+    transition_weight = as.numeric(transition_weight)
   )
 
+  # bmi_t is intentionally excluded. In synthetic-cohort data, the negative
+  # bmi_t coefficient arises from differential mortality (obese individuals
+  # dying between survey waves lower the surviving group mean). Mortality is
+  # already handled by the simulation's mortality module, so including bmi_t
+  # here would double-count that effect and incorrectly cause obese simulated
+  # individuals to lose BMI over time.
   fitted_model <- stats::lm(
     annual_bmi_change ~
       sex +
       age_t +
       I(age_t ^ 2) +
-      bmi_t +
       education_level2 +
       period,
-    data = model_data
+    data = model_data,
+    weights = transition_weight
   )
 
   if (fitted_model$rank < length(

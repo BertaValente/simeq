@@ -20,14 +20,6 @@ The model has three integrated modules:
 \item Module 3: economic outcomes.
 }
 }
-\seealso{
-Useful links:
-\itemize{
-  \item \url{https://github.com/BertaValente/pontept}
-  \item Report bugs at \url{https://github.com/BertaValente/pontept/issues}
-}
-
-}
 \author{
 \strong{Maintainer}: Berta Valente \email{berta.valente@ispup.up.pt}
 

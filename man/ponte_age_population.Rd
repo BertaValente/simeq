@@ -2,40 +2,22 @@
 % Please edit documentation in R/age_population.R
 \name{ponte_age_population}
 \alias{ponte_age_population}
-\title{Age a living PONTE-PT-O population by one year}
+\title{Age a living synthetic population by one year}
 \usage{
 ponte_age_population(state, entry_age = 20L, max_age = 84L)
 }
 \arguments{
-\item{state}{A valid living PONTE-PT-O population state.}
+\item{state}{A living PONTE-PT population state.}
 
-\item{entry_age}{Integer. Minimum supported age.}
+\item{entry_age}{Integer minimum represented age.}
 
-\item{max_age}{Integer. Maximum represented age.}
+\item{max_age}{Integer maximum represented age.}
 }
 \value{
-A data frame with ages advanced by one year and capped at
-\code{max_age}.
+A living population state with ages advanced by one year.
 }
 \description{
-Increases the age of every person in a living PONTE-PT-O population state
-by one year. Ages are capped at \code{max_age}, so people who reach the upper
-model age remain represented at that age in subsequent simulation years.
-}
-\examples{
-population <- data.frame(
-  person_id = c("person_1", "person_2"),
-  age = c(35L, 84L),
-  sex = c("women", "men"),
-  education_level = c("high", "medium"),
-  bmi = c(23.5, 31.2),
-  survey_weight = c(1000, 1200)
-)
-
-state <- ponte_initialise_population(
-  population = population,
-  settings = ponte_settings()
-)
-
-ponte_age_population(state)
+Ages people by one year and removes persons older than the maximum
+modelled age. The calendar year is updated separately by
+\code{\link[=ponte_advance_year]{ponte_advance_year()}}.
 }

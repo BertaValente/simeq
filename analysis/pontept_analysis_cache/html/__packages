@@ -1,0 +1,17 @@
+dplyr
+tidyr
+readr
+readxl
+stringr
+purrr
+ggplot2
+broom
+knitr
+scales
+here
+tidyverse
+tibble
+forcats
+lubridate
+testthat
+pontept

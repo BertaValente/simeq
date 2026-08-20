@@ -2,40 +2,37 @@
 % Please edit documentation in R/calculate_obesity_costs_age_sex.R
 \name{calculate_obesity_costs_age_sex}
 \alias{calculate_obesity_costs_age_sex}
-\title{Calculate obesity-attributable direct medical costs by age and sex}
+\title{Apply high-BMI PAFs to published disease costs}
 \usage{
 calculate_obesity_costs_age_sex(
   paf_by_outcome,
   outcome_mapping,
   costs_dro,
-  paf_ow_ob,
   exclude_disease_groups = character()
 )
 }
 \arguments{
-\item{paf_by_outcome}{A data frame containing \code{outcome} and \code{paf_obesity},
-such as the \code{paf_by_outcome} element returned by
+\item{paf_by_outcome}{A data frame with \code{outcome} and \code{paf_obesity}
+(population-weighted PAF per GBD outcome), as returned by
 \code{\link[=calculate_obesity_pafs_age_sex]{calculate_obesity_pafs_age_sex()}}.}
 
 \item{outcome_mapping}{A data frame mapping GBD outcome names to cost
-disease groups. It must contain \code{outcome_pattern} and \code{disease_group}.}
+disease groups. Must contain \code{outcome_pattern} and \code{disease_group}.}
 
-\item{costs_dro}{A data frame of direct medical costs with \code{disease_group},
-\code{inpatient}, \code{outpatient}, \code{pharmacological}, and \code{total}.}
+\item{costs_dro}{A data frame of published direct medical costs. Must
+contain \code{disease_group}, \code{inpatient}, \code{outpatient}, \code{pharmacological},
+and \code{total}.}
 
-\item{paf_ow_ob}{A data frame of published overweight-and-obesity PAFs with
-\code{disease_group} and \code{paf_ow_ob}.}
-
-\item{exclude_disease_groups}{Character vector of cost disease groups to
-exclude when no compatible relative-risk evidence is available.}
+\item{exclude_disease_groups}{Character vector of disease groups to exclude
+from attributable-cost estimation (e.g. those without GBD RR evidence).}
 }
 \value{
 A list with \code{costs_by_group}, \code{paf_by_group}, and \code{total_costs}.
 }
 \description{
-Estimates obesity-attributable direct medical costs using outcome-level PAFs
-calculated from age- and sex-specific simulated obesity prevalence and GBD
-relative risks. Published overweight-and-obesity costs are rescaled using
-the ratio of the obesity-only PAF to the published overweight-and-obesity
-PAF.
+Rescales published direct medical costs using simulation-derived
+population-attributable fractions (PAFs) for high BMI. The PAFs are
+applied directly to published disease costs — not via a ratio to a
+separately published PAF. This function accepts the \code{paf_by_outcome}
+output from \code{\link[=calculate_obesity_pafs_age_sex]{calculate_obesity_pafs_age_sex()}}.
 }

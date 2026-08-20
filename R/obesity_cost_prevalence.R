@@ -133,7 +133,7 @@ extract_simulated_obesity_prevalence_by_age_sex <- function(
     "year",
     "age",
     "sex",
-    "obesity",
+    "bmi",
     "alive",
     weight_col
   )
@@ -174,7 +174,7 @@ extract_simulated_obesity_prevalence_by_age_sex <- function(
       age <= 84L,
       !is.na(age),
       !is.na(sex),
-      !is.na(obesity),
+      !is.na(bmi),
       !is.na(!!weight_symbol),
       !!weight_symbol > 0
     ) |>
@@ -188,16 +188,16 @@ extract_simulated_obesity_prevalence_by_age_sex <- function(
         ((as.integer(age) - 20L) %/% 5L) * 5L + 20L,
         "-",
         ((as.integer(age) - 20L) %/% 5L) * 5L + 24L
-      ),
-      obesity = as.numeric(obesity)
+      )
     ) |>
     dplyr::group_by(sex, age_band) |>
     dplyr::summarise(
-      population_n = sum(!!weight_symbol, na.rm = TRUE),
-      p_obesity = stats::weighted.mean(
-        obesity,
-        w = !!weight_symbol,
-        na.rm = TRUE
+      population_n  = sum(!!weight_symbol, na.rm = TRUE),
+      p_overweight  = stats::weighted.mean(
+        bmi >= 25 & bmi < 30, w = !!weight_symbol, na.rm = TRUE
+      ),
+      p_obesity     = stats::weighted.mean(
+        bmi >= 30, w = !!weight_symbol, na.rm = TRUE
       ),
       .groups = "drop"
     ) |>
@@ -232,6 +232,7 @@ extract_simulated_obesity_prevalence_by_age_sex <- function(
 
   if (any(!is.finite(prevalence$population_n)) ||
       any(prevalence$population_n <= 0) ||
+      any(!is.finite(prevalence$p_overweight)) ||
       any(!is.finite(prevalence$p_obesity)) ||
       any(prevalence$p_obesity < 0 | prevalence$p_obesity > 1)) {
     stop(
@@ -242,5 +243,5 @@ extract_simulated_obesity_prevalence_by_age_sex <- function(
   }
 
   prevalence |>
-    dplyr::select(year, sex, age_band, population_n, p_obesity)
+    dplyr::select(year, sex, age_band, population_n, p_overweight, p_obesity)
 }

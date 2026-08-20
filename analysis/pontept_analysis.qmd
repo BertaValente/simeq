@@ -250,7 +250,6 @@ digraph pontept {
 }
 ", width = '100%', height = 720)
 ```
-```
 
 ### R Package Implementation
 
@@ -293,12 +292,7 @@ local replacement when adapting PONTE-PT to another jurisdiction.
 ## Verification, Validation, and Uncertainty
 
 This section describes the current model-assurance status of the PONTE-PT
-Portuguese implementation, following the ISPOR–SMDM taxonomy of verification
-(does the software perform the intended logic?), face validity (do structure
-and outputs appear plausible to subject-matter experts?), and external
-validation (do simulated outputs agree with empirical targets not used in model
-development?). Neither successful software verification nor dependent
-calibration alone establishes predictive validity.
+Portuguese implementation, following the ISPOR–SMDM Reports 1-7 (https://www.ispor.org/heor-resources/good-practices/article/modeling-good-research-practices---overview)
 
 ### Technical Verification
 
@@ -316,24 +310,40 @@ cohort-forward matching), and the QALY output column naming. These were
 resolved; the current test suite comprises **321 automated unit tests, all
 passing**.
 
-Current verification work is nevertheless incomplete. Test coverage is
-selective and does not extend to all functions or edge cases. Further
-verification will include deterministic-value tests, boundary and
-extreme-value tests, individual-level trace analyses, population-accounting
-checks, and comparison of selected outputs against hand calculations or
+**To-do:** Current verification will further include:
+- deterministic-value tests, 
+- boundary and extreme-value tests, 
+- individual-level trace analyses, 
+- population-accounting checks, 
+- comparison of selected outputs against hand calculations or
 analytically expected values.
 
-### Face Validity
+### **Face Validity: Co-author Review Requested**
+Co-authors are invited to undertake a structured expert review of the model’s face validity as part of their review of this technical report.
 
-Structured face-validity review is planned with expertise in obesity
-epidemiology, health economics, clinical obesity care, and microsimulation
-methods. Review will assess the conceptual pathways, temporal ordering,
-parameter selection, modelling assumptions, and plausibility of output patterns
-relative to the intended policy applications.
+Please assess, within your area of expertise:
 
-When completed, replace this paragraph with: the date of review, reviewer
-roles (rather than names in an anonymised manuscript), the review scope and
-criteria used, and changes made in response to feedback.
+1. Whether the conceptual pathways adequately represent the relationships intended to be modelled.
+
+2. Whether the temporal ordering of demographic, BMI, disease, mortality, and economic processes is logical and internally consistent.
+
+3. Whether parameter choices, data sources, and modelling assumptions are appropriate and sufficiently justified.
+
+4. Whether key assumptions are transparent, plausible, and relevant to the intended Portuguese policy applications.
+
+5. Whether the direction and patterns of selected outputs appear plausible, including BMI trajectories, disease outcomes, costs, health outcomes, and socioeconomic inequalities.
+
+Please identify:
+
+1. Any missing pathways, states, mechanisms, parameters, or policy-relevant outcomes.
+
+2. Any assumptions or parameter choices that need clarification, revision, or stronger justification.
+
+3. Any implausible model behaviour or output pattern.
+
+4. Recommended changes to the model, analysis, reporting, or documentation.
+
+All comments will be recorded in a response log, together with the action taken and rationale. In subsequent reporting, this activity will be described as an internal expert face-validity review involving co-authors with expertise in dynamic microsimulation, health economics, obesity epidemiology, and social epidemiology. It will not be presented as independent external validation.
 
 ### Current Validation Status
 
@@ -357,18 +367,6 @@ external validation. The model systematically underestimates observed obesity
 prevalence across all six sex–year comparisons, with a mean absolute error of
 3.37 percentage points.
 
-### Independent Temporal Validation
-
-Independent temporal validation is not yet available. A suitable validation
-target must be fully withheld from BMI-transition estimation, donor-pool
-construction, model selection, calibration, and tuning before the simulation
-design is finalised. A candidate external target is INSEF 2015, conditional on
-confirmation that it was not used in any earlier modelling step.
-
-For each independent target, the planned analysis will report: the source
-data and its relationship to model development; simulation setup; outcome
-definition and subgroups; quantitative discrepancy measures with uncertainty
-intervals; and graphical observed-versus-simulated comparisons.
 
 ### Uncertainty
 
@@ -626,7 +624,7 @@ predicted annual BMI change from the fitted transition model. BMI is retained
 as a continuous variable throughout the simulation and recategorised after each
 annual update for obesity-prevalence, mortality-risk, utility, and cost
 calculations. Updated BMI is constrained to the plausible range of
-10–80 kg/m² after each cycle.
+10–80 kg/m² after each cycle. [https://github.com/NCD-RisC/Data-cleaning-protocol/blob/main/README.md]
 
 The base case assumes that estimated annual transition parameters remain
 stationary after the final observed NHS wave (2019). This post-2019
@@ -637,10 +635,8 @@ scenario analyses.
 
 BMI in the Portuguese NHS is derived from self-reported height and weight.
 No correction for self-report bias in height or weight was applied in the
-current implementation. A calibration adjustment against objectively measured
-BMI should be considered if a suitable reference dataset is available, as
-self-report bias typically leads to underestimation of BMI and obesity
-prevalence.
+current implementation. ** To-do:** A calibration adjustment against objectively measured
+BMI will be done as a sensitivity analysis. 
 
 ### NHS wave characteristics
 
@@ -707,8 +703,7 @@ state from year $t$ to year $t+1$):
 4. **Entrant generation** — age-20 entrants sampled from the period-appropriate
    donor pool, assigned year $= t+1$; survivors and entrants combined.
 
-QALY accrual and cost attribution are computed in post-processing from the
-stored annual state records, not within the annual cycle.
+The simulation records each individual’s annual health and demographic states. Costs and QALYs are then calculated in a separate post-simulation step by applying the relevant cost and utility values to those annual records.
 
 ### Key assumptions
 
@@ -728,9 +723,7 @@ stored annual state records, not within the annual cycle.
 - The base case applies stationary annual BMI transitions after 2019.
 - For ages 80–84, BMI transitions are extrapolated from the quadratic age
   function fitted to ages 20–79; this is an out-of-range extrapolation.
-- Uncertainty in BMI-transition estimates is not yet propagated. Future work
-  will require resampling or parameter draws across multiple simulation
-  replications.
+- Uncertainty in BMI-transition estimates is not yet propagated.* **To be done**
 
 ---
 
@@ -1056,7 +1049,7 @@ mortality_consistency |>
 
 ### 3.5 Retrospective Calibration
 
-The simulated obesity prevalence is compared with observed NHS prevalence at the 2005, 2014, and 2019 survey waves. Because these waves contribute to parameter estimation and/or entrant pools, this is a dependent temporal calibration diagnostic, not independent validation.
+The simulated obesity prevalence is compared with observed NHS prevalence at the 2005, 2014, and 2019 survey waves. Because these waves contribute to parameter estimation and/or entrant pools (dependent temporal calibration)
 
 ```{r}
 #| label: module1-validation
@@ -1246,14 +1239,7 @@ calibration_metrics |>
   knitr::kable(col.names = c("Metric", "Value (percentage points)"))
 ```
 
-Across the six sex-year comparisons, the model underestimates observed obesity
-prevalence consistently, with a mean absolute error of 3.37 percentage points.
-The directionally consistent negative bias indicates that the current BMI
-transition specification does not fully reproduce the observed population-level
-increase in obesity prevalence between 2005 and 2019. Because the NHS waves
-inform transition estimation and entrant-pool construction, this result should
-be interpreted as an internal calibration diagnostic rather than independent
-validation.
+Across the six sex-by-year comparisons, simulated obesity prevalence was lower than observed prevalence in every comparison, with a mean absolute error of 3.37 percentage points. The consistently negative signed differences indicate systematic underestimation of obesity prevalence. This pattern suggests that the current combination of BMI-transition modelling and entrant-pool construction does not fully reproduce the observed population-level increase in obesity prevalence between 2005 and 2019. 
 
 ```{r}
 #| label: tbl-module1-error-metrics
@@ -1343,9 +1329,9 @@ ggplot(
 
 
 
-## Module 2: Quality-adjusted Life Years
+4 ## Module 2: Quality-adjusted Life Years
 
-### 2.1 Population-weighted QALYs
+### 4.1 Population-weighted QALYs
 
 QALYs are calculated for alive simulated individuals using age-specific
 EQ-5D-5L utility norms for the Portuguese population [@Ferreira2023].
@@ -1451,64 +1437,70 @@ ggplot(
 ```
 
 
-## Module 3: Exploratory Obesity-Focused Attributable-Cost Scenario {#sec-module3}
+5 ## Module 3: Exploratory Obesity-Focused Attributable-Cost Scenario {#sec-module3}
 
-> **Scope note — exploratory economic scenario, not externally validated cost modelling.**  
-> Costs are derived from a published 2018 Portuguese baseline and scaled using
-> simulated obesity prevalence. No independent comparison against another cost
-> year or data source is performed here. Results should be described as an
-> *internally consistent economic scenario driven by the microsimulation*, not
-> as externally validated cost estimates.
+> **Scope note — exploratory cost-attribution scenario.** This module adapts
+> selected inputs from the Portuguese 2018 overweight-and-obesity
+> cost-of-illness analysis reported by Borges et al. [-@Borges2025]. It combines
+> the published 2018 direct medical cost matrix with simulated obesity prevalence
+> and GBD 2019 relative-risk functions to produce an internally consistent,
+> obesity-focused attributable-cost scenario. It is not a direct reproduction of
+> the published overweight-and-obesity cost estimate and has not been externally
+> validated against an independent Portuguese cost dataset or cost year.
 
-The 2018 cost estimates reported by Borges et al. (2025) [-@Borges2025], which
-cover overweight and obesity combined, are used as the Portuguese cost baseline. GBD 2019
-BMI relative risks are used to derive population-attributable fractions (PAFs)
-for downstream disease groups.
-
-> **Current implementation note.** The published Portuguese 2018 cost matrix
-> includes overweight- and obesity-related costs. The current implementation
-> recalculates downstream disease attribution using an obesity-only risk
-> approximation at a representative BMI of 32 kg/m²; consequently, the outputs
-> should be interpreted as an exploratory obesity-focused scenario, not as a
-> full replication of the overweight-and-obesity cost estimate reported by
-> Borges et al. [@Borges2025].
->
-> A subsequent implementation will model overweight and obesity as separate BMI
-> exposure categories, using simulated prevalences and category-specific
-> GBD-derived relative risks at representative BMI values of 27.5 kg/m²
-> (overweight) and 32.5 kg/m² (obesity).
-
-Direct costs of obesity treatment are added at 100% attribution by definition.
-Depression costs are retained as a descriptive published-cost category but are
-excluded from the obesity-attributable total because GBD 2019 does not provide
-a BMI-to-depression relative risk suitable for this PAF calculation.
-
-### 3.1 Source Study and Exposure Definition
-
-Borges et al. estimated the Portuguese burden and direct medical costs of
-**overweight and obesity combined**, using prevalence estimates from the national
-INSEF 2015 survey [@Borges2025]. In that study, high-BMI exposure was defined as
-BMI at or above 25 kg/m². The published INSEF 2015 prevalence estimates are:
-
-- **Overweight** (BMI 25.0–29.9 kg/m²): 45.4 % men, 33.1 % women (overall 38.9 %)
-- **Obesity** (BMI ≥ 30 kg/m²): 24.9 % men, 32.1 % women (overall 28.7 %)
-- **High BMI** (BMI ≥ 25 kg/m²): 70.3 % men, 65.2 % women
-
-The present framework uses the Borges et al. 2018 cost matrix as its
-Portuguese cost baseline. The current implementation applies an obesity-focused
-attribution scenario using simulated obesity prevalence. A full replication of
-the Borges et al. high-BMI definition requires separate prevalence estimates for
-overweight and obesity and category-specific disease relative risks.
-
-For transparency, the table below presents the published INSEF 2015 exposure
-prevalence used by Borges et al. alongside the corresponding simulated 2018
+Borges et al. [-@Borges2025] estimated 2018 Portuguese direct medical costs
+attributable to overweight and obesity combined. In the present implementation,
+the published cost matrix is used as a reference cost input. GBD 2019 BMI
+relative-risk functions are used to derive population-attributable fractions
+(PAFs) for selected downstream disease groups, using simulated obesity
 prevalence.
 
-Borges et al. reported costs for overweight and obesity combined, whereas the
-current simulation-based PAF implementation applies an obesity-focused
-representative risk contrast (BMI 32 vs. BMI 22 kg/m²). Therefore, the present
-cost estimates should not be interpreted as a direct replication of the
-published overweight-and-obesity cost total.
+> **Current implementation.** Borges et al. estimated costs attributable to
+> high BMI, defined as BMI ≥25 kg/m² and therefore including both overweight and
+> obesity. The current PAF implementation instead uses an obesity-focused
+> representative risk contrast, evaluating GBD relative-risk functions at BMI
+> 32.5 kg/m² relative to BMI 22 kg/m². Consequently, the outputs represent an
+> exploratory obesity-focused scenario rather than a replication of the
+> published overweight-and-obesity cost total.
+>
+> A future extension will represent overweight and obesity as separate exposure
+> categories, using simulated category-specific prevalences and GBD-derived
+> relative risks evaluated at representative BMI values of 27.5 kg/m² for
+> overweight and 32.5 kg/m² for obesity. This would more closely align the
+> exposure definition with that used by Borges et al.
+
+Direct treatment costs reported by Borges et al. for overweight and obesity are
+included at 100% attribution as a separate cost component. Depression costs are
+retained as a descriptive published-cost category but excluded from the
+obesity-attributable total because no BMI-to-depression relative-risk function
+suitable for the current GBD-based PAF calculation is applied.
+
+### 5.1 Source Study and Exposure Definition
+
+Borges et al. estimated the Portuguese burden and direct medical costs of
+overweight and obesity combined using prevalence estimates from INSEF 2015
+[-@Borges2025]. Their high-BMI exposure was defined as BMI ≥25 kg/m². The
+published INSEF 2015 prevalence estimates were:
+
+- **Overweight** (BMI 25.0–29.9 kg/m²): 45.4% among men, 33.1% among women, and
+  38.9% overall.
+- **Obesity** (BMI ≥30 kg/m²): 24.9% among men, 32.1% among women, and 28.7%
+  overall.
+- **High BMI** (BMI ≥25 kg/m²): 70.3% among men and 65.2% among women.
+
+The current model uses the Borges et al. 2018 direct medical cost matrix as a
+reference input, while replacing the published exposure prevalence with
+simulated obesity prevalence in 2018. The PAF calculation applies an
+obesity-focused BMI risk contrast and therefore does not reproduce the
+high-BMI exposure definition, PAFs, disease-specific attributable costs, or
+total costs reported by Borges et al.
+
+For transparency, Table @tbl-module3-exposure-prevalence presents the published
+INSEF 2015 prevalence estimates reported by Borges et al. alongside the
+corresponding simulated 2018 prevalences. This is a descriptive comparison, not
+a formal reproduction or validation exercise. Differences are expected because
+the sources refer to different survey/simulation years and the current economic
+scenario uses obesity rather than high BMI as its principal exposure.
 
 ```{r}
 #| label: tbl-module3-exposure-prevalence
@@ -1541,7 +1533,7 @@ dplyr::bind_rows(
   )
 ```
 
-### 3.2 Published 2018 Cost Inputs
+### 5.2 Published 2018 Cost Inputs
 
 ```{r}
 #| label: tbl-module3-published-cost-inputs
@@ -1583,18 +1575,19 @@ costs_2018 |>
   )
 ```
 
-### 3.3 GBD Relative Risks for PAF Derivation
+### 5.3 GBD Relative Risks for PAF Derivation
 
-Disease-specific relative risks for high BMI were obtained from the Global
-Burden of Disease Study 2019 relative-risk dataset [@GBD2019RR]. The GBD 2019
-comparative risk-assessment framework treats high BMI as a continuous exposure
-and links it to specific disease outcomes through age- and sex-specific
-relative-risk functions.
+Disease-specific BMI relative-risk functions were obtained from the Global
+Burden of Disease Study 2019 relative-risk dataset [-@GBD2019RR]. The GBD
+comparative risk-assessment framework represents high BMI as a continuous
+exposure and relates BMI to specified disease outcomes through age- and
+sex-specific relative-risk functions.
 
-For the current obesity-focused scenario, the continuous relative-risk functions
-are evaluated at BMI 32 kg/m² relative to BMI 22 kg/m². This is a
-representative obesity-versus-reference approximation; it is not the full
-continuous exposure-distribution PAF used in GBD analyses.
+For the present obesity-focused scenario, the relative-risk functions are
+evaluated at BMI 32.5 kg/m² relative to BMI 22 kg/m². This provides a
+representative obesity-versus-reference risk contrast for the PAF calculations.
+It is not equivalent to applying the full GBD continuous BMI exposure
+distribution or to reproducing the PAF method used in Borges et al.
 
 ```{r}
 #| label: load-gbd-rr
@@ -1626,10 +1619,17 @@ bmi_obesity = 32.5
 )
 ```
 
-### 3.4 Cost Data Loading and Validation
+### 5.4 Cost Data Loading and Validation
 
-Published costs are expressed in thousands of 2018 euros from the Portuguese
-National Health Service perspective [@Borges2025].
+Published costs are expressed in thousands of 2018 euros and reflect the
+Portuguese National Health Service perspective reported by Borges et al.
+[-@Borges2025].
+
+> **Implementation note.** The published prevalence values are retained as
+> comparator and audit inputs. The PAF calculation uses simulated 2018 obesity
+> prevalence to maintain consistency with the microsimulation-based scenario.
+> These simulated prevalences replace—not reproduce—the high-BMI prevalence
+> inputs used in the Borges et al. analysis.
 
 ```{r}
 #| label: load-cost-inputs
@@ -1662,11 +1662,19 @@ if (length(missing_cost_columns) > 0L) {
 }
 ```
 
-> **Note:** `published_prevalence_2018` is retained as a published comparator
-> and audit input. The PAF calculation below uses simulated 2018 obesity
-> prevalence to maintain internal consistency with the microsimulation.
 
-### 3.5 Obesity-attributable Costs in 2018
+### 5.5 Exploratory Obesity-Attributable Cost Scenario for 2018
+
+The analysis applies simulated sex-specific obesity prevalence in 2018 to the
+GBD-based PAF calculation and combines the resulting downstream
+disease-attributable costs with the published direct treatment-cost component.
+The result is an obesity-focused, simulation-linked 2018 cost scenario.
+
+It should not be interpreted as an estimate of the full 2018 Portuguese cost
+burden of overweight and obesity combined. In particular, the direct treatment
+cost component is drawn from a published high-BMI cost matrix, whereas
+downstream disease costs are recalculated using obesity-only prevalence and a
+representative obesity risk contrast.
 
 ```{r}
 #| label: run-module3-costs
@@ -1683,93 +1691,68 @@ depression_costs <- costs_2018 |>
 costs_gbd <- costs_2018 |>
   filter(!disease_group %in% exclude_groups)
 
-pafs_gbd <- pafs_ow_ob |>
-  filter(!disease_group %in% exclude_groups)
-
 if (nrow(direct_obesity_costs) != 1L) {
-  stop(
-    "Expected exactly one `obesity_overweight` cost row.",
-    call. = FALSE
-  )
+  stop("Expected exactly one `obesity_overweight` cost row.", call. = FALSE)
 }
-
 if (nrow(depression_costs) != 1L) {
-  stop(
-    "Expected exactly one `depression` cost row.",
-    call. = FALSE
-  )
+  stop("Expected exactly one `depression` cost row.", call. = FALSE)
 }
 
+# ── Step 1: age- and sex-specific simulated prevalence at 2018 ─────────────
+# extract_simulated_obesity_prevalence_by_age_sex() now returns both
+# p_overweight and p_obesity so the two-category PAF formula can be applied.
+prevalence_age_sex_2018 <- extract_simulated_obesity_prevalence_by_age_sex(
+  simulation_output = simulation_historical,
+  year              = 2018L,
+  weight_col        = "survey_weight"
+)
+
+# Also keep sex-level totals for trajectory scaling and the prevalence table
 prevalence_2018_sim <- simulation_historical |>
   filter(alive, year == 2018L) |>
   group_by(sex) |>
   summarise(
-    p_obesity = weighted.mean(
-      bmi >= 30,
-      w = survey_weight,
-      na.rm = TRUE
-    ),
+    p_overweight = weighted.mean(bmi >= 25 & bmi < 30, w = survey_weight, na.rm = TRUE),
+    p_obesity    = weighted.mean(bmi >= 30,             w = survey_weight, na.rm = TRUE),
+    p_high_bmi   = weighted.mean(bmi >= 25,             w = survey_weight, na.rm = TRUE),
     .groups = "drop"
   ) |>
-  mutate(
-    sex = recode(
-      sex,
-      "men" = "Males",
-      "women" = "Females"
-    )
-  )
+  mutate(sex = dplyr::recode(sex, men = "Males", women = "Females"))
 
-if (nrow(prevalence_2018_sim) != 2L) {
-  stop(
-    "Expected simulated obesity prevalence for men and women in 2018.",
-    call. = FALSE
-  )
-}
+# ── Step 2: age- and sex-specific two-category PAFs ────────────────────────
+# Two exposure categories, each evaluated at a representative BMI:
+#   Overweight: representative BMI 27.5 kg/m² vs reference 22 kg/m²
+#   Obesity:    representative BMI 32.5 kg/m² vs reference 22 kg/m²
+# Multi-category formula: PAF = [p_OW*(RR_OW-1) + p_OB*(RR_OB-1)] /
+#                               [1 + p_OW*(RR_OW-1) + p_OB*(RR_OB-1)]
+pafs_high_bmi <- calculate_obesity_pafs_age_sex(
+  rr_matrix          = gbd_rr_matrix,
+  prevalence_age_sex = prevalence_age_sex_2018,
+  bmi_reference      = 22,
+  bmi_overweight     = 27.5,
+  bmi_obesity        = 32.5
+)
 
-if (anyNA(prevalence_2018_sim$p_obesity)) {
-  stop(
-    "Simulated 2018 obesity prevalence contains missing values.",
-    call. = FALSE
-  )
-}
-
-obesity_costs <- calculate_obesity_costs(
-  rr_obesity = rr_obesity_gbd,
+# ── Step 3: apply PAFs to published 2018 disease costs ─────────────────────
+obesity_costs <- calculate_obesity_costs_age_sex(
+  paf_by_outcome  = pafs_high_bmi$paf_by_outcome,
   outcome_mapping = cost_mapping,
-  prevalence = prevalence_2018_sim,
-  costs_dro = costs_gbd,
-  paf_ow_ob = pafs_gbd
+  costs_dro       = costs_gbd
 )
 
 required_cost_outputs <- c("costs_by_group", "paf_by_group", "total_costs")
-
-missing_cost_outputs <- setdiff(
-  required_cost_outputs,
-  names(obesity_costs)
-)
-
+missing_cost_outputs  <- setdiff(required_cost_outputs, names(obesity_costs))
 if (length(missing_cost_outputs) > 0L) {
   stop(
-    "`calculate_obesity_costs()` is missing output(s): ",
+    "`calculate_obesity_costs_age_sex()` is missing output(s): ",
     paste(missing_cost_outputs, collapse = ", "),
     call. = FALSE
   )
 }
 
-write_result_csv(
-  prevalence_2018_sim,
-  "module3_simulated_obesity_prevalence_2018.csv"
-)
-
-write_result_csv(
-  obesity_costs$costs_by_group,
-  "module3_obesity_costs_by_group_2018.csv"
-)
-
-write_result_csv(
-  obesity_costs$paf_by_group,
-  "module3_obesity_pafs_by_group_2018.csv"
-)
+write_result_csv(prevalence_2018_sim,            "module3_simulated_bmi_prevalence_2018.csv")
+write_result_csv(pafs_high_bmi$paf_by_outcome,   "module3_high_bmi_pafs_by_outcome_2018.csv")
+write_result_csv(obesity_costs$costs_by_group,   "module3_high_bmi_costs_by_group_2018.csv")
 ```
 
 ```{r}
@@ -1877,7 +1860,7 @@ write_result_csv(
 ```{r}
 #| label: tbl-module3-special-groups
 #| echo: false
-#| tbl-cap: "Published cost groups handled outside the GBD-based PAF calculation. Direct obesity-treatment costs are included at 100% attribution. Depression costs are shown for context but excluded from the obesity-attributable total."
+#| tbl-cap: "Published cost groups handled outside the GBD-based PAF calculation. Published direct treatment costs for overweight and obesity are included at 100% attribution as a separate cost component. Depression costs are shown for context but excluded from the GBD-based obesity-attributable total"
 
 bind_rows(
   direct_obesity_costs |>
@@ -1917,7 +1900,7 @@ bind_rows(
 ```{r}
 #| label: tbl-module3-total-costs
 #| echo: false
-#| tbl-cap: "Combined obesity-attributable direct medical costs in 2018. The combined total includes GBD-based downstream disease costs and direct obesity-treatment costs. Depression is excluded because no GBD BMI-to-depression relative risk was used."
+#| tbl-cap:  "Exploratory simulation-linked obesity-focused direct medical cost scenario for 2018. The combined total includes GBD-based downstream disease costs calculated using simulated obesity prevalence and a representative BMI contrast, plus published direct treatment costs for overweight and obesity. Depression is excluded from the GBD-based attributable total because no BMI-to-depression relative risk was applied."
 
 combined_obesity_cost_total |>
   mutate(across(where(is.numeric), ~ round(.x, 0))) |>
@@ -1940,23 +1923,36 @@ combined_obesity_cost_total |>
 - Depression costs are excluded from the attributable total because no BMI-to-depression GBD relative risk is used in this analysis.
 - The estimates are exploratory and internally consistent with the microsimulation; they have not been externally validated against another Portuguese cost year or administrative source.
 
-### 3.7 Cost Trajectories, 2018–2040
+### 5.7 Prevalence-Scaled Cost Trajectories, 2018–2040
 
-Obesity-attributable direct medical costs are projected from the combined 2018
-baseline by scaling annual costs in proportion to simulated obesity prevalence.
-For each year, projected annual cost equals the combined 2018 baseline cost
-multiplied by the ratio of simulated obesity prevalence in that year to
-simulated obesity prevalence in 2018. Annual resource costs are reported in
-constant 2018 euros and in inflation-adjusted 2026 euros. For economic
-evaluation, costs after 2026 are additionally discounted to 2026 present value
-at 3% per year.
+Annual obesity-focused cost scenarios are projected by scaling the combined 2018
+cost scenario in proportion to simulated obesity prevalence. For each year, the
+projected annual cost is calculated as:
 
-The primary trajectory reports annual resource costs in constant 2018 euros
+\[
+C_t = C_{2018}
+\times
+\frac{p_{\mathrm{obesity},t}}
+     {p_{\mathrm{obesity},2018}},
+\]
+
+where \(C_{2018}\) is the exploratory combined 2018 cost scenario and
+\(p_{\mathrm{obesity},t}\) is simulated obesity prevalence in year \(t\).
+
+This approach assumes that, apart from changes in obesity prevalence, the
+disease-cost structure and cost per attributable case remain fixed at their
+2018 values. It therefore produces prevalence-scaled cost scenarios, not
+independently validated forecasts of future Portuguese healthcare expenditure.
+
+Annual resource costs are reported in constant 2018 euros and in
+inflation-adjusted 2026 euros. For economic-evaluation presentation, costs
+after 2026 are additionally discounted to 2026 present value at an annual rate
+of 3%.
+
+The primary trajectory presents annual resource costs in constant 2018 euros
 and inflation-adjusted 2026 euros. Discounted 2026-present-value costs are
-reported separately in the accompanying table for economic-evaluation
-purposes; they should not be interpreted as a projected annual healthcare
-resource-burden trajectory.
-
+reported separately for economic-evaluation purposes and should not be
+interpreted as annual healthcare-resource burden estimates.
 ```{r}
 #| label: cost-trajectory-inputs
 #| include: false
@@ -2055,7 +2051,7 @@ write_result_csv(
 ```{r}
 #| label: fig-cost-trajectory
 #| echo: false
-#| fig-cap: "Projected annual obesity-attributable direct medical costs, 2018–2040. Costs are prevalence-scaled from the 2018 baseline and expressed in constant 2018 euros and 2026 euros. Both series represent annual resource costs and rise as simulated obesity prevalence increases."
+#| fig-cap: "Prevalence-scaled exploratory obesity-focused direct medical cost scenarios, 2018–2040. Costs are scaled from the combined 2018 scenario in proportion to simulated obesity prevalence and are expressed in constant 2018 euros and inflation-adjusted 2026 euros. Both series represent undiscounted annual resource-cost scenarios, not externally validated forecasts of healthcare expenditure."
 
 cost_trajectory |>
   select(
@@ -2119,7 +2115,7 @@ sim_prev_combined |>
 ```{r}
 #| label: tbl-cost-trajectory
 #| echo: false
-#| tbl-cap: "Projected exploratory obesity-focused cost scenario, 2018–2040. Resource costs are shown in constant 2018 euros and as 2026-present-value costs after conversion to 2026 euros and discounting from 2027. Prevalence scales use unrounded simulated values; displayed obesity prevalence is rounded to one decimal place."
+#| tbl-cap: "Prevalence-scaled exploratory obesity-focused cost scenarios, 2018–2040. Annual resource costs are shown in constant 2018 euros and as inflation-adjusted 2026 euros. The final column presents costs discounted to 2026 present value for economic-evaluation purposes. Prevalence scaling uses unrounded simulated values; displayed obesity prevalence is rounded to one decimal place."
 
 cost_trajectory |>
   mutate(

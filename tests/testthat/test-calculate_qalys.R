@@ -155,13 +155,13 @@ test_that(
     ]
 
     expect_equal(
-      normal_weight$mean_qaly_per_person,
+      normal_weight$mean_annual_qaly_per_person,
       0.987,
       tolerance = 1e-10
     )
 
     expect_equal(
-      obesity$mean_qaly_per_person,
+      obesity$mean_annual_qaly_per_person,
       0.940,
       tolerance = 1e-10
     )

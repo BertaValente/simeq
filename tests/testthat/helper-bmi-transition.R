@@ -67,6 +67,10 @@ make_bmi_transitions_for_model_fit <- function() {
     ) +
     (model_data$row_id %% 7) * 0.003
 
+  # transition_weight: required by ponte_fit_bmi_transition().
+  # Use geometric-mean-style weights (all equal here for simplicity).
+  model_data$transition_weight <- 1000
+
   model_data
 }
 

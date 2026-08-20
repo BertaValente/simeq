@@ -3,6 +3,7 @@ title: "An Open-Source Dynamic Microsimulation Framework for Obesity and Health-
 subtitle: "MMOS-PT"
 author: "Berta Valente"
 date: today
+bibliography: references.bib
 link-citations: true
 format:
   html:
@@ -55,9 +56,9 @@ dir.create(figures_dir, recursive = TRUE, showWarnings = FALSE)
 
 devtools::load_all(project_root, quiet = TRUE)
 
-if (!exists("ponte_calculate_yll", mode = "function")) {
+if (!exists("ponte_calculate_qalys", mode = "function")) {
   stop(
-    "`ponte_calculate_yll()` was not loaded by devtools::load_all().",
+    "`ponte_calculate_qalys()` was not loaded by devtools::load_all().",
     call. = FALSE
   )
 }
@@ -886,111 +887,18 @@ ggplot(
 
 
 
-```{r}
-#| label: run-module2-yll
-#| cache: false
-
-yll_results <- ponte_calculate_yll(
-  simulation_output = simulation_historical,
-  ref_age = 75L,
-  min_age = 20L,
-  max_age = 84L
-)
-
-required_yll_outputs <- c("by_year", "overall")
-
-missing_yll_outputs <- setdiff(
-  required_yll_outputs,
-  names(yll_results)
-)
-
-if (length(missing_yll_outputs) > 0L) {
-  stop(
-    "`ponte_calculate_yll()` is missing required output(s): ",
-    paste(missing_yll_outputs, collapse = ", "),
-    call. = FALSE
-  )
-}
-
-write_result_csv(
-  yll_results$by_year,
-  "module2_yll_by_year.csv"
-)
-
-write_result_csv(
-  yll_results$overall,
-  "module2_yll_overall.csv"
-)
-```
-
-```{r}
-#| label: tbl-module2-yll-overall
-#| echo: false
-#| tbl-cap: "Simulated all-cause years of life lost by sex and education level, 1998–2040. Mortality risks are adjusted for BMI category and education level; these estimates are not obesity-attributable."
-
-if (report_uncertainty) {
-  yll_results$overall |>
-    mutate(
-      total_yll_weighted = round(total_yll_weighted),
-      mean_yll_per_death = round(mean_yll_per_death, 2),
-      yll_lo = round(yll_lo, 2),
-      yll_hi = round(yll_hi, 2)
-    ) |>
-    select(
-      sex,
-      education_level,
-      total_yll_weighted,
-      mean_yll_per_death,
-      yll_lo,
-      yll_hi
-    ) |>
-    knitr::kable(
-      col.names = c(
-        "Sex",
-        "Education",
-        "Total YLL (weighted)",
-        "Mean YLL per death",
-        "YLL per death (2.5%)",
-        "YLL per death (97.5%)"
-      )
-    )
-} else {
-  yll_results$overall |>
-  mutate(
-    total_deaths_weighted = round(total_deaths_weighted),
-    total_yll_weighted = round(total_yll_weighted),
-    mean_yll_per_death = round(mean_yll_per_death, 2)
-  ) |>
-  select(
-    sex,
-    education_level,
-    total_deaths_weighted,
-    total_yll_weighted,
-    mean_yll_per_death
-  ) |>
-  knitr::kable(
-    col.names = c(
-      "Sex",
-      "Education",
-      "Deaths (weighted)",
-      "Total YLL (weighted)",
-      "Mean YLL per death"
-    )
-  )
-}
-```
-
-
 ## Module 2: Quality-adjusted Life Years
 
 ### 2.1 Population-weighted QALYs
 
-QALYs are calculated for alive simulated individuals using age- and for the portuguese population:
-Ferreira, P. L., Pereira, L. N., Antunes, P., & Ferreira, L. N. (2023). EQ-5D-5L Portuguese population norms. The European journal of health economics : HEPAC : health economics in prevention and care, 24(9), 1411–1420. https://doi.org/10.1007/s10198-022-01552-9
+QALYs are calculated for alive simulated individuals using age-specific
+EQ-5D-5L utility norms for the Portuguese population [@Ferreira2023].
+BMI-related utility decrements are applied to individuals with BMI at or
+above 25 kg/m², using published estimates for overweight and obesity
+[@OverweightUtilityReview2021].
 
-
-Additionally, BMI-related utility decrements applied
-to individuals with BMI at or above 25 kg/m²: Reviewing evidence of utility decrements associated with overweight/obesity in Australia. PharmacoEcon Outcomes News 873, 21 (2021). https://doi.org/10.1007/s40274-021-7530-5
+No base-case utility decrement is applied to underweight BMI because the
+selected decrement estimates apply to overweight and obesity categories only.
 
 
 This module illustrates the framework’s ability to aggregate health-related
@@ -1039,52 +947,22 @@ if ("overall" %in% names(qaly_results)) {
 qaly_results_total <- qaly_results$by_year |>
   group_by(year) |>
   summarise(
-    total_qalys_weighted = sum(mean_qaly, na.rm = TRUE),
+    total_qalys_weighted = sum(mean_total_qalys_weighted, na.rm = TRUE),
     .groups = "drop"
   )
 ```
 
 ```{r}
-
-#| label: summarise-module2-qalys
-#| include: false
-
-qaly_results_total <- qaly_results$by_year |>
-  group_by(year) |>
-  summarise(
-    total_qalys_weighted = sum(mean_qaly, na.rm = TRUE),
-    .groups = "drop"
-  )
-```
-
-
-```{r}
-
 #| label: tbl-module2-qalys-overall
 #| echo: false
 #| tbl-cap: "Annual total population-weighted QALYs accrued by the living simulated population, 1998–2040."
 
 qaly_results_total |>
   summarise(
-    mean_annual_total_qalys = mean(
-      total_qalys_weighted,
-      na.rm = TRUE
-    ),
-    cumulative_total_qalys = sum(
-      total_qalys_weighted,
-      na.rm = TRUE
-    )
-  )
-      na.rm = TRUE
-    ),
-    cumulative_total_qalys = sum(
-      total_qalys_weighted,
-      na.rm = TRUE
-    )
+    mean_annual_total_qalys = mean(total_qalys_weighted, na.rm = TRUE),
+    cumulative_total_qalys  = sum(total_qalys_weighted,  na.rm = TRUE)
   ) |>
-  mutate(
-    across(everything(), ~ round(.x, 0))
-  ) |>
+  mutate(across(everything(), \(x) round(x, 0))) |>
   knitr::kable(
     col.names = c(
       "Mean annual total QALYs (weighted)",
@@ -1093,7 +971,6 @@ qaly_results_total |>
   )
 ```
 
-```{r}
 ```{r}
 #| label: fig-module2-qaly-trend
 #| echo: false
@@ -1484,22 +1361,20 @@ combined_obesity_cost_total |>
 
 ### 3.5 Cost Trajectories, 2018–2040
 
-Obesity-attributable direct medical costs are projected from the combined 2018 baseline by scaling annual costs in proportion to simulated obesity prevalence. The analysis reports annual resource costs in constant 2018 euros and annual costs expressed as 2026 present values. Costs are converted to 2026 euros using a CPI index of 117.22 (2018 = 100); this is an explicit conservative assumption for the 2025–2026 value. Costs from 2027 onward are discounted to 2026 at 3% per year.
+Obesity-attributable direct medical costs are projected from the combined 2018
+baseline by scaling annual costs in proportion to simulated obesity prevalence.
+For each year, projected annual cost equals the combined 2018 baseline cost
+multiplied by the ratio of simulated obesity prevalence in that year to
+simulated obesity prevalence in 2018. Annual resource costs are reported in
+constant 2018 euros and in inflation-adjusted 2026 euros. For economic
+evaluation, costs after 2026 are additionally discounted to 2026 present value
+at 3% per year.
 
-\[
-\text{Cost}^{2026PV}_{t}
-=
-\text{Cost}^{2018}_{2018}
-\times
-\frac{\mathrm{Prev}_{t}}{\mathrm{Prev}_{2018}}
-\times
-\frac{\mathrm{CPI}_{2026}}{100}
-\times
-\begin{cases}
-1, & t \leq 2026 \\
-(1.03)^{-(t-2026)}, & t > 2026
-\end{cases}
-\]
+The primary trajectory reports annual resource costs in constant 2018 euros
+and inflation-adjusted 2026 euros. Discounted 2026-present-value costs are
+reported separately in the accompanying table for economic-evaluation
+purposes; they should not be interpreted as a projected annual healthcare
+resource-burden trajectory.
 
 ```{r}
 #| label: cost-trajectory-inputs
@@ -1639,29 +1514,25 @@ cost_trajectory |>
 ```{r}
 #| label: fig-cost-prevalence-trajectory
 #| echo: false
-#| fig-cap: "Simulated obesity prevalence underlying the projected cost trajectory, by sex and education level, 2018–2040."
-#| fig-height: 6
+#| fig-cap: "Aggregate simulated obesity prevalence underlying the projected cost trajectory, 2018–2040. The dotted line marks the end of the NHS observation period."
 
-sim_prev_detail |>
-  ggplot(aes(x = year, y = obesity_prev, colour = education_level)) +
+sim_prev_combined |>
+  ggplot(aes(x = year, y = obesity_prev)) +
   geom_vline(
     xintercept = 2019.5,
     linetype = "dotted",
     colour = "grey50"
   ) +
-  geom_line(linewidth = 0.9) +
+  geom_line(linewidth = 1.0) +
   scale_y_continuous(
-    labels = scales::percent_format(accuracy = 1)
+    labels = scales::percent_format(accuracy = 0.1),
+    limits = c(0, NA)
   ) +
-  facet_wrap(~ sex, ncol = 2) +
   labs(
     x = "Year",
-    y = "Obesity prevalence",
-    colour = "Education",
-    caption = "Dotted line = end of NHS observation period."
+    y = "Obesity prevalence"
   ) +
-  theme_minimal(base_size = 12) +
-  theme(legend.position = "bottom")
+  theme_minimal(base_size = 12)
 ```
 
 ```{r}

@@ -182,7 +182,7 @@ digraph pontept {
   ]
 
   bmi [
-    label = 'BMI updating\\nSynthetic-cohort annual transitions\\nBMI limits and categorisation',
+    label = 'BMI updating\\nSynthetic cohorts: NHS 1998\u21922005, 2005\u21922014, 2014\u21922019\\nAnnualised continuous-BMI transitions\\nBMI constrained to 10\u201380 kg/m\u00b2',
     fillcolor = '#F8FAFC'
   ]
 
@@ -551,6 +551,123 @@ ponte_validate_mortality_risks(
   rr_education = rr_education
 )
 ```
+
+## BMI-Transition Model
+
+### Synthetic-cohort construction
+
+Repeated Portuguese NHS cross-sectional survey waves from 1998, 2005, 2014,
+and 2019 were used to construct synthetic cohorts. Because the NHS waves do not
+follow the same respondents longitudinally, the synthetic cohorts represent
+population groups with shared stable characteristics rather than observed
+individual-level trajectories. BMI change is therefore inferred at the
+synthetic-cohort level, not from individual follow-up data.
+
+Synthetic cohorts were defined by **sex** (men, women), **education level**
+(higher, lower), and **five-year age group at the baseline survey wave**
+(12 groups: 20–24, 25–29, ..., 75–79 years). This gives 2 × 2 × 12 = 48
+cohorts per transition interval.
+
+Three consecutive survey-wave pairs were used, producing 144 synthetic
+transitions in total:
+
+```{r}
+#| label: tbl-bmi-transition-intervals
+#| echo: false
+#| tbl-cap: "Synthetic-cohort transition intervals used to estimate annual BMI change. Each interval contributes 48 cohorts (2 sex × 2 education × 12 five-year age groups)."
+
+bmi_transitions |>
+  dplyr::distinct(year_t, year_t1) |>
+  dplyr::mutate(
+    interval_years = year_t1 - year_t,
+    n_cohorts      = 48L
+  ) |>
+  dplyr::arrange(year_t) |>
+  knitr::kable(
+    col.names = c("Earlier NHS wave", "Later NHS wave",
+                  "Interval (years)", "Cohorts")
+  )
+```
+
+For each cohort observed in consecutive survey waves, weighted mean BMI was
+calculated at the earlier ($t_0$) and later ($t_1$) wave using NHS survey
+weights. The annual BMI change for cohort $c$ is:
+
+$$
+\Delta\mathrm{BMI}_{\mathrm{annual},\,c}
+= \frac{\overline{\mathrm{BMI}}_{c,\,t_1} - \overline{\mathrm{BMI}}_{c,\,t_0}}{t_1 - t_0}
+$$
+
+The annualisation is exact: the maximum absolute difference between the stored
+`annual_bmi_change` and the recomputed formula is zero (verified
+programmatically). A transition weight equal to the geometric mean of the two
+wave-level survey weights is assigned to each cohort.
+
+### BMI updating in the simulation
+
+During each one-year simulation cycle, individual BMI is updated by adding the
+predicted annual BMI change from the fitted transition model. BMI is retained
+as a continuous variable throughout the simulation and recategorised after each
+annual update for obesity-prevalence, mortality-risk, utility, and cost
+calculations. Updated BMI is constrained to the plausible range of
+10–80 kg/m² after each cycle.
+
+The base case assumes that estimated annual transition parameters remain
+stationary after the final observed NHS wave (2019). This post-2019
+stationarity assumption is a structural choice and will be examined in
+scenario analyses.
+
+### BMI measurement
+
+BMI in the Portuguese NHS is derived from self-reported height and weight.
+No correction for self-report bias in height or weight was applied in the
+current implementation. A calibration adjustment against objectively measured
+BMI should be considered if a suitable reference dataset is available, as
+self-report bias typically leads to underestimation of BMI and obesity
+prevalence.
+
+### NHS wave characteristics
+
+```{r}
+#| label: tbl-bmi-transition-waves
+#| echo: false
+#| tbl-cap: "Portuguese NHS waves used for synthetic-cohort BMI-transition estimation, restricted to respondents aged 20–79 with valid BMI and survey weight."
+
+bmi_panel |>
+  dplyr::filter(year %in% c(1998L, 2005L, 2014L, 2019L)) |>
+  dplyr::group_by(year) |>
+  dplyr::summarise(
+    survey_records      = dplyr::n(),
+    weighted_population = round(sum(survey_weight, na.rm = TRUE)),
+    mean_bmi            = round(weighted.mean(bmi, w = survey_weight, na.rm = TRUE), 2),
+    .groups = "drop"
+  ) |>
+  knitr::kable(
+    col.names = c("NHS wave", "Survey records",
+                  "Weighted population", "Weighted mean BMI (kg/m²)")
+  )
+```
+
+### Key assumptions
+
+- NHS data are repeated cross-sections, not longitudinal follow-up. BMI change
+  is inferred at the synthetic-cohort level; individual trajectories are not
+  observed.
+- Synthetic-cohort membership is defined by sex, education level (higher/lower),
+  and five-year baseline age group — all treated as stable across waves.
+- Survey weights are used when estimating cohort-level mean BMI and transition
+  parameters.
+- BMI is modelled as a continuous variable and recategorised after each annual
+  update.
+- Annual BMI changes are derived by dividing cohort-level BMI change by the
+  length of the survey interval (7, 9, or 5 years respectively).
+- BMI values are constrained to 10–80 kg/m² after each annual update.
+- The base case applies stationary annual BMI transitions after 2019.
+- Uncertainty in BMI-transition estimates is not yet propagated. Future work
+  will require resampling or parameter draws across multiple simulation
+  replications.
+
+---
 
 ## 3 Module 1: Obesity Trajectories 1998–2040
 

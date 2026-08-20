@@ -1,46 +1,40 @@
-#' Age a living PONTE-PT-O population by one year
+#' Age a living synthetic population by one year
 #'
-#' Increases the age of every person in a living PONTE-PT-O population state
-#' by one year. Ages are capped at `max_age`, so people who reach the upper
-#' model age remain represented at that age in subsequent simulation years.
+#' Ages people by one year, capping at the maximum modelled age rather than
+#' removing them. People who reach `max_age` remain in the state at that age
+#' and continue to be exposed to mortality in subsequent cycles; they exit only
+#' when they die. The calendar year is updated separately by
+#' [ponte_advance_year()].
 #'
-#' @param state A valid living PONTE-PT-O population state.
-#' @param entry_age Integer. Minimum supported age.
-#' @param max_age Integer. Maximum represented age.
+#' @param state A living PONTE-PT population state.
+#' @param entry_age Integer minimum represented age.
+#' @param max_age Integer maximum represented age.
 #'
-#' @return A data frame with ages advanced by one year and capped at
-#'   `max_age`.
+#' @return A living population state with ages advanced by one year (capped at
+#'   `max_age`). Row count is unchanged.
 #' @export
-#'
-#' @examples
-#' population <- data.frame(
-#'   person_id = c("person_1", "person_2"),
-#'   age = c(35L, 84L),
-#'   sex = c("women", "men"),
-#'   education_level = c("high", "medium"),
-#'   bmi = c(23.5, 31.2),
-#'   survey_weight = c(1000, 1200)
-#' )
-#'
-#' state <- ponte_initialise_population(
-#'   population = population,
-#'   settings = ponte_settings()
-#' )
-#'
-#' ponte_age_population(state)
 ponte_age_population <- function(
     state,
     entry_age = 20L,
     max_age = 84L
 ) {
-  ponte_validate_living_state(
-    state = state,
-    entry_age = entry_age,
-    max_age = max_age
-  )
+  if (!is.data.frame(state)) {
+    stop("`state` must be a data frame.", call. = FALSE)
+  }
+
+  if (!"age" %in% names(state)) {
+    stop("`state` must contain an `age` column.", call. = FALSE)
+  }
+
+  if ("alive" %in% names(state) && any(!state$alive, na.rm = TRUE)) {
+    stop(
+      "`state` must contain only living records.",
+      call. = FALSE
+    )
+  }
 
   state$age <- pmin(
-    as.integer(state$age + 1L),
+    as.integer(state$age) + 1L,
     as.integer(max_age)
   )
 

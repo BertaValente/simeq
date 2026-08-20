@@ -126,101 +126,109 @@ inputs, and the three outcome modules.
 ```{r}
 #| label: fig-model-overview
 #| echo: false
-#| fig-cap: "Overview of the PONTE-PT annual dynamic microsimulation framework. Blue nodes are Portugal-specific inputs; green is the simulation engine; yellow nodes are outcome modules; the red node collects verification and calibration outputs."
-#| fig-width: 11
-#| fig-height: 7
+#| fig-cap: "Overview of the PONTE-PT annual dynamic microsimulation framework. Blue nodes denote Portugal-specific inputs, green denotes the annual simulation engine, yellow denotes outputs, and red denotes verification and calibration diagnostics."
+#| fig-width: 10
+#| fig-height: 11
+#| out-width: "100%"
 
 DiagrammeR::grViz("
 digraph pontept {
   graph [
     rankdir = TB,
     bgcolor = 'transparent',
-    nodesep = 0.55,
-    ranksep = 0.75
+    nodesep = 0.45,
+    ranksep = 0.65,
+    pad = 0.2
   ]
 
   node [
     shape = box,
     style = 'rounded,filled',
     fontname = Helvetica,
-    fontsize = 13,
+    fontsize = 16,
     color = '#4A5568',
-    penwidth = 1.2,
-    margin = '0.20,0.12'
+    penwidth = 1.3,
+    margin = '0.22,0.15'
   ]
 
   edge [
     color = '#4A5568',
-    penwidth = 1.3,
-    arrowsize = 0.8
+    penwidth = 1.4,
+    arrowsize = 0.8,
+    fontname = Helvetica,
+    fontsize = 11
   ]
 
   baseline [
-    label = 'Portuguese NHS baseline population, 1998\nAge \u2022 sex \u2022 education \u2022 BMI \u2022 survey weights',
+    label = 'Portuguese NHS baseline population, 1998\\nAge • sex • education • BMI • survey weights',
     fillcolor = '#DCEEFF'
   ]
 
   inputs [
-    label = 'Portugal-specific inputs\nRepeated NHS waves \u2022 entrant donor pools\nLife tables \u2022 EQ-5D-5L norms \u2022 NHS cost baseline',
+    label = 'Portugal-specific inputs\\nRepeated NHS waves • donor pools • life tables\\nEQ-5D-5L norms • relative risks • cost inputs',
     fillcolor = '#DCEEFF'
   ]
 
-  annual [
-    label = 'Annual dynamic microsimulation, 1999\u20132040',
-    fillcolor = '#E8F5E9',
-    fontsize = 16,
-    penwidth = 1.8
+  engine [
+    label = 'Annual dynamic microsimulation\\n1999–2040',
+    fillcolor = '#D9F2D9',
+    fontsize = 18,
+    penwidth = 2
   ]
 
   demographic [
-    label = 'Demographic updating\nAgeing \u2022 mortality \u2022 annual age-20 entrants',
+    label = 'Demographic updating\\nAgeing • mortality • age-20 entrants',
     fillcolor = '#F8FAFC'
   ]
 
   bmi [
-    label = 'BMI updating\nSynthetic-cohort annual transitions\nBMI limits and categorisation',
+    label = 'BMI updating\\nSynthetic-cohort annual transitions\\nBMI limits and categorisation',
     fillcolor = '#F8FAFC'
   ]
 
   mortality [
-    label = 'Mortality adjustment\nLife-table hazards \u00d7 BMI and education relative risks',
+    label = 'Mortality adjustment\\nLife-table hazards × BMI and education RRs',
     fillcolor = '#F8FAFC'
   ]
 
   obesity [
-    label = 'Obesity trajectories\nBMI and obesity prevalence\nby sex and education',
+    label = 'BMI and weight-status trajectories\\nMean BMI • overweight • obesity\\nby sex and education',
     fillcolor = '#FFF3CD'
   ]
 
   qalys [
-    label = 'Quality-adjusted life years\nPortuguese EQ-5D-5L norms\nBMI utility decrements',
+    label = 'Quality-adjusted life years\\nPortuguese EQ-5D-5L norms\\nBMI utility decrements',
     fillcolor = '#FFF3CD'
   ]
 
   costs [
-    label = 'Obesity-attributable costs\nGBD-based PAFs + Portuguese 2018 cost baseline\nPrevalence-scaled projections',
+    label = 'Overweight- and obesity-attributable costs\\nGBD PAFs + Portuguese 2018\\ncost baseline • prevalence-scaled projections',
     fillcolor = '#FFF3CD'
   ]
 
   validation [
-    label = 'Verification and calibration diagnostics\nDependent NHS temporal comparison\nMortality input consistency',
+    label = 'Verification and calibration diagnostics\\nDependent NHS temporal comparison\\nMortality input consistency',
     fillcolor = '#FDE2E2'
   ]
 
-  baseline -> annual
-  inputs -> annual
+  { rank = same; baseline; inputs }
+  { rank = same; demographic; bmi; mortality }
+  { rank = same; obesity; qalys; costs }
 
-  annual -> demographic
-  annual -> bmi
-  annual -> mortality
+  baseline -> engine
+  inputs -> engine
 
-  demographic -> annual [label = 'next cycle', fontsize = 10]
-  bmi -> annual [label = 'updated BMI', fontsize = 10]
-  mortality -> annual [label = 'survivors', fontsize = 10]
+  engine -> demographic
+  engine -> bmi
+  engine -> mortality
 
-  annual -> obesity
-  annual -> qalys
-  annual -> costs
+  demographic -> engine [label = 'next cycle']
+  bmi -> engine [label = 'updated BMI']
+  mortality -> engine [label = 'survivors']
+
+  engine -> obesity
+  engine -> qalys
+  engine -> costs
 
   obesity -> validation
   mortality -> validation
@@ -375,9 +383,15 @@ write_result_csv(donor_pool_sizes, "module1_donor_pool_sizes.csv")
 
 Three objects must be constructed before the simulation can run:
 
-- **`rr_bmi`** — all-cause mortality relative risks by BMI category and sex, with normal weight as reference.
-- **`rr_education`** — all-cause mortality relative risks by education level.
-- **`bmi_transition_model`** — synthetic-cohort BMI-transition model fitted from the repeated NHS cross-sections.
+- **`rr_bmi`** — all-cause mortality relative risks by BMI category and sex,
+  with normal weight as reference. Relative risks are based on the Global BMI
+  Mortality Collaboration meta-analysis [@DiAngelantonio2016].
+
+- **`rr_education`** — all-cause mortality relative risks by education level,
+  based on the IHME-CHAIN Collaborators meta-analysis [@IHMECHAIN2024].
+
+- **`bmi_transition_model`** — synthetic-cohort BMI-transition model fitted
+  from repeated Portuguese NHS cross-sections.
 
 ```{r}
 #| label: build-rr-bmi
@@ -1159,17 +1173,67 @@ ggplot(
 > *internally consistent economic scenario driven by the microsimulation*, not
 > as externally validated cost estimates.
 
-Obesity-attributable direct medical costs are estimated from published
-overweight-and-obesity direct medical costs for Portugal in 2018
-[@Borges2025]. GBD 2019 BMI relative risks are used to derive obesity-only
-population-attributable fractions (PAFs) for downstream disease groups.
+Overweight- and obesity-attributable direct medical costs are estimated from
+the published Portuguese 2018 cost-of-illness study [@Borges2025]. GBD 2019
+BMI relative risks are used to derive population-attributable fractions (PAFs)
+for downstream disease groups.
+
+> **Current implementation note.** The published Portuguese 2018 cost matrix
+> includes overweight- and obesity-related costs. The current implementation
+> recalculates downstream disease attribution using an obesity-only risk
+> approximation at a representative BMI of 32 kg/m²; consequently, the outputs
+> should be interpreted as an exploratory obesity-focused scenario, not as a
+> full replication of the overweight-and-obesity cost estimate reported by
+> Borges et al. [@Borges2025].
+>
+> A subsequent implementation will model overweight and obesity as separate BMI
+> exposure categories, using simulated prevalences and category-specific
+> GBD-derived relative risks at representative BMI values of 27.5 kg/m²
+> (overweight) and 32.5 kg/m² (obesity).
 
 Direct costs of obesity treatment are added at 100% attribution by definition.
 Depression costs are retained as a descriptive published-cost category but are
 excluded from the obesity-attributable total because GBD 2019 does not provide
 a BMI-to-depression relative risk suitable for this PAF calculation.
 
-### 3.1 GBD Relative Risks for PAF Derivation
+### 3.1 Published 2018 Cost Inputs
+
+```{r}
+#| label: tbl-module3-published-cost-inputs
+#| echo: false
+#| tbl-cap: "Published Portuguese direct medical cost inputs for overweight and obesity in 2018, by disease group [@Borges2025]. Values are thousands of 2018 euros, ordered by total cost."
+
+disease_labels <- tibble::tribble(
+  ~disease_group,               ~description,
+  "obesity_overweight",         "Overweight and obesity treatment (direct)",
+  "diabetes_mellitus_type_2",   "Type 2 diabetes mellitus",
+  "ischaemic_heart_disease",    "Ischaemic heart disease",
+  "stroke",                     "Stroke",
+  "hypertensive_hd_af",         "Hypertensive heart disease and atrial fibrillation",
+  "cancer_all",                 "Obesity-related cancers (all)",
+  "osteoarthritis",             "Osteoarthritis",
+  "gout",                       "Gout",
+  "depression",                 "Depression (excluded from attributable total)",
+  "alzheimers_disease",         "Alzheimer's disease",
+  "chronic_kidney_disease",     "Chronic kidney disease",
+  "gallbladder_biliary_diseases","Gallbladder and biliary diseases",
+  "asthma",                     "Asthma",
+  "cataracts",                  "Cataracts"
+)
+
+costs_2018 |>
+  dplyr::left_join(disease_labels, by = "disease_group") |>
+  dplyr::arrange(dplyr::desc(total)) |>
+  dplyr::mutate(dplyr::across(c(inpatient, outpatient, pharmacological, total),
+                              \(x) round(x, 0))) |>
+  dplyr::select(description, inpatient, outpatient, pharmacological, total) |>
+  knitr::kable(
+    col.names = c("Disease group", "Inpatient (k\u20ac)",
+                  "Outpatient (k\u20ac)", "Pharmacological (k\u20ac)", "Total (k\u20ac)")
+  )
+```
+
+### 3.2 GBD Relative Risks for PAF Derivation
 
 ```{r}
 #| label: load-gbd-rr
@@ -1195,12 +1259,13 @@ gbd_rr_matrix <- read_gbd_bmi_rr(path = gbd_rr_path)
 
 rr_obesity_gbd <- transform_bmi_relative_risks(
   rr_matrix = gbd_rr_matrix,
-  bmi_reference = 22,
-  bmi_obesity = 32
+bmi_reference = 22,
+bmi_overweight = 27.5,
+bmi_obesity = 32.5
 )
 ```
 
-### 3.2 Published 2018 Cost Inputs
+### 3.3 Cost Data Loading and Validation
 
 Published costs are expressed in thousands of 2018 euros from the Portuguese
 National Health Service perspective [@Borges2025].
@@ -1240,7 +1305,7 @@ if (length(missing_cost_columns) > 0L) {
 > and audit input. The PAF calculation below uses simulated 2018 obesity
 > prevalence to maintain internal consistency with the microsimulation.
 
-### 3.3 Obesity-attributable Costs in 2018
+### 3.4 Obesity-attributable Costs in 2018
 
 ```{r}
 #| label: run-module3-costs
@@ -1506,7 +1571,7 @@ combined_obesity_cost_total |>
   )
 ```
 
-### 3.4 Interpretation and limitations
+### 3.5 Interpretation and limitations
 
 - The GBD relative-risk transformation evaluates the risk contrast at BMI 32 kg/m² relative to BMI 22 kg/m². It is a representative obesity-versus-reference scenario, not a continuous BMI-distribution PAF calculation.
 - The published direct-cost matrix includes overweight-and-obesity costs, whereas downstream disease attribution is recalculated for obesity only. Do not interpret the resulting totals as directly comparable without this qualification.
@@ -1514,7 +1579,7 @@ combined_obesity_cost_total |>
 - Depression costs are excluded from the attributable total because no BMI-to-depression GBD relative risk is used in this analysis.
 - The estimates are exploratory and internally consistent with the microsimulation; they have not been externally validated against another Portuguese cost year or administrative source.
 
-### 3.5 Cost Trajectories, 2018–2040
+### 3.6 Cost Trajectories, 2018–2040
 
 Obesity-attributable direct medical costs are projected from the combined 2018
 baseline by scaling annual costs in proportion to simulated obesity prevalence.

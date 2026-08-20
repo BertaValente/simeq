@@ -131,7 +131,7 @@ bmi_cat <- function(bmi) {
 
 > **Interpretation of current results.** All numerical results are based on one stochastic simulation run. Monte Carlo uncertainty has not yet been quantified; estimates should therefore be interpreted as illustrative of current model behaviour rather than stable point estimates. Stochastic uncertainty analysis using repeated simulations is planned before final reporting.
 
----
+* * *
 
 The Portuguese implementation is provided through **PONTE-PT**, an open-source, modular R package for annual dynamic microsimulation. It models adult BMI trajectories, mortality, health-related quality of life, and obesity-attributable economic outcomes.
 
@@ -269,7 +269,7 @@ The table below distinguishes components that are generally reusable from those 
 | Model logic | Annual individual updating and outcome aggregation | Reusable subject to structural-assumption review |
 | Validation routines | Automated comparison framework | Reuse with local targets and predefined criteria |
 
----
+* * *
 
 ## Verification, Validation, and Uncertainty
 
@@ -333,7 +333,7 @@ The NHS 2005, 2014, and 2019 survey waves contributed to BMI-transition estimati
 As noted above, the current report is based on one stochastic simulation run and does not quantify Monte Carlo uncertainty. Before final reporting, stochastic uncertainty will be assessed using at least 100 independent simulation replications with different random seeds and a pre-specified population size per replication.
 
 
----
+* * *
 
 ## 1 Input Preparation
 
@@ -646,7 +646,7 @@ The simulation stores annual demographic and health states for each individual. 
 - BMI transitions for ages 80–84 are extrapolated beyond the observed 20–79-year age range.
 - Uncertainty in BMI-transition parameter estimates is not yet propagated.
 
----
+* * *
 
 ## 3 Module 1: Obesity Trajectories 1998–2040
 
@@ -676,11 +676,6 @@ Entrants are assigned the weighted age-20 NHS population size from the survey wa
 #| label: entrant-targets-module1
 
 entrant_by_wave <- bmi_panel |>
-    sim_mx_per1000 = round(sim_mx_per1000, 2),
-    mx_ratio = round(mx_ratio, 3),
-    mx_abs_diff = round(mx_abs_diff, 2)
-  ) |>
-  select(sex, age_band, lt_mx_per1000, sim_mx_per1000, mx_ratio, mx_abs_diff) |>
   filter(age == 20L, year %in% c(1998L, 2005L, 2014L, 2019L)) |>
   group_by(year, sex) |>
   summarise(

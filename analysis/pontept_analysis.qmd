@@ -1196,7 +1196,65 @@ Depression costs are retained as a descriptive published-cost category but are
 excluded from the obesity-attributable total because GBD 2019 does not provide
 a BMI-to-depression relative risk suitable for this PAF calculation.
 
-### 3.1 Published 2018 Cost Inputs
+### 3.1 Source Study and Exposure Definition
+
+Borges et al. estimated the Portuguese burden and direct medical costs of
+**overweight and obesity combined**, using prevalence estimates from the national
+INSEF 2015 survey [@Borges2025]. In that study, high-BMI exposure was defined as
+BMI at or above 25 kg/m². The published INSEF 2015 prevalence estimates are:
+
+- **Overweight** (BMI 25.0–29.9 kg/m²): 45.4 % men, 33.1 % women (overall 38.9 %)
+- **Obesity** (BMI ≥ 30 kg/m²): 24.9 % men, 32.1 % women (overall 28.7 %)
+- **High BMI** (BMI ≥ 25 kg/m²): 70.3 % men, 65.2 % women
+
+The present framework uses the Borges et al. 2018 cost matrix as its
+Portuguese cost baseline. The current implementation applies an obesity-focused
+attribution scenario using simulated obesity prevalence. A full replication of
+the Borges et al. high-BMI definition requires separate prevalence estimates for
+overweight and obesity and category-specific disease relative risks.
+
+For transparency, the table below presents the published INSEF 2015 exposure
+prevalence used by Borges et al. alongside the corresponding simulated 2018
+prevalence.
+
+Borges et al. reported costs for overweight and obesity combined, whereas the
+current simulation-based PAF implementation applies an obesity-focused
+representative risk contrast (BMI 32 vs. BMI 22 kg/m²). Therefore, the present
+cost estimates should not be interpreted as a direct replication of the
+published overweight-and-obesity cost total.
+
+```{r}
+#| label: tbl-module3-exposure-prevalence
+#| echo: false
+#| tbl-cap: "Published INSEF 2015 high-BMI prevalence used by Borges et al. and corresponding simulated population prevalence at 2018, by sex. Overweight = BMI 25.0–29.9 kg/m²; obesity = BMI ≥ 30 kg/m²; high BMI = BMI ≥ 25 kg/m²."
+
+simulated_bmi_prevalence_2018 <- simulation_historical |>
+  dplyr::filter(alive, year == 2018L) |>
+  dplyr::group_by(sex) |>
+  dplyr::summarise(
+    p_overweight = weighted.mean(bmi >= 25 & bmi < 30, w = survey_weight, na.rm = TRUE),
+    p_obesity    = weighted.mean(bmi >= 30,             w = survey_weight, na.rm = TRUE),
+    p_high_bmi   = weighted.mean(bmi >= 25,             w = survey_weight, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  dplyr::mutate(
+    sex    = dplyr::recode(sex, men = "Males", women = "Females"),
+    source = "Simulated population, 2018"
+  )
+
+dplyr::bind_rows(
+  obesity_prevalence_2018() |> dplyr::mutate(source = "INSEF 2015 / Borges et al."),
+  simulated_bmi_prevalence_2018
+) |>
+  dplyr::mutate(dplyr::across(dplyr::ends_with("bmi") | dplyr::starts_with("p_"),
+                              \(x) scales::percent(x, accuracy = 0.1))) |>
+  dplyr::select(source, sex, p_overweight, p_obesity, p_high_bmi) |>
+  knitr::kable(
+    col.names = c("Source", "Sex", "Overweight", "Obesity", "BMI \u226525 kg/m\u00b2")
+  )
+```
+
+### 3.2 Published 2018 Cost Inputs
 
 ```{r}
 #| label: tbl-module3-published-cost-inputs
@@ -1233,7 +1291,18 @@ costs_2018 |>
   )
 ```
 
-### 3.2 GBD Relative Risks for PAF Derivation
+### 3.3 GBD Relative Risks for PAF Derivation
+
+Disease-specific relative risks for high BMI were obtained from the Global
+Burden of Disease Study 2019 relative-risk dataset [@GBD2019RR]. The GBD 2019
+comparative risk-assessment framework treats high BMI as a continuous exposure
+and links it to specific disease outcomes through age- and sex-specific
+relative-risk functions.
+
+For the current obesity-focused scenario, the continuous relative-risk functions
+are evaluated at BMI 32 kg/m² relative to BMI 22 kg/m². This is a
+representative obesity-versus-reference approximation; it is not the full
+continuous exposure-distribution PAF used in GBD analyses.
 
 ```{r}
 #| label: load-gbd-rr
@@ -1265,7 +1334,7 @@ bmi_obesity = 32.5
 )
 ```
 
-### 3.3 Cost Data Loading and Validation
+### 3.4 Cost Data Loading and Validation
 
 Published costs are expressed in thousands of 2018 euros from the Portuguese
 National Health Service perspective [@Borges2025].
@@ -1305,7 +1374,7 @@ if (length(missing_cost_columns) > 0L) {
 > and audit input. The PAF calculation below uses simulated 2018 obesity
 > prevalence to maintain internal consistency with the microsimulation.
 
-### 3.4 Obesity-attributable Costs in 2018
+### 3.5 Obesity-attributable Costs in 2018
 
 ```{r}
 #| label: run-module3-costs
@@ -1571,7 +1640,7 @@ combined_obesity_cost_total |>
   )
 ```
 
-### 3.5 Interpretation and limitations
+### 3.6 Interpretation and limitations
 
 - The GBD relative-risk transformation evaluates the risk contrast at BMI 32 kg/m² relative to BMI 22 kg/m². It is a representative obesity-versus-reference scenario, not a continuous BMI-distribution PAF calculation.
 - The published direct-cost matrix includes overweight-and-obesity costs, whereas downstream disease attribution is recalculated for obesity only. Do not interpret the resulting totals as directly comparable without this qualification.
@@ -1579,7 +1648,7 @@ combined_obesity_cost_total |>
 - Depression costs are excluded from the attributable total because no BMI-to-depression GBD relative risk is used in this analysis.
 - The estimates are exploratory and internally consistent with the microsimulation; they have not been externally validated against another Portuguese cost year or administrative source.
 
-### 3.6 Cost Trajectories, 2018–2040
+### 3.7 Cost Trajectories, 2018–2040
 
 Obesity-attributable direct medical costs are projected from the combined 2018
 baseline by scaling annual costs in proportion to simulated obesity prevalence.

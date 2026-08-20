@@ -2,19 +2,31 @@
 % Please edit documentation in R/obesity_cost_prevalence.R
 \name{obesity_prevalence_2018}
 \alias{obesity_prevalence_2018}
-\title{Create observed 2018 obesity prevalence input}
+\title{Create observed INSEF 2015 BMI-weight-status prevalence}
 \usage{
 obesity_prevalence_2018()
 }
 \value{
-A tibble with sex and obesity prevalence as a proportion.
+A tibble with columns \code{sex}, \code{p_overweight},
+\code{p_obesity}, and \code{p_high_bmi} (all as proportions).
 }
 \description{
-Returns sex-specific obesity prevalence from INSEF 2015, used as the
-observed prevalence input for the published 2018 cost-of-illness anchor.
+Returns sex-specific overweight and obesity prevalence from the Portuguese
+INSEF 2015 national health survey, as reported in Borges et al. (2025) and
+used as the observed prevalence anchor for the 2018 cost-of-illness baseline.
+}
+\details{
+Prevalence estimates:
+\itemize{
+\item Overweight (BMI 25.0–29.9 kg/m²): 45.4 \\% men, 33.1 \\% women
+(overall 38.9 \\%)
+\item Obesity (BMI ≥ 30 kg/m²): 24.9 \\% men, 32.1 \\% women
+(overall 28.7 \\%)
+\item High BMI (BMI ≥ 25 kg/m²): 70.3 \\% men, 65.2 \\% women
+}
 }
 \references{
-Borges M, et al. Disease and Economic Burden of Overweight
-and Obesity in Portugal. Obesity Facts. 2025;18:107-120.
+Borges M, et al. Burden of Disease and Cost of Illness of
+Overweight and Obesity in Portugal. Obesity Facts. 2025;18(2):107-120.
 doi:10.1159/000541781.
 }

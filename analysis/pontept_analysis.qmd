@@ -111,6 +111,161 @@ bmi_cat <- function(bmi) {
 }
 ```
 
+## Model Overview
+
+The Portuguese implementation is delivered as the **PONTE-PT** R package:
+an open-source, modular toolkit for annual dynamic microsimulation of adult
+BMI trajectories, mortality, health-related quality of life, and
+obesity-attributable economic outcomes. The package separates reusable model
+logic from Portuguese parameter inputs, allowing adaptation to other
+jurisdictions after local data replacement, calibration, and validation.
+
+@fig-model-overview shows the framework's annual loop, Portugal-specific
+inputs, and the three outcome modules.
+
+```{r}
+#| label: fig-model-overview
+#| echo: false
+#| fig-cap: "Overview of the PONTE-PT annual dynamic microsimulation framework. Blue nodes are Portugal-specific inputs; green is the simulation engine; yellow nodes are outcome modules; the red node collects verification and calibration outputs."
+#| fig-width: 11
+#| fig-height: 7
+
+DiagrammeR::grViz("
+digraph pontept {
+  graph [
+    rankdir = TB,
+    bgcolor = 'transparent',
+    nodesep = 0.55,
+    ranksep = 0.75
+  ]
+
+  node [
+    shape = box,
+    style = 'rounded,filled',
+    fontname = Helvetica,
+    fontsize = 13,
+    color = '#4A5568',
+    penwidth = 1.2,
+    margin = '0.20,0.12'
+  ]
+
+  edge [
+    color = '#4A5568',
+    penwidth = 1.3,
+    arrowsize = 0.8
+  ]
+
+  baseline [
+    label = 'Portuguese NHS baseline population, 1998\nAge \u2022 sex \u2022 education \u2022 BMI \u2022 survey weights',
+    fillcolor = '#DCEEFF'
+  ]
+
+  inputs [
+    label = 'Portugal-specific inputs\nRepeated NHS waves \u2022 entrant donor pools\nLife tables \u2022 EQ-5D-5L norms \u2022 NHS cost baseline',
+    fillcolor = '#DCEEFF'
+  ]
+
+  annual [
+    label = 'Annual dynamic microsimulation, 1999\u20132040',
+    fillcolor = '#E8F5E9',
+    fontsize = 16,
+    penwidth = 1.8
+  ]
+
+  demographic [
+    label = 'Demographic updating\nAgeing \u2022 mortality \u2022 annual age-20 entrants',
+    fillcolor = '#F8FAFC'
+  ]
+
+  bmi [
+    label = 'BMI updating\nSynthetic-cohort annual transitions\nBMI limits and categorisation',
+    fillcolor = '#F8FAFC'
+  ]
+
+  mortality [
+    label = 'Mortality adjustment\nLife-table hazards \u00d7 BMI and education relative risks',
+    fillcolor = '#F8FAFC'
+  ]
+
+  obesity [
+    label = 'Obesity trajectories\nBMI and obesity prevalence\nby sex and education',
+    fillcolor = '#FFF3CD'
+  ]
+
+  qalys [
+    label = 'Quality-adjusted life years\nPortuguese EQ-5D-5L norms\nBMI utility decrements',
+    fillcolor = '#FFF3CD'
+  ]
+
+  costs [
+    label = 'Obesity-attributable costs\nGBD-based PAFs + Portuguese 2018 cost baseline\nPrevalence-scaled projections',
+    fillcolor = '#FFF3CD'
+  ]
+
+  validation [
+    label = 'Verification and calibration diagnostics\nDependent NHS temporal comparison\nMortality input consistency',
+    fillcolor = '#FDE2E2'
+  ]
+
+  baseline -> annual
+  inputs -> annual
+
+  annual -> demographic
+  annual -> bmi
+  annual -> mortality
+
+  demographic -> annual [label = 'next cycle', fontsize = 10]
+  bmi -> annual [label = 'updated BMI', fontsize = 10]
+  mortality -> annual [label = 'survivors', fontsize = 10]
+
+  annual -> obesity
+  annual -> qalys
+  annual -> costs
+
+  obesity -> validation
+  mortality -> validation
+}
+")
+```
+
+### R Package Implementation
+
+PONTE-PT is implemented as an R package and loaded from the local development
+repository using `devtools::load_all()`. Core package functions prepare model
+inputs, construct synthetic BMI cohorts, fit annual BMI-transition models,
+initialise and update the simulated population, apply mortality, add entrant
+cohorts, calculate QALYs, estimate obesity-attributable costs, and produce
+validation diagnostics.
+
+The analysis is reproducible through version-controlled source code, fixed
+random seeds, structured input objects, automated output exports, and this
+Quarto-based reporting workflow. This report uses the Portuguese parameter set;
+the model logic is reusable, whereas population, BMI-transition, demographic,
+mortality, utility, and cost inputs require local reassessment for transfer to
+another setting.
+
+The analysis was run with the development version of the PONTE-PT R package
+(version `r packageVersion("pontept")`, accessed `r Sys.Date()`).
+
+### Jurisdictional Transferability
+
+The table below identifies which components are reusable and which require
+local replacement when adapting PONTE-PT to another jurisdiction.
+
+| Parameter group | Portuguese implementation | Requirement for another jurisdiction |
+|---|---|---|
+| Baseline population | NHS-based synthetic 1998 adult population | Replace with a local representative baseline population |
+| BMI dynamics | Synthetic cohorts from Portuguese NHS waves | Re-estimate using local repeated cross-sectional or longitudinal data |
+| Entrant cohorts | NHS donor pools and survey-weight targets | Replace with local entrant distributions and population targets |
+| Mortality and demography | Portuguese life table and demographic inputs | Replace with local mortality and demographic data |
+| Relative risks | Literature-derived BMI and education mortality RRs | Assess local applicability; use local estimates where possible |
+| Utilities | Portuguese EQ-5D-5L age norms and external BMI decrements | Replace or reassess local valuation and utility evidence |
+| Costs | Portuguese NHS 2018 direct-cost matrix | Replace with local payer-perspective costs and price year |
+| Model logic | Annual individual updating and outcome aggregation | Reusable subject to structural-assumption review |
+| Validation routines | Automated comparison framework | Reuse with local targets and predefined criteria |
+
+---
+
 ## 1 Input Preparation
 
 Model inputs were pre-processed before simulation and include the 1998 baseline population, repeated NHS BMI data, mortality life tables, entrant donor pools, and model settings. The analysis loads the prepared input object and validates the required components before simulation.

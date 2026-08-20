@@ -2,23 +2,35 @@
 % Please edit documentation in R/transform_bmi_relative_risks.R
 \name{transform_bmi_relative_risks}
 \alias{transform_bmi_relative_risks}
-\title{Transform BMI relative risks to an obesity contrast}
+\title{Transform BMI relative risks to exposure-versus-reference contrasts}
 \usage{
-transform_bmi_relative_risks(rr_matrix, bmi_reference = 22, bmi_obesity = 32)
+transform_bmi_relative_risks(
+  rr_matrix,
+  bmi_reference = 22,
+  bmi_obesity = 32,
+  bmi_overweight = NULL
+)
 }
 \arguments{
 \item{rr_matrix}{A data frame returned by \code{read_gbd_bmi_rr()}.}
 
-\item{bmi_reference}{Reference BMI value.}
+\item{bmi_reference}{Reference (normal-weight) BMI value. Default 22 kg/m².}
 
-\item{bmi_obesity}{BMI value representing obesity.}
+\item{bmi_obesity}{Representative obesity BMI value. Default 32 kg/m².}
+
+\item{bmi_overweight}{Optional representative overweight BMI value
+(e.g. 27.5 kg/m²). When supplied, overweight-versus-reference relative
+risks are returned as additional columns \code{rr_overweight_vs_normal},
+\code{rr_overweight_vs_normal_lower}, and \code{rr_overweight_vs_normal_upper}.}
 }
 \value{
-A tibble containing one obesity-versus-reference relative risk per
-outcome and sex, with lower and upper uncertainty bounds when available.
+A tibble with one row per disease outcome and sex. Columns always
+include the obesity-versus-reference relative risks. Overweight-versus-
+reference columns are added when \code{bmi_overweight} is not \code{NULL}.
 }
 \description{
-Converts GBD relative risks reported per 5 kg/m2 increase in BMI into
-relative risks for an obesity BMI value compared with a reference BMI value.
-The transformed risks are averaged across age bands for each outcome and sex.
+Converts GBD relative risks (reported per 5 kg/m² increase in BMI) into
+relative risks at representative overweight and/or obesity BMI values
+compared with a reference BMI. Relative risks are averaged across age bands
+for each disease outcome and sex.
 }

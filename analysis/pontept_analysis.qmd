@@ -126,114 +126,107 @@ inputs, and the three outcome modules.
 ```{r}
 #| label: fig-model-overview
 #| echo: false
-#| fig-cap: "Overview of the PONTE-PT annual dynamic microsimulation framework. Blue nodes denote Portugal-specific inputs, green denotes the annual simulation engine, yellow denotes outputs, and red denotes verification and calibration diagnostics."
-#| fig-width: 10
-#| fig-height: 11
-#| out-width: "100%"
+#| fig-cap: "Overview of the PONTE-PT annual dynamic microsimulation framework. Blue = Portugal-specific inputs; green = annual simulation engine (processes shown as bullet points inside the node); yellow = outcome modules; red = verification and calibration diagnostics."
 
+# width/height control the HTML widget size directly;
+# fig-width/fig-height do not resize DiagrammeR widgets.
 DiagrammeR::grViz("
 digraph pontept {
+
   graph [
-    rankdir = TB,
-    bgcolor = 'transparent',
-    nodesep = 0.45,
-    ranksep = 0.65,
-    pad = 0.2
+    rankdir  = TB
+    bgcolor  = transparent
+    nodesep  = 0.70
+    ranksep  = 0.90
+    splines  = ortho
+    pad      = 0.45
   ]
 
   node [
-    shape = box,
-    style = 'rounded,filled',
-    fontname = Helvetica,
-    fontsize = 16,
-    color = '#4A5568',
-    penwidth = 1.3,
-    margin = '0.22,0.15'
+    shape    = box
+    style    = filled
+    fontname = Helvetica
+    fontsize = 18
+    penwidth = 2.0
+    margin   = '0.35,0.22'
   ]
 
   edge [
-    color = '#4A5568',
-    penwidth = 1.4,
-    arrowsize = 0.8,
-    fontname = Helvetica,
-    fontsize = 11
+    color     = '#4A5568'
+    penwidth  = 2.2
+    arrowsize = 1.1
   ]
 
+  // ── Row 1: inputs ──────────────────────────────────────────────────
   baseline [
-    label = 'Portuguese NHS baseline population, 1998\\nAge • sex • education • BMI • survey weights',
+    label     = 'Portuguese NHS baseline population, 1998\nAge  ·  sex  ·  education  ·  BMI  ·  survey weights'
     fillcolor = '#DCEEFF'
+    color     = '#1B6CA8'
+    penwidth  = 2.5
   ]
 
   inputs [
-    label = 'Portugal-specific inputs\\nRepeated NHS waves • donor pools • life tables\\nEQ-5D-5L norms • relative risks • cost inputs',
+    label     = 'Portugal-specific inputs\nNHS waves  ·  donor pools  ·  life tables\nEQ-5D-5L norms  ·  relative risks  ·  cost inputs'
     fillcolor = '#DCEEFF'
+    color     = '#1B6CA8'
+    penwidth  = 2.5
   ]
 
+  // ── Row 2: simulation engine (annual processes as bullet points) ────
   engine [
-    label = 'Annual dynamic microsimulation\\n1999–2040',
-    fillcolor = '#D9F2D9',
-    fontsize = 18,
-    penwidth = 2
+    label     = 'Annual dynamic microsimulation  ·  1999–2040\n\n\u2022  Ageing and age-20 entrant cohorts\n\u2022  BMI updating from synthetic NHS cohorts (1998\u21922005, 2005\u21922014, 2014\u21922019)\n\u2022  Mortality: life-table hazards \u00d7 BMI and education RRs\n\u2022  BMI recategorised after each annual update'
+    fillcolor = '#D9F2D9'
+    color     = '#2E8B2E'
+    fontsize  = 19
+    penwidth  = 3.0
   ]
 
-  demographic [
-    label = 'Demographic updating\\nAgeing • mortality • age-20 entrants',
-    fillcolor = '#F8FAFC'
-  ]
-
-  bmi [
-    label = 'BMI updating\\nSynthetic cohorts: NHS 1998\u21922005, 2005\u21922014, 2014\u21922019\\nAnnualised continuous-BMI transitions\\nBMI constrained to 10\u201380 kg/m\u00b2',
-    fillcolor = '#F8FAFC'
-  ]
-
-  mortality [
-    label = 'Mortality adjustment\\nLife-table hazards × BMI and education RRs',
-    fillcolor = '#F8FAFC'
-  ]
-
+  // ── Row 3: outcome modules ─────────────────────────────────────────
   obesity [
-    label = 'BMI and weight-status trajectories\\nMean BMI • overweight • obesity\\nby sex and education',
+    label     = 'BMI and weight-status trajectories\nMean BMI  ·  overweight  ·  obesity\nby sex and education'
     fillcolor = '#FFF3CD'
+    color     = '#B7950B'
+    penwidth  = 2.2
   ]
 
   qalys [
-    label = 'Quality-adjusted life years\\nPortuguese EQ-5D-5L norms\\nBMI utility decrements',
+    label     = 'Quality-adjusted life years\nPortuguese EQ-5D-5L norms\nBMI utility decrements'
     fillcolor = '#FFF3CD'
+    color     = '#B7950B'
+    penwidth  = 2.2
   ]
 
   costs [
-    label = 'Overweight- and obesity-attributable costs\\nGBD PAFs + Portuguese 2018\\ncost baseline • prevalence-scaled projections',
+    label     = 'Overweight- and obesity-attributable costs\nGBD PAFs  ·  2018 Portuguese cost baseline\nPrevalence-scaled projections'
     fillcolor = '#FFF3CD'
+    color     = '#B7950B'
+    penwidth  = 2.2
   ]
 
+  // ── Row 4: diagnostics ─────────────────────────────────────────────
   validation [
-    label = 'Verification and calibration diagnostics\\nDependent NHS temporal comparison\\nMortality input consistency',
+    label     = 'Verification and calibration diagnostics\nDependent NHS temporal comparison  ·  Mortality input consistency'
     fillcolor = '#FDE2E2'
+    color     = '#C0392B'
+    penwidth  = 2.2
   ]
 
-  { rank = same; baseline; inputs }
-  { rank = same; demographic; bmi; mortality }
-  { rank = same; obesity; qalys; costs }
+  // ── Layout ─────────────────────────────────────────────────────────
+  { rank = same; baseline; inputs  }
+  { rank = same; obesity;  qalys;  costs }
 
+  // ── Edges (straight, no feedback arrows) ───────────────────────────
   baseline -> engine
-  inputs -> engine
-
-  engine -> demographic
-  engine -> bmi
-  engine -> mortality
-
-  demographic -> engine [label = 'next cycle']
-  bmi -> engine [label = 'updated BMI']
-  mortality -> engine [label = 'survivors']
+  inputs   -> engine
 
   engine -> obesity
   engine -> qalys
   engine -> costs
 
   obesity -> validation
-  mortality -> validation
 }
-")
+", width = '100%', height = 720)
+```
 ```
 
 ### R Package Implementation

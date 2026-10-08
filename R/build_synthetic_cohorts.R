@@ -21,25 +21,25 @@
 #'   bmi = c(22.1, 23.8, 25.4, 24.7)
 #' )
 #'
-#' ponte_build_bmi_synthetic_cohorts(
-#'   bmi_panel = ponte_prepare_bmi_panel(bmi_panel)
+#' simeq_build_bmi_synthetic_cohorts(
+#'   bmi_panel = simeq_prepare_bmi_panel(bmi_panel)
 #' )
-ponte_build_bmi_synthetic_cohorts <- function(
+simeq_build_bmi_synthetic_cohorts <- function(
     bmi_panel
 ) {
-  ponte_validate_bmi_panel(
+  simeq_validate_bmi_panel(
     bmi_panel = bmi_panel
   )
 
   if (!"age_group" %in% names(bmi_panel)) {
     stop(
       "`bmi_panel` must contain an `age_group` column. ",
-      "Use `ponte_prepare_bmi_panel()` first.",
+      "Use `simeq_prepare_bmi_panel()` first.",
       call. = FALSE
     )
   }
 
-  expected_age_group <- ponte_bmi_age_group(
+  expected_age_group <- simeq_bmi_age_group(
     age = bmi_panel$age
   )
 
@@ -160,7 +160,10 @@ ponte_build_bmi_synthetic_cohorts <- function(
       (as.integer(raw_follow_up_age) - 20L) %/% 5L
     ) * 5L + 20L
 
-    # Drop cohorts that age beyond max_age (80 = last 5-year group start)
+    # Drop cohorts whose expected follow-up age group starts beyond 80
+    # (the 80-84 group = start 80 is the last trackable cohort follow-up;
+    # the 80-84 group itself cannot be a baseline because its follow-up
+    # would be aged 87+ and is out of range).
     baseline_summary <- baseline_summary[
       baseline_summary$expected_follow_up_start <= 80L,
       ,
@@ -247,8 +250,10 @@ ponte_build_bmi_synthetic_cohorts <- function(
     )
   }
 
-  do.call(
-    rbind,
-    transition_data
-  )
+  do.call(rbind, transition_data)
+  # Note: synthetic cohorts are defined for baseline age groups 20-24 through
+  # 75-79. The 75-79 group's follow-up lands in the 80-84 stratum, which is
+  # observed in the data. Ages 80-84 as *baseline* cannot form a cohort
+  # (follow-up would require data aged 87+); BMI change at those ages is
+  # therefore extrapolated from the fitted quadratic age function.
 }

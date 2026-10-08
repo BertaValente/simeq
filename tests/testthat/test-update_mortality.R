@@ -26,9 +26,9 @@ make_state_for_mortality_update <- function() {
     )
   )
 
-  ponte_initialise_population(
+  simeq_initialise_population(
     population = population,
-    settings = ponte_settings()
+    settings = simeq_settings()
   )
 }
 
@@ -86,7 +86,7 @@ make_risks_for_mortality_update <- function() {
 }
 
 test_that(
-  "ponte_update_mortality returns survivors deaths and probabilities",
+  "simeq_update_mortality returns survivors deaths and probabilities",
   {
     state <- make_state_for_mortality_update()
 
@@ -96,7 +96,7 @@ test_that(
 
     risks <- make_risks_for_mortality_update()
 
-    result <- ponte_update_mortality(
+    result <- simeq_update_mortality(
       state = state,
       life_table = life_table,
       rr_bmi = risks$rr_bmi,
@@ -134,7 +134,7 @@ test_that(
 )
 
 test_that(
-  "ponte_update_mortality records certain deaths",
+  "simeq_update_mortality records certain deaths",
   {
     state <- make_state_for_mortality_update()
 
@@ -144,7 +144,7 @@ test_that(
 
     risks <- make_risks_for_mortality_update()
 
-    result <- ponte_update_mortality(
+    result <- simeq_update_mortality(
       state = state,
       life_table = life_table,
       rr_bmi = risks$rr_bmi,
@@ -196,11 +196,11 @@ test_that(
 )
 
 test_that(
-  "ponte_update_mortality supports existing education_level2",
+  "simeq_update_mortality supports existing education_level2",
   {
     state <- make_state_for_mortality_update()
 
-    state <- ponte_prepare_education_level2(
+    state <- simeq_prepare_education_level2(
       state = state,
       source = "map_3_to_2"
     )
@@ -211,7 +211,7 @@ test_that(
 
     risks <- make_risks_for_mortality_update()
 
-    result <- ponte_update_mortality(
+    result <- simeq_update_mortality(
       state = state,
       life_table = life_table,
       rr_bmi = risks$rr_bmi,
@@ -230,7 +230,7 @@ test_that(
 )
 
 test_that(
-  "ponte_update_mortality validates mortality inputs",
+  "simeq_update_mortality validates mortality inputs",
   {
     state <- make_state_for_mortality_update()
 
@@ -243,7 +243,7 @@ test_that(
     risks$rr_bmi$rr_bmi[1] <- 0
 
     expect_error(
-      ponte_update_mortality(
+      simeq_update_mortality(
         state = state,
         life_table = life_table,
         rr_bmi = risks$rr_bmi,

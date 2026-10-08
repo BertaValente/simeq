@@ -6,24 +6,24 @@
 #' BMI, and education level.
 #'
 #' @param bmi_panel A prepared BMI panel produced by
-#'   `ponte_prepare_bmi_panel()`.
+#'   `simeq_prepare_bmi_panel()`.
 #' @param stable_tolerance Numeric threshold used to label annual BMI changes as
 #'   decrease, stable, or increase.
 #'
-#' @return An object of class `ponte_bmi_transition_hayes`.
+#' @return An object of class `simeq_bmi_transition_hayes`.
 #' @export
-ponte_fit_bmi_transition_hayes <- function(
+simeq_fit_bmi_transition_hayes <- function(
     bmi_panel,
     stable_tolerance = 0.01
 ) {
-  ponte_validate_bmi_panel(
+  simeq_validate_bmi_panel(
     bmi_panel = bmi_panel
   )
 
   if (!"age_group" %in% names(bmi_panel)) {
     stop(
       "`bmi_panel` must contain `age_group`. ",
-      "Use `ponte_prepare_bmi_panel()` first.",
+      "Use `simeq_prepare_bmi_panel()` first.",
       call. = FALSE
     )
   }
@@ -41,7 +41,7 @@ ponte_fit_bmi_transition_hayes <- function(
     )
   }
 
-  bmi_category <- ponte_bmi_category(
+  bmi_category <- simeq_bmi_category(
     bmi = bmi_panel$bmi
   )
 
@@ -248,6 +248,6 @@ ponte_fit_bmi_transition_hayes <- function(
       regression_data = regression_data,
       stable_tolerance = as.numeric(stable_tolerance)
     ),
-    class = "ponte_bmi_transition_hayes"
+    class = "simeq_bmi_transition_hayes"
   )
 }

@@ -9,7 +9,7 @@
 #' @export
 #'
 #' @examples
-#' ponte_bmi_age_group(
+#' simeq_bmi_age_group(
 #'   c(
 #'     20L,
 #'     24L,
@@ -17,7 +17,7 @@
 #'     84L
 #'   )
 #' )
-ponte_bmi_age_group <- function(
+simeq_bmi_age_group <- function(
     age
 ) {
   if (

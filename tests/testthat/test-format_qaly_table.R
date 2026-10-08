@@ -1,5 +1,5 @@
 test_that(
-  "ponte_format_qaly_table formats QALY trajectories and intervals",
+  "simeq_format_qaly_table formats QALY trajectories and intervals",
   {
     qaly_results <- list(
       by_year_obesity = data.frame(
@@ -7,14 +7,14 @@ test_that(
         sex = "women",
         education_level = "high",
         obesity_status = "obesity",
-        mean_qaly_per_person = 0.91234,
-        qaly_lo = 0.90123,
-        qaly_hi = 0.92345,
+        mean_annual_qaly_per_person = 0.91234,
+        qaly_per_person_lo = 0.90123,
+        qaly_per_person_hi = 0.92345,
         stringsAsFactors = FALSE
       )
     )
 
-    results <- ponte_format_qaly_table(
+    results <- simeq_format_qaly_table(
       qaly_results = qaly_results
     )
 
@@ -35,3 +35,23 @@ test_that(
     )
   }
 )
+
+test_that("simeq_format_qaly_table accepts simeq_calculate_qalys output", {
+  simulation_output <- data.frame(
+    person_id = c("person_1", "person_2"),
+    simulation = c(1L, 2L),
+    year = c(2020L, 2020L),
+    age = c(35L, 35L),
+    sex = c("women", "women"),
+    education_level = c("medium", "medium"),
+    survey_weight = c(100, 100),
+    bmi_category = c("obesity_I", "obesity_I"),
+    alive = c(TRUE, TRUE),
+    stringsAsFactors = FALSE
+  )
+
+  qaly_results <- simeq_calculate_qalys(simulation_output)
+
+  expect_no_error(simeq_format_qaly_table(qaly_results))
+  expect_s3_class(simeq_plot_qaly_trajectory(qaly_results), "ggplot")
+})

@@ -1,14 +1,14 @@
 #' Update BMI using the PONTE-PT Hayes-style transition model
 #'
 #' @param population Synthetic population.
-#' @param hayes_bmi_model Fitted object from ponte_fit_bmi_transition_hayes().
+#' @param hayes_bmi_model Fitted object from simeq_fit_bmi_transition_hayes().
 #' @param stochastic Logical; add annual individual-level random variation.
 #' @param min_bmi Minimum allowable BMI.
 #' @param max_bmi Maximum allowable BMI.
 #'
 #' @return Synthetic population with updated BMI.
 #' @export
-ponte_update_bmi_hayes <- function(
+simeq_update_bmi_hayes <- function(
     population,
     hayes_bmi_model,
     stochastic = TRUE,
@@ -81,6 +81,9 @@ ponte_update_bmi_hayes <- function(
       bmi = pmin(
         max_bmi,
         pmax(min_bmi, bmi + annual_bmi_change)
-      )
-    )
+      ),
+      bmi_category = simeq_bmi_category(bmi),
+      obesity = bmi >= 30
+    ) |>
+    .refresh_weight_from_bmi()
 }

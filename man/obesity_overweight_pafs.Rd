@@ -14,7 +14,7 @@ Returns disease-specific PAFs reported by Borges et al. (2025) for
 combined overweight and obesity. PAFs are proportions, not percentages.
 }
 \references{
-Borges M, et al. Disease and Economic Burden of Overweight
-and Obesity in Portugal. Obesity Facts. 2025;18:107-120.
+Borges M, et al. Burden of Disease and Cost of Illness of
+Overweight and Obesity in Portugal. Obesity Facts. 2025;18(2):107-120.
 doi:10.1159/000541781.
 }

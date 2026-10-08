@@ -6,7 +6,7 @@
 #'
 #' @param population Synthetic population.
 #' @param year Current simulation year.
-#' @param hayes_bmi_model Output from ponte_fit_bmi_transition_hayes().
+#' @param hayes_bmi_model Output from simeq_fit_bmi_transition_hayes().
 #' @param min_cell_n Minimum NHS sample size required in both survey waves.
 #' @param stochastic Logical; add individual-level residual variation.
 #' @param min_bmi Minimum allowed BMI.
@@ -14,7 +14,7 @@
 #'
 #' @return Synthetic population with updated BMI and transition diagnostics.
 #' @export
-ponte_update_bmi_historical <- function(
+simeq_update_bmi_historical <- function(
     population,
     year,
     hayes_bmi_model,
@@ -104,6 +104,7 @@ ponte_update_bmi_historical <- function(
     ) |>
     dplyr::mutate(
       use_empirical_change =
+        !use_regression_only &
         sample_n_t >= min_cell_n &
         sample_n_t1 >= min_cell_n
     ) |>
@@ -207,7 +208,8 @@ ponte_update_bmi_historical <- function(
           bmi + annual_bmi_change
         )
       ),
-      bmi_category = ponte_bmi_category(bmi),
+      bmi_category = simeq_bmi_category(bmi),
       obesity = bmi >= 30
-    )
+    ) |>
+    .refresh_weight_from_bmi()
 }

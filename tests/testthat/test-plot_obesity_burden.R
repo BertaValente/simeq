@@ -1,5 +1,5 @@
 test_that(
-  "ponte_plot_obesity_burden returns a DALY burden plot",
+  "simeq_plot_obesity_burden returns a DALY burden plot",
   {
     skip_if_not_installed("ggplot2")
 
@@ -24,7 +24,7 @@ test_that(
       )
     )
 
-    results <- ponte_plot_obesity_burden(
+    results <- simeq_plot_obesity_burden(
       burden_results = burden_results
     )
 

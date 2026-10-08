@@ -20,12 +20,12 @@
 #'
 #' entrant_targets$entrant_population <- 50000
 #'
-#' ponte_validate_entrant_targets(
+#' simeq_validate_entrant_targets(
 #'   entrant_targets = entrant_targets,
 #'   start_year = 2021L,
 #'   end_year = 2023L
 #' )
-ponte_validate_entrant_targets <- function(
+simeq_validate_entrant_targets <- function(
     entrant_targets,
     start_year,
     end_year

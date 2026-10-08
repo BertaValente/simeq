@@ -9,10 +9,10 @@
 #' @export
 #'
 #' @examples
-#' ponte_bmi_category(
+#' simeq_bmi_category(
 #'   c(17.5, 22.0, 27.5, 32.0, 37.0, 42.0)
 #' )
-ponte_bmi_category <- function(
+simeq_bmi_category <- function(
     bmi
 ) {
   if (!is.numeric(bmi)) {

@@ -4,10 +4,14 @@
 \alias{read_gbd_bmi_rr}
 \title{Read GBD BMI relative-risk matrix}
 \usage{
-read_gbd_bmi_rr(path = "GBD_RR_2019/gbd_rr_2019.xlsx", sheet = 1)
+read_gbd_bmi_rr(
+  path = system.file("extdata", "gbd_rr_2019.xlsx", package = "simeq"),
+  sheet = 1
+)
 }
 \arguments{
-\item{path}{Path to the GBD Excel workbook.}
+\item{path}{Path to the GBD Excel workbook. Defaults to the copy bundled
+with the package in \verb{inst/extdata/}.}
 
 \item{sheet}{Excel sheet name or position.}
 }

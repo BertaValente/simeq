@@ -1,5 +1,5 @@
 test_that(
-  "ponte_calculate_yll calculates individual YLL correctly",
+  "simeq_calculate_yll calculates individual YLL correctly",
   {
     simulation_output <- data.frame(
       person_id = c(
@@ -21,7 +21,7 @@ test_that(
       stringsAsFactors = FALSE
     )
 
-    results <- ponte_calculate_yll(
+    results <- simeq_calculate_yll(
       simulation_output = simulation_output,
       ref_age = 75L,
       min_age = 20L,
@@ -33,19 +33,19 @@ test_that(
     expect_equal(nrow(individual), 4L)
 
     expect_equal(
-      individual$yll,
+      unname(individual$yll),
       c(15, 0, 0, 0)
     )
 
     expect_equal(
-      individual$died,
+      unname(individual$died),
       c(TRUE, FALSE, TRUE, TRUE)
     )
   }
 )
 
 test_that(
-  "ponte_calculate_yll calculates weighted YLL totals by death year",
+  "simeq_calculate_yll calculates weighted YLL totals by death year",
   {
     simulation_output <- data.frame(
       person_id = c(
@@ -65,7 +65,7 @@ test_that(
       stringsAsFactors = FALSE
     )
 
-    results <- ponte_calculate_yll(
+    results <- simeq_calculate_yll(
       simulation_output = simulation_output,
       ref_age = 75L,
       min_age = 20L,
@@ -91,3 +91,32 @@ test_that(
     expect_equal(yll_2021$total_yll_weighted, 0)
   }
 )
+
+test_that("simeq_calculate_yll uses remaining life expectancy when supplied", {
+  simulation_output <- data.frame(
+    person_id = c("person_1", "person_2"),
+    simulation = c(1L, 1L),
+    sex = c("men", "women"),
+    education_level = c("low", "high"),
+    survey_weight = c(10, 10),
+    death_year = c(2020L, 2020L),
+    age_at_death = c(80L, 40L),
+    stringsAsFactors = FALSE
+  )
+
+  ref_life_expectancy <- expand.grid(
+    age = 20:84,
+    sex = c("men", "women"),
+    stringsAsFactors = FALSE
+  )
+  ref_life_expectancy$ex <- 90 - ref_life_expectancy$age
+
+  result <- simeq_calculate_yll(
+    simulation_output,
+    ref_age = c(men = 77L, women = 81L),
+    ref_life_expectancy = ref_life_expectancy
+  )
+
+  # Man dying at 80 still loses 10 years, instead of 0 with ref_age 77.
+  expect_equal(result$individual$yll, c(10, 50))
+})

@@ -18,10 +18,10 @@
 #'   bmi = c(22.1, 23.8, 25.4, 24.7)
 #' )
 #'
-#' ponte_validate_bmi_panel(
+#' simeq_validate_bmi_panel(
 #'   bmi_panel = bmi_panel
 #' )
-ponte_validate_bmi_panel <- function(
+simeq_validate_bmi_panel <- function(
     bmi_panel
 ) {
   if (!is.data.frame(bmi_panel)) {

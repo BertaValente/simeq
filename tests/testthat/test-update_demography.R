@@ -32,18 +32,18 @@ make_state_for_demographic_update <- function() {
     )
   )
 
-  ponte_initialise_population(
+  simeq_initialise_population(
     population = population,
-    settings = ponte_settings()
+    settings = simeq_settings()
   )
 }
 
 test_that(
-  "ponte_update_demography ages the state and advances the year",
+  "simeq_update_demography ages the state and advances the year",
   {
     state <- make_state_for_demographic_update()
 
-    updated_state <- ponte_update_demography(state)
+    updated_state <- simeq_update_demography(state)
 
     expect_s3_class(
       updated_state,
@@ -54,16 +54,15 @@ test_that(
       updated_state$person_id,
       c(
         "person_1",
-        "person_2",
-        "person_3"
+        "person_2"
       )
     )
 
+    # person_3 (84) passes the maximum age and leaves the model.
     expect_identical(
       updated_state$age,
       c(
         36L,
-        84L,
         84L
       )
     )
@@ -71,7 +70,6 @@ test_that(
     expect_identical(
       updated_state$year,
       c(
-        2021L,
         2021L,
         2021L
       )
@@ -81,7 +79,6 @@ test_that(
       updated_state$baseline_year,
       c(
         2020L,
-        2020L,
         2020L
       )
     )
@@ -89,11 +86,11 @@ test_that(
 )
 
 test_that(
-  "ponte_update_demography retains non-demographic state values",
+  "simeq_update_demography retains non-demographic state values",
   {
     state <- make_state_for_demographic_update()
 
-    updated_state <- ponte_update_demography(state)
+    updated_state <- simeq_update_demography(state)
 
     unchanged_columns <- setdiff(
       names(state),
@@ -105,20 +102,20 @@ test_that(
 
     expect_identical(
       updated_state[unchanged_columns],
-      state[unchanged_columns]
+      state[1:2, unchanged_columns]
     )
   }
 )
 
 test_that(
-  "ponte_update_demography validates its input state",
+  "simeq_update_demography validates its input state",
   {
     state <- make_state_for_demographic_update()
 
     state$alive[1] <- FALSE
 
     expect_error(
-      ponte_update_demography(state),
+      simeq_update_demography(state),
       "`state` must contain only living records"
     )
   }

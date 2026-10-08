@@ -4,13 +4,13 @@
 #' 95% simulation intervals into a report-ready table.
 #'
 #' @param burden_results A list returned by
-#'   [ponte_calculate_obesity_burden()].
+#'   [simeq_calculate_obesity_burden()].
 #'
 #' @return A data frame containing year, sex, education level, and formatted
 #'   YLL, YLD, and DALY rates per 100,000 with 95% simulation intervals.
 #'
 #' @export
-ponte_format_obesity_burden_table <- function(
+simeq_format_obesity_burden_table <- function(
     burden_results
 ) {
   if (

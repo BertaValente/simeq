@@ -31,9 +31,9 @@ make_state_for_annual_update <- function() {
     stringsAsFactors = FALSE
   )
 
-  ponte_initialise_population(
+  simeq_initialise_population(
     population = population,
-    settings = ponte_settings(
+    settings = simeq_settings(
       initial_year = 2020L
     )
   )
@@ -145,15 +145,15 @@ make_entrant_targets_for_annual_update <- function() {
 }
 
 test_that(
-  "ponte_advance_one_year updates survivors and adds entrants",
+  "simeq_advance_one_year updates survivors and adds entrants",
   {
     set.seed(123)
 
-    bmi_transition_model <- ponte_fit_bmi_transition(
+    bmi_transition_model <- simeq_fit_bmi_transition(
       bmi_transitions = make_bmi_transitions_for_model_fit()
     )
 
-    annual_result <- ponte_advance_one_year(
+    annual_result <- simeq_advance_one_year(
       state = make_state_for_annual_update(),
       life_table = make_life_table_for_annual_update(),
       rr_bmi = make_bmi_risks_for_annual_update(),
@@ -165,9 +165,10 @@ test_that(
       education_source = "existing"
     )
 
+    # person_2 (84) survives but passes the maximum age and leaves.
     expect_identical(
       nrow(annual_result$living_state),
-      102L
+      101L
     )
 
     expect_identical(
@@ -188,25 +189,22 @@ test_that(
       31L
     )
 
-    expect_identical(
-      annual_result$living_state$age[
-        annual_result$living_state$person_id == "person_2"
-      ],
-      84L
+    expect_false(
+      "person_2" %in% annual_result$living_state$person_id
     )
   }
 )
 
 test_that(
-  "ponte_advance_one_year creates age-20 entrants",
+  "simeq_advance_one_year creates age-20 entrants",
   {
     set.seed(123)
 
-    bmi_transition_model <- ponte_fit_bmi_transition(
+    bmi_transition_model <- simeq_fit_bmi_transition(
       bmi_transitions = make_bmi_transitions_for_model_fit()
     )
 
-    annual_result <- ponte_advance_one_year(
+    annual_result <- simeq_advance_one_year(
       state = make_state_for_annual_update(),
       life_table = make_life_table_for_annual_update(),
       rr_bmi = make_bmi_risks_for_annual_update(),
@@ -257,15 +255,15 @@ test_that(
 )
 
 test_that(
-  "ponte_advance_one_year calibrates entrant weights by sex",
+  "simeq_advance_one_year calibrates entrant weights by sex",
   {
     set.seed(123)
 
-    bmi_transition_model <- ponte_fit_bmi_transition(
+    bmi_transition_model <- simeq_fit_bmi_transition(
       bmi_transitions = make_bmi_transitions_for_model_fit()
     )
 
-    annual_result <- ponte_advance_one_year(
+    annual_result <- simeq_advance_one_year(
       state = make_state_for_annual_update(),
       life_table = make_life_table_for_annual_update(),
       rr_bmi = make_bmi_risks_for_annual_update(),
@@ -309,7 +307,7 @@ test_that(
 )
 
 test_that(
-  "ponte_advance_one_year records deaths in the next simulation year",
+  "simeq_advance_one_year records deaths in the next simulation year",
   {
     set.seed(123)
 
@@ -317,11 +315,11 @@ test_that(
 
     life_table$qx <- 1
 
-    bmi_transition_model <- ponte_fit_bmi_transition(
+    bmi_transition_model <- simeq_fit_bmi_transition(
       bmi_transitions = make_bmi_transitions_for_model_fit()
     )
 
-    annual_result <- ponte_advance_one_year(
+    annual_result <- simeq_advance_one_year(
       state = make_state_for_annual_update(),
       life_table = life_table,
       rr_bmi = make_bmi_risks_for_annual_update(),
@@ -362,18 +360,18 @@ test_that(
 )
 
 test_that(
-  "ponte_advance_one_year requires one state year",
+  "simeq_advance_one_year requires one state year",
   {
     state <- make_state_for_annual_update()
 
     state$year[2L] <- 2021L
 
-    bmi_transition_model <- ponte_fit_bmi_transition(
+    bmi_transition_model <- simeq_fit_bmi_transition(
       bmi_transitions = make_bmi_transitions_for_model_fit()
     )
 
     expect_error(
-      ponte_advance_one_year(
+      simeq_advance_one_year(
         state = state,
         life_table = make_life_table_for_annual_update(),
         rr_bmi = make_bmi_risks_for_annual_update(),
@@ -388,3 +386,52 @@ test_that(
     )
   }
 )
+
+test_that(
+  "simeq_advance_one_year applies mortality before the BMI update",
+  {
+    bmi_transition_model <- simeq_fit_bmi_transition(
+      bmi_transitions = make_bmi_transitions_for_model_fit()
+    )
+
+    state <- make_state_for_annual_update()
+    life_table <- make_life_table_for_annual_update()
+    life_table$qx <- 1
+
+    annual_result <- simeq_advance_one_year(
+      state = state,
+      life_table = life_table,
+      rr_bmi = make_bmi_risks_for_annual_update(),
+      rr_education = make_education_risks_for_annual_update(),
+      bmi_transition_model = bmi_transition_model,
+      donor_pool = make_donor_pool_for_annual_update(),
+      entrant_targets = make_entrant_targets_for_annual_update(),
+      n_entrants = 100L,
+      education_source = "existing"
+    )
+
+    deaths <- annual_result$deaths
+    expect_identical(nrow(deaths), nrow(state))
+    # Deaths keep their start-of-year BMI: no BMI update before mortality.
+    expect_equal(
+      deaths$bmi[match(state$person_id, deaths$person_id)],
+      state$bmi
+    )
+  }
+)
+
+test_that("advance_one_year requires the percentile model for that method", {
+  expect_error(
+    simeq_advance_one_year(
+      state = make_state_for_annual_update(),
+      life_table = make_life_table_for_annual_update(),
+      rr_bmi = make_bmi_risks_for_annual_update(),
+      rr_education = make_education_risks_for_annual_update(),
+      donor_pool = make_donor_pool_for_annual_update(),
+      entrant_targets = make_entrant_targets_for_annual_update(),
+      n_entrants = 100L,
+      bmi_update_method = "percentile"
+    ),
+    "bmi_percentile_model"
+  )
+})

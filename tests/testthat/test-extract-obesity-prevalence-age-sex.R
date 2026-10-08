@@ -9,7 +9,7 @@ make_sim_output <- function() {
   # Use BMI column (function now requires bmi, not obesity flag)
   d$bmi         <- ifelse(d$age >= 50L, 32, 23)  # obese if age >= 50
   d$alive       <- TRUE
-  d$surveyweight <- 1
+  d$survey_weight <- 1
   d
 }
 

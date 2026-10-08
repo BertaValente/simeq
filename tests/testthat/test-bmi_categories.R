@@ -1,7 +1,7 @@
 test_that(
-  "ponte_bmi_category classifies BMI values correctly",
+  "simeq_bmi_category classifies BMI values correctly",
   {
-    result <- ponte_bmi_category(
+    result <- simeq_bmi_category(
       c(
         18.4,
         18.5,
@@ -37,10 +37,10 @@ test_that(
 )
 
 test_that(
-  "ponte_bmi_category rejects non-numeric input",
+  "simeq_bmi_category rejects non-numeric input",
   {
     expect_error(
-      ponte_bmi_category(
+      simeq_bmi_category(
         c(
           "22.0",
           "30.0"
@@ -52,10 +52,10 @@ test_that(
 )
 
 test_that(
-  "ponte_bmi_category rejects infinite values",
+  "simeq_bmi_category rejects infinite values",
   {
     expect_error(
-      ponte_bmi_category(
+      simeq_bmi_category(
         c(
           22.0,
           Inf

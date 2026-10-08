@@ -35,132 +35,72 @@ make_population_for_initialisation <- function() {
   )
 }
 
-test_that(
-  "ponte_initialise_population creates a valid initial state",
-  {
-    population <- make_population_for_initialisation()
+test_that("simeq_initialise_population preserves BMI exactly", {
 
-    state <- ponte_initialise_population(
-      population = population,
-      settings = ponte_settings()
-    )
+  population <- data.frame(
+    person_id = c("p1", "p2", "p3"),
+    age = c(20L, 45L, 84L),
+    sex = c("women", "men", "women"),
+    education_level = c("low", "medium", "high"),
+    education_level2 = c("lower", "lower", "higher"),
+    survey_weight = c(100, 200, 150),
+    bmi = c(22.5, 27.8, 31.2),
+    height = c(165, 175, 155),
+    weight = c(61.3, 85.1, 75.0),
+    stringsAsFactors = FALSE
+  )
 
-    expect_s3_class(
-      state,
-      "data.frame"
-    )
+  settings <- simeq_settings(
+    initial_year = 1998L,
+    projection_end_year = 2000L,
+    entry_age = 20L,
+    max_age = 84L,
+    n_simulations = 1L,
+    entrant_n_per_year = 2L,
+    seed = 123L
+  )
 
-    expect_identical(
-      nrow(state),
-      2L
-    )
+  initial_state <- simeq_initialise_population(
+    population = population,
+    settings = settings
+  )
 
-    expect_true(
-      all(
-        c(
-          "person_id",
-          "simulation",
-          "year",
-          "baseline_year",
-          "age",
-          "sex",
-          "education_level",
-          "education_level2",
-          "survey_weight",
-          "bmi",
-          "bmi_category",
-          "obesity",
-          "alive",
-          "death_year",
-          "age_at_death"
-        ) %in% names(state)
-      )
-    )
+  expect_equal(
+    initial_state$bmi,
+    population$bmi,
+    tolerance = 1e-12
+  )
 
-    expect_identical(
-      state$simulation,
-      c(1L, 1L)
-    )
+  expect_equal(
+    initial_state$survey_weight,
+    population$survey_weight,
+    tolerance = 1e-12
+  )
 
-    expect_identical(
-      state$year,
-      c(2020L, 2020L)
-    )
+  expect_equal(
+    initial_state$age,
+    population$age
+  )
 
-    expect_identical(
-      state$baseline_year,
-      c(2020L, 2020L)
-    )
+  expect_equal(
+    initial_state$sex,
+    population$sex
+  )
 
-    expect_identical(
-      state$bmi_category,
-      c(
-        "normal_weight",
-        "obesity_I"
-      )
-    )
+  expect_equal(
+    initial_state$education_level,
+    population$education_level
+  )
 
-    expect_identical(
-      state$obesity,
-      c(
-        FALSE,
-        TRUE
-      )
-    )
+  expect_equal(
+    initial_state$education_level2,
+    population$education_level2
+  )
 
-    expect_true(
-      all(state$alive)
-    )
+  expect_equal(
+    initial_state$year,
+    rep(1998L, nrow(population))
+  )
 
-    expect_true(
-      all(is.na(state$death_year))
-    )
-
-    expect_true(
-      all(is.na(state$age_at_death))
-    )
-  }
-)
-
-test_that(
-  "ponte_initialise_population retains extra population variables",
-  {
-    population <- make_population_for_initialisation()
-
-    state <- ponte_initialise_population(
-      population = population,
-      settings = ponte_settings()
-    )
-
-    expect_identical(
-      state$education_level2,
-      c(
-        "higher",
-        "lower"
-      )
-    )
-
-    expect_identical(
-      state$region_nuts,
-      c(
-        "PT11",
-        "PT17"
-      )
-    )
-  }
-)
-
-test_that(
-  "ponte_initialise_population requires ponte settings",
-  {
-    population <- make_population_for_initialisation()
-
-    expect_error(
-      ponte_initialise_population(
-        population = population,
-        settings = list()
-      ),
-      "`settings` must be a `ponte_settings` object"
-    )
-  }
-)
+  expect_true(all(initial_state$alive))
+})

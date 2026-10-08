@@ -113,9 +113,9 @@ make_entrant_targets_for_verification <- function() {
 }
 
 test_that(
-  "ponte_verify_simulation_output passes valid output",
+  "simeq_verify_simulation_output passes valid output",
   {
-    verification <- ponte_verify_simulation_output(
+    verification <- simeq_verify_simulation_output(
       simulation_output =
         make_valid_simulation_output_for_verification(),
       entrant_targets =
@@ -141,7 +141,7 @@ test_that(
 )
 
 test_that(
-  "ponte_verify_simulation_output detects duplicate person-years",
+  "simeq_verify_simulation_output detects duplicate person-years",
   {
     simulation_output <-
       make_valid_simulation_output_for_verification()
@@ -151,7 +151,7 @@ test_that(
       simulation_output[1L, , drop = FALSE]
     )
 
-    verification <- ponte_verify_simulation_output(
+    verification <- simeq_verify_simulation_output(
       simulation_output = simulation_output
     )
 
@@ -165,7 +165,7 @@ test_that(
 )
 
 test_that(
-  "ponte_verify_simulation_output detects invalid death-year records",
+  "simeq_verify_simulation_output detects invalid death-year records",
   {
     simulation_output <-
       make_valid_simulation_output_for_verification()
@@ -174,7 +174,7 @@ test_that(
     simulation_output$death_year[2L] <- 2020L
     simulation_output$age_at_death[2L] <- 31L
 
-    verification <- ponte_verify_simulation_output(
+    verification <- simeq_verify_simulation_output(
       simulation_output = simulation_output
     )
 
@@ -188,14 +188,14 @@ test_that(
 )
 
 test_that(
-  "ponte_verify_simulation_output detects BMI-category mismatch",
+  "simeq_verify_simulation_output detects BMI-category mismatch",
   {
     simulation_output <-
       make_valid_simulation_output_for_verification()
 
     simulation_output$bmi_category[1L] <- "obesity"
 
-    verification <- ponte_verify_simulation_output(
+    verification <- simeq_verify_simulation_output(
       simulation_output = simulation_output
     )
 
@@ -209,14 +209,14 @@ test_that(
 )
 
 test_that(
-  "ponte_verify_simulation_output detects incorrect entrant age",
+  "simeq_verify_simulation_output detects incorrect entrant age",
   {
     simulation_output <-
       make_valid_simulation_output_for_verification()
 
     simulation_output$age[3L] <- 21L
 
-    verification <- ponte_verify_simulation_output(
+    verification <- simeq_verify_simulation_output(
       simulation_output = simulation_output
     )
 
@@ -230,7 +230,7 @@ test_that(
 )
 
 test_that(
-  "ponte_verify_simulation_output detects entrant target mismatch",
+  "simeq_verify_simulation_output detects entrant target mismatch",
   {
     entrant_targets <- make_entrant_targets_for_verification()
 
@@ -238,7 +238,7 @@ test_that(
       entrant_targets$sex == "men"
     ] <- 50000
 
-    verification <- ponte_verify_simulation_output(
+    verification <- simeq_verify_simulation_output(
       simulation_output =
         make_valid_simulation_output_for_verification(),
       entrant_targets = entrant_targets
@@ -254,7 +254,7 @@ test_that(
 )
 
 test_that(
-  "ponte_verify_simulation_output requires complete output columns",
+  "simeq_verify_simulation_output requires complete output columns",
   {
     simulation_output <-
       make_valid_simulation_output_for_verification()
@@ -262,7 +262,7 @@ test_that(
     simulation_output$bmi <- NULL
 
     expect_error(
-      ponte_verify_simulation_output(
+      simeq_verify_simulation_output(
         simulation_output = simulation_output
       ),
       "`simulation_output` is missing required columns: bmi.",

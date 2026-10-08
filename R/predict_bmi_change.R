@@ -6,17 +6,21 @@
 #'
 #' @param state A valid living PONTE-PT-O population state containing
 #'   `education_level2`.
-#' @param bmi_transition_model A `ponte_bmi_transition_model` object returned
-#'   by [ponte_fit_bmi_transition()].
+#' @param bmi_transition_model A `simeq_bmi_transition_model` object returned
+#'   by [simeq_fit_bmi_transition()].
+#' @param period Optional survey period (a baseline survey year used when the
+#'   model was fitted) to predict with. Default `NULL` uses the model's
+#'   `projection_period`, the latest period.
 #'
 #' @return A numeric vector of simulated annual BMI changes, in the same row
 #'   order as `state`.
 #' @export
-ponte_predict_bmi_change <- function(
+simeq_predict_bmi_change <- function(
     state,
-    bmi_transition_model
+    bmi_transition_model,
+    period = NULL
 ) {
-  ponte_validate_living_state(
+  simeq_validate_living_state(
     state = state
   )
 
@@ -30,7 +34,7 @@ ponte_predict_bmi_change <- function(
     )
   }
 
-  state <- ponte_prepare_education_level2(
+  state <- simeq_prepare_education_level2(
     state = state,
     source = "existing"
   )
@@ -38,11 +42,11 @@ ponte_predict_bmi_change <- function(
   if (
     !inherits(
       bmi_transition_model,
-      "ponte_bmi_transition_model"
+      "simeq_bmi_transition_model"
     )
   ) {
     stop(
-      "`bmi_transition_model` must be a `ponte_bmi_transition_model` object.",
+      "`bmi_transition_model` must be a `simeq_bmi_transition_model` object.",
       call. = FALSE
     )
   }
@@ -154,6 +158,13 @@ ponte_predict_bmi_change <- function(
   projection_period <- as.integer(
     bmi_transition_model$projection_period
   )
+
+  if (!is.null(period)) {
+    if (length(period) != 1L || is.na(period)) {
+      stop("`period` must be one survey year.", call. = FALSE)
+    }
+    projection_period <- as.integer(period)
+  }
 
   prediction_data <- data.frame(
     sex = factor(

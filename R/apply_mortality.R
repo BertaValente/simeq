@@ -7,7 +7,7 @@
 #' @param state A valid living PONTE-PT-O population state.
 #' @param mortality_probabilities A data frame with `person_id`, `simulation`,
 #'   and `p_die`, typically produced by
-#'   `ponte_calculate_death_probability()`.
+#'   `simeq_calculate_death_probability()`.
 #' @param death_year Integer. Calendar year in which deaths are recorded.
 #'   Defaults to one year after each record's current `year`.
 #' @param entry_age Integer. Minimum represented age.
@@ -30,9 +30,9 @@
 #'   survey_weight = c(1000, 1200)
 #' )
 #'
-#' state <- ponte_initialise_population(
+#' state <- simeq_initialise_population(
 #'   population = population,
-#'   settings = ponte_settings()
+#'   settings = simeq_settings()
 #' )
 #'
 #' mortality_probabilities <- data.frame(
@@ -41,18 +41,18 @@
 #'   p_die = c(0, 1)
 #' )
 #'
-#' ponte_apply_mortality(
+#' simeq_apply_mortality(
 #'   state = state,
 #'   mortality_probabilities = mortality_probabilities
 #' )
-ponte_apply_mortality <- function(
+simeq_apply_mortality <- function(
     state,
     mortality_probabilities,
     death_year = NULL,
     entry_age = 20L,
     max_age = 84L
 ) {
-  ponte_validate_living_state(
+  simeq_validate_living_state(
     state = state,
     entry_age = entry_age,
     max_age = max_age

@@ -1,5 +1,5 @@
 test_that(
-  "ponte_plot_qaly_trajectory returns a QALY trajectory plot",
+  "simeq_plot_qaly_trajectory returns a QALY trajectory plot",
   {
     skip_if_not_installed("ggplot2")
 
@@ -14,19 +14,19 @@ test_that(
           "obesity",
           "obesity"
         ),
-        mean_qaly_per_person = c(
+        mean_annual_qaly_per_person = c(
           0.987,
           0.986,
           0.940,
           0.938
         ),
-        qaly_lo = c(
+        qaly_per_person_lo = c(
           0.980,
           0.979,
           0.930,
           0.928
         ),
-        qaly_hi = c(
+        qaly_per_person_hi = c(
           0.993,
           0.992,
           0.950,
@@ -36,7 +36,7 @@ test_that(
       )
     )
 
-    results <- ponte_plot_qaly_trajectory(
+    results <- simeq_plot_qaly_trajectory(
       qaly_results = qaly_results
     )
 

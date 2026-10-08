@@ -29,46 +29,46 @@ make_living_state_for_validation <- function() {
     )
   )
 
-  ponte_initialise_population(
+  simeq_initialise_population(
     population = population,
-    settings = ponte_settings()
+    settings = simeq_settings()
   )
 }
 
 test_that(
-  "ponte_validate_living_state accepts a valid living state",
+  "simeq_validate_living_state accepts a valid living state",
   {
     state <- make_living_state_for_validation()
 
     expect_invisible(
-      ponte_validate_living_state(state)
+      simeq_validate_living_state(state)
     )
   }
 )
 
 test_that(
-  "ponte_validate_living_state requires living records",
+  "simeq_validate_living_state requires living records",
   {
     state <- make_living_state_for_validation()
 
     state$alive[2] <- FALSE
 
     expect_error(
-      ponte_validate_living_state(state),
+      simeq_validate_living_state(state),
       "`state` must contain only living records"
     )
   }
 )
 
 test_that(
-  "ponte_validate_living_state requires missing death information",
+  "simeq_validate_living_state requires missing death information",
   {
     state <- make_living_state_for_validation()
 
     state$death_year[1] <- 2021L
 
     expect_error(
-      ponte_validate_living_state(state),
+      simeq_validate_living_state(state),
       "`death_year` must be missing for living records"
     )
 
@@ -77,21 +77,21 @@ test_that(
     state$age_at_death[1] <- 35L
 
     expect_error(
-      ponte_validate_living_state(state),
+      simeq_validate_living_state(state),
       "`age_at_death` must be missing for living records"
     )
   }
 )
 
 test_that(
-  "ponte_validate_living_state checks BMI-derived variables",
+  "simeq_validate_living_state checks BMI-derived variables",
   {
     state <- make_living_state_for_validation()
 
     state$bmi_category[1] <- "obesity"
 
     expect_error(
-      ponte_validate_living_state(state),
+      simeq_validate_living_state(state),
       "`bmi_category` must match the BMI values"
     )
 
@@ -100,21 +100,21 @@ test_that(
     state$obesity[1] <- TRUE
 
     expect_error(
-      ponte_validate_living_state(state),
+      simeq_validate_living_state(state),
       "`obesity` must be logical and match the BMI values"
     )
   }
 )
 
 test_that(
-  "ponte_validate_living_state requires unique IDs per simulation",
+  "simeq_validate_living_state requires unique IDs per simulation",
   {
     state <- make_living_state_for_validation()
 
     state$person_id[2] <- state$person_id[1]
 
     expect_error(
-      ponte_validate_living_state(state),
+      simeq_validate_living_state(state),
       "Each `person_id` must be unique within each simulation"
     )
   }

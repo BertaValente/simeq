@@ -1,3 +1,6 @@
-^pontept\.Rproj$
+^simeq\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
+^data-raw$
+^README\.md$
+^NEWS\.md$

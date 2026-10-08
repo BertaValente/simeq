@@ -47,11 +47,11 @@ make_bmi_panel_for_preparation <- function() {
 }
 
 test_that(
-  "ponte_prepare_bmi_panel retains original columns",
+  "simeq_prepare_bmi_panel retains original columns",
   {
     bmi_panel <- make_bmi_panel_for_preparation()
 
-    prepared_panel <- ponte_prepare_bmi_panel(
+    prepared_panel <- simeq_prepare_bmi_panel(
       bmi_panel = bmi_panel
     )
 
@@ -75,9 +75,9 @@ test_that(
 )
 
 test_that(
-  "ponte_prepare_bmi_panel appends expected age groups",
+  "simeq_prepare_bmi_panel appends expected age groups",
   {
-    prepared_panel <- ponte_prepare_bmi_panel(
+    prepared_panel <- simeq_prepare_bmi_panel(
       bmi_panel = make_bmi_panel_for_preparation()
     )
 
@@ -94,14 +94,14 @@ test_that(
 )
 
 test_that(
-  "ponte_prepare_bmi_panel validates the input panel",
+  "simeq_prepare_bmi_panel validates the input panel",
   {
     bmi_panel <- make_bmi_panel_for_preparation()
 
     bmi_panel$bmi[1L] <- NA_real_
 
     expect_error(
-      ponte_prepare_bmi_panel(
+      simeq_prepare_bmi_panel(
         bmi_panel = bmi_panel
       ),
       "`bmi_panel$bmi` must contain only positive finite values.",

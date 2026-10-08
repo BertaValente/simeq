@@ -2,37 +2,61 @@
 % Please edit documentation in R/calculate_obesity_costs_age_sex.R
 \name{calculate_obesity_costs_age_sex}
 \alias{calculate_obesity_costs_age_sex}
-\title{Apply high-BMI PAFs to published disease costs}
+\title{Apply high-BMI PAFs to published disease costs (ratio-rescaling)}
 \usage{
 calculate_obesity_costs_age_sex(
   paf_by_outcome,
   outcome_mapping,
   costs_dro,
+  reference_paf_by_group = NULL,
   exclude_disease_groups = character()
 )
 }
 \arguments{
 \item{paf_by_outcome}{A data frame with \code{outcome} and \code{paf_obesity}
 (population-weighted PAF per GBD outcome), as returned by
-\code{\link[=calculate_obesity_pafs_age_sex]{calculate_obesity_pafs_age_sex()}}.}
+\code{\link[=calculate_obesity_pafs_individual]{calculate_obesity_pafs_individual()}}.}
 
 \item{outcome_mapping}{A data frame mapping GBD outcome names to cost
 disease groups. Must contain \code{outcome_pattern} and \code{disease_group}.}
 
-\item{costs_dro}{A data frame of published direct medical costs. Must
-contain \code{disease_group}, \code{inpatient}, \code{outpatient}, \code{pharmacological},
-and \code{total}.}
+\item{costs_dro}{A data frame of \strong{published obesity-attributable} direct
+medical costs (post-PAF, as reported in Borges et al. 2025). Must contain
+\code{disease_group}, \code{inpatient}, \code{outpatient}, \code{pharmacological}, and
+\code{total}.}
+
+\item{reference_paf_by_group}{A data frame with \code{disease_group} and
+\code{paf_reference} columns giving the published Borges PAFs by disease group.
+Obtain from \code{\link[=obesity_overweight_pafs]{obesity_overweight_pafs()}} and rename \code{paf_ow_ob} to
+\code{paf_reference} before passing. All disease groups in \code{costs_dro} (that
+are not excluded) must have a matching reference PAF.}
 
 \item{exclude_disease_groups}{Character vector of disease groups to exclude
 from attributable-cost estimation (e.g. those without GBD RR evidence).}
 }
 \value{
-A list with \code{costs_by_group}, \code{paf_by_group}, and \code{total_costs}.
+A list with:
+\describe{
+\item{costs_by_group}{Per-disease-group adjusted attributable costs,
+including \code{paf_obesity} (simulated), \code{paf_reference} (Borges), and
+\code{paf_ratio}.}
+\item{paf_by_group}{Simulation-derived PAFs collapsed to disease-group
+level.}
+\item{total_costs}{Total attributable costs summed across disease groups.}
+}
 }
 \description{
-Rescales published direct medical costs using simulation-derived
-population-attributable fractions (PAFs) for high BMI. The PAFs are
-applied directly to published disease costs — not via a ratio to a
-separately published PAF. This function accepts the \code{paf_by_outcome}
-output from \code{\link[=calculate_obesity_pafs_age_sex]{calculate_obesity_pafs_age_sex()}}.
+Rescales published direct medical costs using a ratio of simulation-derived
+PAFs to published (Borges et al.) reference PAFs.
+}
+\details{
+The published cost matrix from Borges et al. (2025) contains costs that are
+\strong{already obesity-attributable} — i.e. total disease costs multiplied by
+the published PAFs. Applying a second PAF directly would double-penalise
+the estimate. Instead, this function computes the adjustment factor as:
+
+\deqn{\text{adjustment} = \frac{PAF_{\text{simulated}}}{PAF_{\text{Borges}}}}
+
+which is equivalent to back-calculating the total disease cost and then
+re-applying the simulated PAF.
 }

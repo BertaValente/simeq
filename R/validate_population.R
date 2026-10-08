@@ -22,11 +22,11 @@
 #'   survey_weight = c(1000, 1200)
 #' )
 #'
-#' ponte_validate_population(
+#' simeq_validate_population(
 #'   population = population,
 #'   initial_year = 2020L
 #' )
-ponte_validate_population <- function(
+simeq_validate_population <- function(
     population,
     initial_year,
     entry_age = 20L,
@@ -217,3 +217,4 @@ ponte_validate_population <- function(
 
   invisible(population)
 }
+

@@ -18,8 +18,8 @@
 #'   survey_weight = c(1000, 1200)
 #' )
 #'
-#' ponte_validate_entrant_donor_pool(donor_pool)
-ponte_validate_entrant_donor_pool <- function(
+#' simeq_validate_entrant_donor_pool(donor_pool)
+simeq_validate_entrant_donor_pool <- function(
     donor_pool,
     entry_age = 20L
 ) {

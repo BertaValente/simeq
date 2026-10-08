@@ -3,14 +3,15 @@
 #' Imports and tidies a GBD relative-risk matrix containing relative risks
 #' per 5 kg/m2 increase in body mass index, by disease, sex, and age band.
 #'
-#' @param path Path to the GBD Excel workbook.
+#' @param path Path to the GBD Excel workbook. Defaults to the copy bundled
+#'   with the package in `inst/extdata/`.
 #' @param sheet Excel sheet name or position.
 #'
 #' @return A tibble with disease, sex, age band, relative risk, and lower and
 #'   upper uncertainty bounds.
 #' @export
 read_gbd_bmi_rr <- function(
-    path = "GBD_RR_2019/gbd_rr_2019.xlsx",
+    path = system.file("extdata", "gbd_rr_2019.xlsx", package = "simeq"),
     sheet = 1
 ) {
   if (!file.exists(path)) {

@@ -4,16 +4,20 @@
 #' population through the requested projection end year.
 #'
 #' @param population A baseline population data frame.
-#' @param settings A `ponte_settings` object.
+#' @param settings A `simeq_settings` object.
 #' @param life_table A validated life table with `age`, `sex`, and `qx`.
 #' @param rr_bmi A validated BMI mortality relative-risk table.
 #' @param rr_education A validated education mortality relative-risk table.
-#' @param bmi_transition_model Optional legacy `ponte_bmi_transition_model`
+#' @param bmi_transition_model Optional legacy `simeq_bmi_transition_model`
 #'   object. Required only when `bmi_update_method = "legacy"`.
 #' @param hayes_bmi_model Optional output from
-#'   [ponte_fit_bmi_transition_hayes()]. Required when
+#'   [simeq_fit_bmi_transition_hayes()]. Required when
 #'   `bmi_update_method = "historical"`.
-#' @param bmi_update_method BMI update strategy: `"legacy"` or `"historical"`.
+#' @param bmi_update_method BMI update strategy: `"legacy"`, `"historical"` or
+#'   `"percentile"`; see [simeq_advance_one_year()].
+#' @param bmi_percentile_model Output from
+#'   [simeq_fit_bmi_transition_percentile()]. Required when
+#'   `bmi_update_method = "percentile"`.
 #' @param min_cell_n Minimum NHS sample size required at both endpoints of an
 #'   empirical BMI-transition cell.
 #' @param stochastic_bmi Logical; whether to add individual random BMI
@@ -28,12 +32,31 @@
 #' @param entrant_targets A validated annual entrant-target table.
 #' @param education_source Either `"existing"` or `"map_3_to_2"`.
 #' @param bmi_limits Numeric vector of lower and upper permitted BMI values.
+#' @param mortality_calibration How the life-table hazard is rescaled by the
+#'   population's mean BMI-education relative risk. `"hybrid"` (default)
+#'   rescales every year while an observed life table exists for that year
+#'   (the last `year` in `life_table`), so simulated deaths follow each
+#'   observed table, which already reflects that year's BMI and education
+#'   mix. From then on the scaling is fixed at the mean relative risk of the
+#'   population in the last observed year, so projected changes in BMI and
+#'   education change the number of deaths. Without a `year` column this is
+#'   the same as `"baseline"`. `"baseline"` fixes the scaling on the initial
+#'   population for all years. `"annual" rescales the life-table
+#'   hazard every year so deaths in each age-sex stratum match the life table;
+#'   changes in BMI then change who dies but not how many (the behaviour
+#'   before this version).
+#' @param bmi_period For `bmi_update_method = "legacy"` or `"percentile"`:
+#'   `"latest"` (default)
+#'   or `"by_year"`; see [simeq_advance_one_year()].
+#'
+#' @param education_upgrade Optional output from
+#'   [simeq_fit_education_upgrade()]; see [simeq_advance_one_year()].
 #'
 #' @return A data frame containing living and death records for every
 #'   simulation year.
 #' @export
 
-ponte_run_simulation <- function(
+simeq_run_simulation <- function(
     population,
     settings,
     life_table,
@@ -44,16 +67,20 @@ ponte_run_simulation <- function(
     entrant_targets,
     bmi_transition_model = NULL,
     hayes_bmi_model = NULL,
-    bmi_update_method = c("legacy", "historical"),
+    bmi_update_method = c("legacy", "historical", "percentile"),
     min_cell_n = 30L,
     stochastic_bmi = TRUE,
     education_source = c("existing", "map_3_to_2"),
-    bmi_limits = c(10, 80)
+    bmi_limits = c(10, 80),
+    mortality_calibration = c("hybrid", "baseline", "annual"),
+    bmi_period = c("latest", "by_year"),
+    bmi_percentile_model = NULL,
+    education_upgrade = NULL
 ) {
 
-  if (!inherits(settings, "ponte_settings")) {
+  if (!inherits(settings, "simeq_settings")) {
     stop(
-      "`settings` must be a `ponte_settings` object.",
+      "`settings` must be a `simeq_settings` object.",
       call. = FALSE
     )
   }
@@ -63,6 +90,8 @@ ponte_run_simulation <- function(
   )
 
   bmi_update_method <- match.arg(bmi_update_method)
+  mortality_calibration <- match.arg(mortality_calibration)
+  bmi_period <- match.arg(bmi_period)
 
   if (
     identical(bmi_update_method, "historical") &&
@@ -86,7 +115,18 @@ ponte_run_simulation <- function(
     )
   }
 
-  ponte_validate_entrant_donor_pool(
+  if (
+    identical(bmi_update_method, "percentile") &&
+    is.null(bmi_percentile_model)
+  ) {
+    stop(
+      "`bmi_percentile_model` must be supplied when ",
+      "`bmi_update_method = 'percentile'`.",
+      call. = FALSE
+    )
+  }
+
+  simeq_validate_entrant_donor_pool(
     donor_pool = donor_pool,
     entry_age = settings$entry_age
   )
@@ -103,7 +143,7 @@ ponte_run_simulation <- function(
     donor_pool
   }
 
-  initial_state <- ponte_initialise_population(
+  initial_state <- simeq_initialise_population(
     population = population,
     settings = settings
   )
@@ -112,12 +152,41 @@ ponte_run_simulation <- function(
     settings$projection_end_year >
     settings$initial_year
   ) {
-    ponte_validate_entrant_targets(
+    simeq_validate_entrant_targets(
       entrant_targets = entrant_targets,
       start_year = as.integer(
         settings$initial_year + 1L
       ),
       end_year = settings$projection_end_year
+    )
+  }
+
+  mortality_calibration_rr <- NULL
+
+  # Last calendar year with an observed life table (hybrid calibration).
+  last_life_table_year <- if ("year" %in% names(life_table)) {
+    max(as.integer(life_table$year))
+  } else {
+    as.integer(settings$initial_year)
+  }
+
+  if (identical(mortality_calibration, "baseline")) {
+    baseline_life_table <- simeq_select_life_table_year(
+      life_table = life_table,
+      year = settings$initial_year
+    )
+
+    simeq_validate_life_table(
+      life_table = baseline_life_table,
+      entry_age = settings$entry_age,
+      max_age = settings$max_age
+    )
+
+    mortality_calibration_rr <- simeq_mortality_calibration_rr(
+      state = initial_state,
+      rr_bmi = rr_bmi,
+      rr_education = rr_education,
+      education_source = education_source
     )
   }
 
@@ -134,6 +203,10 @@ ponte_run_simulation <- function(
     settings$n_simulations
   )) {
     state <- initial_state
+
+    if (identical(mortality_calibration, "hybrid")) {
+      mortality_calibration_rr <- NULL
+    }
 
     state$simulation <- rep(
       as.integer(simulation_number),
@@ -158,7 +231,22 @@ ponte_run_simulation <- function(
           drop = FALSE
         ]
 
-        annual_result <- ponte_advance_one_year(
+        # Hybrid: annual calibration while the start-of-year life table is
+        # observed; fix the scaling on the last observed year's population.
+        if (
+          identical(mortality_calibration, "hybrid") &&
+          entry_year - 1L >= last_life_table_year &&
+          is.null(mortality_calibration_rr)
+        ) {
+          mortality_calibration_rr <- simeq_mortality_calibration_rr(
+            state = state,
+            rr_bmi = rr_bmi,
+            rr_education = rr_education,
+            education_source = education_source
+          )
+        }
+
+        annual_result <- simeq_advance_one_year(
           state = state,
           life_table = life_table,
           rr_bmi = rr_bmi,
@@ -174,7 +262,11 @@ ponte_run_simulation <- function(
           education_source = education_source,
           entry_age = settings$entry_age,
           max_age = settings$max_age,
-          bmi_limits = bmi_limits
+          bmi_limits = bmi_limits,
+          mortality_calibration_rr = mortality_calibration_rr,
+          bmi_period = bmi_period,
+          bmi_percentile_model = bmi_percentile_model,
+          education_upgrade = education_upgrade
         )
 
         state <- annual_result$living_state

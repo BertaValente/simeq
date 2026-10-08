@@ -1,5 +1,5 @@
 test_that(
-  "ponte_calculate_obesity_burden calculates PAF, YLD and DALYs",
+  "simeq_calculate_obesity_burden calculates PAF, YLD and DALYs",
   {
     simulation_output <- data.frame(
       person_id = c(
@@ -43,7 +43,7 @@ test_that(
       stringsAsFactors = FALSE
     )
 
-    results <- ponte_calculate_obesity_burden(
+    results <- simeq_calculate_obesity_burden(
       simulation_output = simulation_output,
       rr_bmi = rr_bmi,
       disability_weight = 0.05,
@@ -105,7 +105,7 @@ test_that(
 )
 
 test_that(
-  "ponte_calculate_obesity_burden returns zero PAF and YLD without obesity",
+  "simeq_calculate_obesity_burden returns zero PAF and YLD without obesity",
   {
     simulation_output <- data.frame(
       person_id = c(
@@ -145,7 +145,7 @@ test_that(
       stringsAsFactors = FALSE
     )
 
-    results <- ponte_calculate_obesity_burden(
+    results <- simeq_calculate_obesity_burden(
       simulation_output = simulation_output,
       rr_bmi = rr_bmi
     )
@@ -167,7 +167,7 @@ test_that(
 )
 
 test_that(
-  "ponte_calculate_obesity_burden summarises burden-rate intervals",
+  "simeq_calculate_obesity_burden summarises burden-rate intervals",
   {
     simulation_output <- data.frame(
       person_id = c(
@@ -198,7 +198,7 @@ test_that(
       stringsAsFactors = FALSE
     )
 
-    results <- ponte_calculate_obesity_burden(
+    results <- simeq_calculate_obesity_burden(
       simulation_output = simulation_output,
       rr_bmi = rr_bmi
     )
@@ -236,3 +236,46 @@ test_that(
   }
 )
 
+test_that(
+  "attributable YLL uses the PAF of the year before death",
+  {
+    simulation_output <- data.frame(
+      person_id = c("p1", "p2", "p1", "p2", "p3"),
+      simulation = 1L,
+      year = c(2020L, 2020L, 2021L, 2021L, 2021L),
+      age = c(50L, 50L, 51L, 51L, 60L),
+      sex = "women",
+      education_level = "high",
+      survey_weight = c(100, 100, 100, 100, 50),
+      bmi = c(32, 32, 22, 22, 32),
+      bmi_category = c(
+        "obesity_I", "obesity_I", "normal_weight", "normal_weight",
+        "obesity_I"
+      ),
+      alive = c(TRUE, TRUE, TRUE, TRUE, FALSE),
+      death_year = c(NA, NA, NA, NA, 2021L),
+      age_at_death = c(NA, NA, NA, NA, 60L),
+      stringsAsFactors = FALSE
+    )
+
+    rr_bmi <- data.frame(
+      sex = c("women", "women"),
+      bmi_category = c("normal_weight", "obesity_I"),
+      rr_bmi = c(1, 2),
+      stringsAsFactors = FALSE
+    )
+
+    burden <- simeq_calculate_obesity_burden(
+      simulation_output = simulation_output,
+      rr_bmi = rr_bmi,
+      ref_age = 75L
+    )$by_year_sim
+
+    row_2021 <- burden[burden$year == 2021L, ]
+
+    # 2021 survivors are not obese (PAF 0), but the 2020 population that
+    # produced the death was all obese (PAF 0.5).
+    expect_equal(row_2021$paf_obesity, 0)
+    expect_equal(row_2021$yll_obesity_attrib_weighted, 15 * 50 * 0.5)
+  }
+)

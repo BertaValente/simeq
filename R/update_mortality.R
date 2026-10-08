@@ -13,6 +13,8 @@
 #'   `education_level`.
 #' @param entry_age Integer. Minimum represented age.
 #' @param max_age Integer. Maximum represented age.
+#' @param calibration_rr Optional fixed stratum mean relative risks; see
+#'   [simeq_calculate_death_probability()].
 #'
 #' @return A named list containing:
 #' \describe{
@@ -33,9 +35,9 @@
 #'   survey_weight = c(1000, 1200)
 #' )
 #'
-#' state <- ponte_initialise_population(
+#' state <- simeq_initialise_population(
 #'   population = population,
-#'   settings = ponte_settings()
+#'   settings = simeq_settings()
 #' )
 #'
 #' life_table <- expand.grid(
@@ -66,14 +68,14 @@
 #'   rr_education = c(1, 1)
 #' )
 #'
-#' ponte_update_mortality(
+#' simeq_update_mortality(
 #'   state = state,
 #'   life_table = life_table,
 #'   rr_bmi = rr_bmi,
 #'   rr_education = rr_education,
 #'   education_source = "map_3_to_2"
 #' )
-ponte_update_mortality <- function(
+simeq_update_mortality <- function(
     state,
     life_table,
     rr_bmi,
@@ -83,24 +85,26 @@ ponte_update_mortality <- function(
       "map_3_to_2"
     ),
     entry_age = 20L,
-    max_age = 84L
+    max_age = 84L,
+    calibration_rr = NULL
 ) {
   education_source <- match.arg(
     education_source
   )
 
   mortality_probabilities <-
-    ponte_calculate_death_probability(
+    simeq_calculate_death_probability(
       state = state,
       life_table = life_table,
       rr_bmi = rr_bmi,
       rr_education = rr_education,
       education_source = education_source,
       entry_age = entry_age,
-      max_age = max_age
+      max_age = max_age,
+      calibration_rr = calibration_rr
     )
 
-  mortality_result <- ponte_apply_mortality(
+  mortality_result <- simeq_apply_mortality(
     state = state,
     mortality_probabilities = mortality_probabilities,
     entry_age = entry_age,

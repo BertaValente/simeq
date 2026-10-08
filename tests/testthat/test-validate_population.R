@@ -31,12 +31,12 @@ make_valid_population <- function() {
 }
 
 test_that(
-  "ponte_validate_population accepts a valid population",
+  "simeq_validate_population accepts a valid population",
   {
     population <- make_valid_population()
 
     expect_silent(
-      ponte_validate_population(
+      simeq_validate_population(
         population = population,
         initial_year = 2020L
       )
@@ -45,10 +45,10 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_population requires a data frame",
+  "simeq_validate_population requires a data frame",
   {
     expect_error(
-      ponte_validate_population(
+      simeq_validate_population(
         population = list(),
         initial_year = 2020L
       ),
@@ -58,13 +58,13 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_population checks required columns",
+  "simeq_validate_population checks required columns",
   {
     population <- make_valid_population()
     population$bmi <- NULL
 
     expect_error(
-      ponte_validate_population(
+      simeq_validate_population(
         population = population,
         initial_year = 2020L
       ),
@@ -74,13 +74,13 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_population checks unique person IDs",
+  "simeq_validate_population checks unique person IDs",
   {
     population <- make_valid_population()
     population$person_id[2] <- "person_1"
 
     expect_error(
-      ponte_validate_population(
+      simeq_validate_population(
         population = population,
         initial_year = 2020L
       ),
@@ -90,13 +90,13 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_population checks age limits",
+  "simeq_validate_population checks age limits",
   {
     population <- make_valid_population()
     population$age[1] <- 19L
 
     expect_error(
-      ponte_validate_population(
+      simeq_validate_population(
         population = population,
         initial_year = 2020L,
         entry_age = 20L,
@@ -108,13 +108,13 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_population checks BMI limits",
+  "simeq_validate_population checks BMI limits",
   {
     population <- make_valid_population()
     population$bmi[1] <- 85
 
     expect_error(
-      ponte_validate_population(
+      simeq_validate_population(
         population = population,
         initial_year = 2020L
       ),
@@ -124,13 +124,13 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_population checks positive weights",
+  "simeq_validate_population checks positive weights",
   {
     population <- make_valid_population()
     population$survey_weight[1] <- 0
 
     expect_error(
-      ponte_validate_population(
+      simeq_validate_population(
         population = population,
         initial_year = 2020L
       ),

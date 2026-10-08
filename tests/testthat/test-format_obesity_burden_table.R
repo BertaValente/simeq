@@ -1,5 +1,5 @@
 test_that(
-  "ponte_format_obesity_burden_table formats YLL, YLD and DALY rates",
+  "simeq_format_obesity_burden_table formats YLL, YLD and DALY rates",
   {
     burden_results <- list(
       by_year = data.frame(
@@ -19,7 +19,7 @@ test_that(
       )
     )
 
-    results <- ponte_format_obesity_burden_table(
+    results <- simeq_format_obesity_burden_table(
       burden_results = burden_results
     )
 

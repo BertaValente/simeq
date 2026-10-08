@@ -1,40 +1,71 @@
-#' Apply high-BMI PAFs to published disease costs
+#' Apply high-BMI PAFs to published disease costs (ratio-rescaling)
 #'
-#' Rescales published direct medical costs using simulation-derived
-#' population-attributable fractions (PAFs) for high BMI. The PAFs are
-#' applied directly to published disease costs — not via a ratio to a
-#' separately published PAF. This function accepts the `paf_by_outcome`
-#' output from [calculate_obesity_pafs_age_sex()].
+#' Rescales published direct medical costs using a ratio of simulation-derived
+#' PAFs to published (Borges et al.) reference PAFs.
+#'
+#' The published cost matrix from Borges et al. (2025) contains costs that are
+#' **already obesity-attributable** — i.e. total disease costs multiplied by
+#' the published PAFs. Applying a second PAF directly would double-penalise
+#' the estimate. Instead, this function computes the adjustment factor as:
+#'
+#' \deqn{\text{adjustment} = \frac{PAF_{\text{simulated}}}{PAF_{\text{Borges}}}}
+#'
+#' which is equivalent to back-calculating the total disease cost and then
+#' re-applying the simulated PAF.
 #'
 #' @param paf_by_outcome A data frame with `outcome` and `paf_obesity`
 #'   (population-weighted PAF per GBD outcome), as returned by
-#'   [calculate_obesity_pafs_age_sex()].
+#'   [calculate_obesity_pafs_individual()].
 #' @param outcome_mapping A data frame mapping GBD outcome names to cost
 #'   disease groups. Must contain `outcome_pattern` and `disease_group`.
-#' @param costs_dro A data frame of published direct medical costs. Must
-#'   contain `disease_group`, `inpatient`, `outpatient`, `pharmacological`,
-#'   and `total`.
+#' @param costs_dro A data frame of **published obesity-attributable** direct
+#'   medical costs (post-PAF, as reported in Borges et al. 2025). Must contain
+#'   `disease_group`, `inpatient`, `outpatient`, `pharmacological`, and
+#'   `total`.
+#' @param reference_paf_by_group A data frame with `disease_group` and
+#'   `paf_reference` columns giving the published Borges PAFs by disease group.
+#'   Obtain from [obesity_overweight_pafs()] and rename `paf_ow_ob` to
+#'   `paf_reference` before passing. All disease groups in `costs_dro` (that
+#'   are not excluded) must have a matching reference PAF.
 #' @param exclude_disease_groups Character vector of disease groups to exclude
 #'   from attributable-cost estimation (e.g. those without GBD RR evidence).
 #'
-#' @return A list with `costs_by_group`, `paf_by_group`, and `total_costs`.
+#' @return A list with:
+#' \describe{
+#'   \item{costs_by_group}{Per-disease-group adjusted attributable costs,
+#'     including `paf_obesity` (simulated), `paf_reference` (Borges), and
+#'     `paf_ratio`.}
+#'   \item{paf_by_group}{Simulation-derived PAFs collapsed to disease-group
+#'     level.}
+#'   \item{total_costs}{Total attributable costs summed across disease groups.}
+#' }
 #' @export
 calculate_obesity_costs_age_sex <- function(
     paf_by_outcome,
     outcome_mapping,
     costs_dro,
+    reference_paf_by_group = NULL,
     exclude_disease_groups = character()
 ) {
   required_paf     <- c("outcome", "paf_obesity")
   required_mapping <- c("outcome_pattern", "disease_group")
   required_costs   <- c("disease_group", "inpatient", "outpatient",
                         "pharmacological", "total")
+  required_ref     <- c("disease_group", "paf_reference")
 
-  for (nm in list(
+  validation_list <- list(
     list(required_paf,     paf_by_outcome,  "paf_by_outcome"),
     list(required_mapping, outcome_mapping, "outcome_mapping"),
     list(required_costs,   costs_dro,       "costs_dro")
-  )) {
+  )
+  if (!is.null(reference_paf_by_group)) {
+    validation_list <- c(
+      validation_list,
+      list(list(required_ref, reference_paf_by_group, "reference_paf_by_group"))
+    )
+  }
+
+  for (nm in validation_list) {
     missing <- setdiff(nm[[1L]], names(nm[[2L]]))
     if (length(missing) > 0L) {
       stop(nm[[3L]], " is missing required column(s): ",
@@ -54,8 +85,7 @@ calculate_obesity_costs_age_sex <- function(
     )
   }
 
-  # Map GBD outcome names to cost disease groups and average across outcomes
-  # that map to the same disease group
+  # ── Map GBD outcomes to cost disease groups ─────────────────────────────────
   mapping <- outcome_mapping |>
     dplyr::transmute(
       outcome_lc    = tolower(as.character(outcome_pattern)),
@@ -80,27 +110,69 @@ calculate_obesity_costs_age_sex <- function(
     stop("paf_by_group contains invalid PAF values.", call. = FALSE)
   }
 
-  # Join PAFs to costs and apply directly
+  # ── Validate and prepare reference PAFs ─────────────────────────────────────
+  # When reference_paf_by_group is NULL, PAFs are applied directly (no
+  # ratio rescaling). This preserves backward compatibility.
+  if (!is.null(reference_paf_by_group)) {
+    ref_paf <- reference_paf_by_group |>
+      dplyr::transmute(
+        disease_group,
+        paf_reference = as.numeric(paf_reference)
+      )
+    if (any(!is.finite(ref_paf$paf_reference)) ||
+        any(ref_paf$paf_reference <= 0 | ref_paf$paf_reference > 1)) {
+      stop("`reference_paf_by_group` contains invalid PAF values (must be in (0, 1]).",
+           call. = FALSE)
+    }
+  } else {
+    ref_paf <- NULL
+  }
+
+  # ── Join PAFs and costs; compute ratio-rescaled attributable costs ──────────
   costs_by_group <- costs_dro |>
     dplyr::filter(!disease_group %in% exclude_disease_groups) |>
     dplyr::left_join(paf_by_group, by = "disease_group")
+
+  if (!is.null(ref_paf)) {
+    costs_by_group <- costs_by_group |>
+      dplyr::left_join(ref_paf, by = "disease_group")
+  } else {
+    # No reference PAF supplied: apply simulated PAF directly to costs
+    # (costs_dro contains total disease costs, not attributable costs).
+    costs_by_group$paf_reference <- 1.0
+  }
 
   if (any(is.na(costs_by_group$paf_obesity))) {
     missing_groups <- costs_by_group |>
       dplyr::filter(is.na(paf_obesity)) |>
       dplyr::pull(disease_group)
     stop(
-      "No PAF was available for non-excluded cost disease group(s): ",
+      "No simulated PAF available for non-excluded disease group(s): ",
       paste(missing_groups, collapse = ", "), call. = FALSE
     )
   }
 
+  if (any(is.na(costs_by_group$paf_reference))) {
+    missing_ref <- costs_by_group |>
+      dplyr::filter(is.na(paf_reference)) |>
+      dplyr::pull(disease_group)
+    stop(
+      "No reference PAF available for non-excluded disease group(s): ",
+      paste(missing_ref, collapse = ", "), call. = FALSE
+    )
+  }
+
+  # Ratio: simulated PAF / Borges PAF.
+  # Multiplying the published attributable cost by this ratio is equivalent to
+  # back-calculating the total disease cost (÷ paf_reference) and then applying
+  # the simulated PAF (× paf_obesity).
   costs_by_group <- costs_by_group |>
     dplyr::mutate(
-      inpatient_obesity        = inpatient        * paf_obesity,
-      outpatient_obesity       = outpatient       * paf_obesity,
-      pharmacological_obesity  = pharmacological  * paf_obesity,
-      total_obesity            = total            * paf_obesity
+      paf_ratio               = paf_obesity / paf_reference,
+      inpatient_obesity       = inpatient       * paf_ratio,
+      outpatient_obesity      = outpatient      * paf_ratio,
+      pharmacological_obesity = pharmacological * paf_ratio,
+      total_obesity           = total           * paf_ratio
     )
 
   total_costs <- costs_by_group |>

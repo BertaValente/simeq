@@ -4,7 +4,9 @@
 #' by exact age and sex. The `qx` value is the probability that a person aged
 #' exactly `age` dies before reaching the next age.
 #'
-#' @param life_table A data frame with columns `age`, `sex`, and `qx`.
+#' @param life_table A data frame with columns `age`, `sex`, and `qx`, and
+#'   optionally `year`. With `year`, each year must be a complete table; see
+#'   [simeq_select_life_table_year()] for how years are chosen.
 #' @param entry_age Integer. Minimum represented age.
 #' @param max_age Integer. Maximum represented age.
 #'
@@ -18,8 +20,8 @@
 #'   qx = 0.01
 #' )
 #'
-#' ponte_validate_life_table(life_table)
-ponte_validate_life_table <- function(
+#' simeq_validate_life_table(life_table)
+simeq_validate_life_table <- function(
     life_table,
     entry_age = 20L,
     max_age = 84L
@@ -36,6 +38,37 @@ ponte_validate_life_table <- function(
       "`life_table` must contain at least one record.",
       call. = FALSE
     )
+  }
+
+  # Optional calendar-year column: validate each year's table separately.
+  if ("year" %in% names(life_table)) {
+    year <- life_table$year
+
+    if (
+      !is.numeric(year) ||
+      anyNA(year) ||
+      any(!is.finite(year)) ||
+      any(year != as.integer(year))
+    ) {
+      stop(
+        "`year` must contain finite, non-missing integer values.",
+        call. = FALSE
+      )
+    }
+
+    for (table_year in unique(year)) {
+      simeq_validate_life_table(
+        life_table = life_table[
+          year == table_year,
+          setdiff(names(life_table), "year"),
+          drop = FALSE
+        ],
+        entry_age = entry_age,
+        max_age = max_age
+      )
+    }
+
+    return(invisible(life_table))
   }
 
   required_columns <- c(

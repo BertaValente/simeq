@@ -21,12 +21,12 @@ make_entrant_targets_for_validation <- function() {
 }
 
 test_that(
-  "ponte_validate_entrant_targets accepts complete valid targets",
+  "simeq_validate_entrant_targets accepts complete valid targets",
   {
     entrant_targets <- make_entrant_targets_for_validation()
 
     expect_invisible(
-      ponte_validate_entrant_targets(
+      simeq_validate_entrant_targets(
         entrant_targets = entrant_targets,
         start_year = 2021L,
         end_year = 2023L
@@ -36,14 +36,14 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_entrant_targets requires expected columns",
+  "simeq_validate_entrant_targets requires expected columns",
   {
     entrant_targets <- make_entrant_targets_for_validation()
 
     entrant_targets$entrant_population <- NULL
 
     expect_error(
-      ponte_validate_entrant_targets(
+      simeq_validate_entrant_targets(
         entrant_targets = entrant_targets,
         start_year = 2021L,
         end_year = 2023L
@@ -54,14 +54,14 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_entrant_targets requires positive populations",
+  "simeq_validate_entrant_targets requires positive populations",
   {
     entrant_targets <- make_entrant_targets_for_validation()
 
     entrant_targets$entrant_population[1] <- 0
 
     expect_error(
-      ponte_validate_entrant_targets(
+      simeq_validate_entrant_targets(
         entrant_targets = entrant_targets,
         start_year = 2021L,
         end_year = 2023L
@@ -72,7 +72,7 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_entrant_targets requires both sex groups every year",
+  "simeq_validate_entrant_targets requires both sex groups every year",
   {
     entrant_targets <- make_entrant_targets_for_validation()
 
@@ -86,7 +86,7 @@ test_that(
     ]
 
     expect_error(
-      ponte_validate_entrant_targets(
+      simeq_validate_entrant_targets(
         entrant_targets = entrant_targets,
         start_year = 2021L,
         end_year = 2023L
@@ -97,7 +97,7 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_entrant_targets rejects duplicate year-sex rows",
+  "simeq_validate_entrant_targets rejects duplicate year-sex rows",
   {
     entrant_targets <- make_entrant_targets_for_validation()
 
@@ -107,7 +107,7 @@ test_that(
     )
 
     expect_error(
-      ponte_validate_entrant_targets(
+      simeq_validate_entrant_targets(
         entrant_targets = entrant_targets,
         start_year = 2021L,
         end_year = 2023L
@@ -118,14 +118,14 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_entrant_targets rejects years outside the range",
+  "simeq_validate_entrant_targets rejects years outside the range",
   {
     entrant_targets <- make_entrant_targets_for_validation()
 
     entrant_targets$entry_year[1] <- 2020L
 
     expect_error(
-      ponte_validate_entrant_targets(
+      simeq_validate_entrant_targets(
         entrant_targets = entrant_targets,
         start_year = 2021L,
         end_year = 2023L
@@ -136,12 +136,12 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_entrant_targets validates requested year bounds",
+  "simeq_validate_entrant_targets validates requested year bounds",
   {
     entrant_targets <- make_entrant_targets_for_validation()
 
     expect_error(
-      ponte_validate_entrant_targets(
+      simeq_validate_entrant_targets(
         entrant_targets = entrant_targets,
         start_year = 2023L,
         end_year = 2021L

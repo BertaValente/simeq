@@ -7,3 +7,9 @@
 
 results/
 data-raw/
+
+# Quarto render outputs
+analysis/*_files/
+analysis/*_cache/
+analysis/*.docx
+analysis/*.pdf

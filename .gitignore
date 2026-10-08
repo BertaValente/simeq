@@ -6,5 +6,4 @@
 .quarto
 
 results/
-data-raw/*
-!data-raw/*.R
+data-raw/

@@ -1,14 +1,13 @@
-# pontept <img src="man/figures/logo.png" align="right" height="139" alt="" />
+# simeq
 
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![R CMD Check](https://github.com/BertaValente/pontept/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/BertaValente/pontept/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 ## Overview
 
-**pontept** is an individual-level, stochastic, open-cohort microsimulation model for projecting obesity trajectories, health burden, and healthcare costs in the Portuguese adult population (ages 20–84) over the period 1998–2040.
+**simeq** is an individual-level, stochastic, open-cohort microsimulation model for projecting obesity trajectories, health burden, and healthcare costs in the Portuguese adult population (ages 20–84) over the period 1998–2040.
 
 The model comprises three modules:
 
@@ -24,7 +23,7 @@ Install the development version from GitHub:
 
 ```r
 # install.packages("devtools")
-devtools::install_github("BertaValente/pontept")
+devtools::install_github("BertaValente/simeq")
 ```
 
 ## Data requirements
@@ -39,16 +38,15 @@ The following **reference datasets** are bundled with the package in `inst/extda
 
 ## Quick start
 
-The example below uses the bundled reference data and a small synthetic population to demonstrate the simulation workflow. See `vignettes/getting-started.Rmd` for a full walkthrough.
 
 ```r
-library(pontept)
+library(simeq)
 library(dplyr)
 library(readxl)
 
 # 1. Load bundled reference data
-life_table_path <- system.file("extdata", "prob_dying_qx.xlsx", package = "pontept")
-gbd_rr_path     <- system.file("extdata", "gbd_rr_2019.xlsx",  package = "pontept")
+life_table_path <- system.file("extdata", "prob_dying_qx.xlsx", package = "simeq")
+gbd_rr_path     <- system.file("extdata", "gbd_rr_2019.xlsx",  package = "simeq")
 
 life_table <- readxl::read_excel(life_table_path) |>
   ponte_validate_life_table()
@@ -66,7 +64,7 @@ settings <- ponte_settings(
 
 # 3. Build a synthetic baseline population (no NHS data required)
 # In a real analysis, replace this with your prepared NHS-derived population.
-population <- pontept_synthetic_pop   # small built-in dataset, n = 2 000
+population <- simeq_synthetic_pop   # small built-in dataset, n = 2 000
 
 # 4. Run the simulation
 # (requires a fitted BMI transition model; see vignette for full setup)
@@ -82,23 +80,19 @@ population <- pontept_synthetic_pop   # small built-in dataset, n = 2 000
 ## Repository structure
 
 ```
-pontept/
-├── R/                  # Package functions (57 exported)
+simeq/
+├── R/                  # Package functions (61 exported)
 ├── man/                # Roxygen2-generated documentation
-├── tests/testthat/     # Unit tests (33 test files)
-├── inst/extdata/       # Bundled reference data (GBD RRs, life tables)
-├── vignettes/          # Getting-started vignette
-├── data-raw/           # Raw data preparation scripts (not on GitHub for NHS data)
-├── analysis/           # Full analysis scripts and Quarto reports
+├── tests/testthat/     # Unit tests (50 test files)
 └── DESCRIPTION
 ```
 
 ## Citation
 
-If you use **pontept** in your research, please cite:
+If you use **simeq** in your research, please cite:
 
-> Valente B (2026). *pontept: Portuguese Obesity Trajectory Microsimulation*.
-> R package version 0.1.0. <https://github.com/BertaValente/pontept>
+> Valente B (2026). *simeq: Portuguese Obesity Trajectory Microsimulation*.
+> R package version 0.1.0. <https://github.com/BertaValente/simeq>
 
 ## License
 

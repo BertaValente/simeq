@@ -125,11 +125,11 @@ review.
   weight.
 - Roxygen title of `simeq_generate_synthetic_population()` restored.
 
-# pontept 0.1.0
+# simeq 0.1.0
 
 ## First public release
 
-**pontept** is an individual-level dynamic microsimulation model for projecting
+**simeq** is an individual-level dynamic microsimulation model for projecting
 BMI trajectories, health burden, and healthcare costs among Portuguese adults
 (ages 20–84) over the period 1998–2040.
 
@@ -152,7 +152,7 @@ BMI trajectories, health burden, and healthcare costs among Portuguese adults
 
 ### Bundled data
 
-- `pontept_synthetic_pop`: A synthetic baseline population (n = 2 000) for
+- `simeq_synthetic_pop`: A synthetic baseline population (n = 2 000) for
   vignette examples and testing — no restricted data required.
 - `inst/extdata/gbd_rr_2019.xlsx`: GBD 2019 BMI mortality relative risks.
 - `inst/extdata/prob_dying_qx.xlsx`: Portuguese life tables.

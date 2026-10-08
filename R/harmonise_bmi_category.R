@@ -2,15 +2,15 @@
 #' Harmonise BMI category labels
 #'
 #' Converts accepted BMI-category label variants to the standard BMI-category
-#' labels used throughout pontept.
+#' labels used throughout simeq.
 #'
 #' @param x A character vector of BMI category labels.
 #'
-#' @return A character vector using standard pontept BMI category labels.
+#' @return A character vector using standard simeq BMI category labels.
 #'   Unsupported or missing labels return `NA_character_`.
 #'
 #' @export
-ponte_harmonise_bmi_category <- function(x) {
+simeq_harmonise_bmi_category <- function(x) {
   x_chr <- as.character(x)
 
   output <- rep(

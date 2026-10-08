@@ -30,13 +30,13 @@ make_bmi_panel_for_synthetic_cohorts <- function() {
 }
 
 test_that(
-  "ponte_build_bmi_synthetic_cohorts produces one row per cohort transition",
+  "simeq_build_bmi_synthetic_cohorts produces one row per cohort transition",
   {
-    bmi_panel <- ponte_prepare_bmi_panel(
+    bmi_panel <- simeq_prepare_bmi_panel(
       bmi_panel = make_bmi_panel_for_synthetic_cohorts()
     )
 
-    transitions <- ponte_build_bmi_synthetic_cohorts(
+    transitions <- simeq_build_bmi_synthetic_cohorts(
       bmi_panel = bmi_panel
     )
 
@@ -50,13 +50,13 @@ test_that(
 )
 
 test_that(
-  "ponte_build_bmi_synthetic_cohorts returns age_group_t and age_group_t1 columns",
+  "simeq_build_bmi_synthetic_cohorts returns age_group_t and age_group_t1 columns",
   {
-    bmi_panel <- ponte_prepare_bmi_panel(
+    bmi_panel <- simeq_prepare_bmi_panel(
       bmi_panel = make_bmi_panel_for_synthetic_cohorts()
     )
 
-    transitions <- ponte_build_bmi_synthetic_cohorts(
+    transitions <- simeq_build_bmi_synthetic_cohorts(
       bmi_panel = bmi_panel
     )
 
@@ -82,13 +82,13 @@ test_that(
 )
 
 test_that(
-  "ponte_build_bmi_synthetic_cohorts calculates annual BMI change correctly",
+  "simeq_build_bmi_synthetic_cohorts calculates annual BMI change correctly",
   {
-    bmi_panel <- ponte_prepare_bmi_panel(
+    bmi_panel <- simeq_prepare_bmi_panel(
       bmi_panel = make_bmi_panel_for_synthetic_cohorts()
     )
 
-    transitions <- ponte_build_bmi_synthetic_cohorts(
+    transitions <- simeq_build_bmi_synthetic_cohorts(
       bmi_panel = bmi_panel
     )
 
@@ -107,13 +107,13 @@ test_that(
 )
 
 test_that(
-  "ponte_build_bmi_synthetic_cohorts creates a transition_weight column",
+  "simeq_build_bmi_synthetic_cohorts creates a transition_weight column",
   {
-    bmi_panel <- ponte_prepare_bmi_panel(
+    bmi_panel <- simeq_prepare_bmi_panel(
       bmi_panel = make_bmi_panel_for_synthetic_cohorts()
     )
 
-    transitions <- ponte_build_bmi_synthetic_cohorts(
+    transitions <- simeq_build_bmi_synthetic_cohorts(
       bmi_panel = bmi_panel
     )
 
@@ -127,10 +127,10 @@ test_that(
 )
 
 test_that(
-  "ponte_build_bmi_synthetic_cohorts requires prepared data",
+  "simeq_build_bmi_synthetic_cohorts requires prepared data",
   {
     expect_error(
-      ponte_build_bmi_synthetic_cohorts(
+      simeq_build_bmi_synthetic_cohorts(
         bmi_panel = make_bmi_panel_for_synthetic_cohorts()
       ),
       "`bmi_panel` must contain an `age_group` column. ",
@@ -140,7 +140,7 @@ test_that(
 )
 
 test_that(
-  "ponte_build_bmi_synthetic_cohorts works with non-five-year survey intervals",
+  "simeq_build_bmi_synthetic_cohorts works with non-five-year survey intervals",
   {
     # A six-year gap (2015 → 2021) is not a multiple of the five-year age group.
     # The function should still produce valid transitions by snapping to the
@@ -148,9 +148,9 @@ test_that(
     bmi_panel <- make_bmi_panel_for_synthetic_cohorts()
     bmi_panel$year[bmi_panel$year == 2020L] <- 2021L
 
-    bmi_panel <- ponte_prepare_bmi_panel(bmi_panel = bmi_panel)
+    bmi_panel <- simeq_prepare_bmi_panel(bmi_panel = bmi_panel)
 
-    transitions <- ponte_build_bmi_synthetic_cohorts(
+    transitions <- simeq_build_bmi_synthetic_cohorts(
       bmi_panel = bmi_panel
     )
 

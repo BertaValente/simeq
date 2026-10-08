@@ -14,12 +14,12 @@ utils::globalVariables(
 #' level.
 #'
 #' @param burden_results A list returned by
-#'   [ponte_calculate_obesity_burden()].
+#'   [simeq_calculate_obesity_burden()].
 #'
 #' @return A ggplot object.
 #'
 #' @export
-ponte_plot_obesity_burden <- function(
+simeq_plot_obesity_burden <- function(
     burden_results
 ) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {

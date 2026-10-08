@@ -17,11 +17,11 @@
 #'   education_level = c("low", "medium", "high")
 #' )
 #'
-#' ponte_prepare_education_level2(
+#' simeq_prepare_education_level2(
 #'   state = state,
 #'   source = "map_3_to_2"
 #' )
-ponte_prepare_education_level2 <- function(
+simeq_prepare_education_level2 <- function(
     state,
     source = c(
       "existing",

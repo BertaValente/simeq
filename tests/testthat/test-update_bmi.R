@@ -1,15 +1,15 @@
 test_that(
-  "ponte_update_bmi updates BMI-derived variables",
+  "simeq_update_bmi updates BMI-derived variables",
   {
     set.seed(123)
 
-    bmi_transition_model <- ponte_fit_bmi_transition(
+    bmi_transition_model <- simeq_fit_bmi_transition(
       bmi_transitions = make_bmi_transitions_for_model_fit()
     )
 
     state <- make_living_state_for_bmi_prediction()
 
-    updated_state <- ponte_update_bmi(
+    updated_state <- simeq_update_bmi(
       state = state,
       bmi_transition_model = bmi_transition_model
     )
@@ -33,7 +33,7 @@ test_that(
 
     expect_identical(
       updated_state$bmi_category,
-      ponte_bmi_category(
+      simeq_bmi_category(
         updated_state$bmi
       )
     )
@@ -46,17 +46,17 @@ test_that(
 )
 
 test_that(
-  "ponte_update_bmi retains both education variables",
+  "simeq_update_bmi retains both education variables",
   {
     set.seed(123)
 
-    bmi_transition_model <- ponte_fit_bmi_transition(
+    bmi_transition_model <- simeq_fit_bmi_transition(
       bmi_transitions = make_bmi_transitions_for_model_fit()
     )
 
     state <- make_living_state_for_bmi_prediction()
 
-    updated_state <- ponte_update_bmi(
+    updated_state <- simeq_update_bmi(
       state = state,
       bmi_transition_model = bmi_transition_model
     )
@@ -74,17 +74,17 @@ test_that(
 )
 
 test_that(
-  "ponte_update_bmi constrains BMI to requested limits",
+  "simeq_update_bmi constrains BMI to requested limits",
   {
     set.seed(123)
 
-    bmi_transition_model <- ponte_fit_bmi_transition(
+    bmi_transition_model <- simeq_fit_bmi_transition(
       bmi_transitions = make_bmi_transitions_for_model_fit()
     )
 
     state <- make_living_state_for_bmi_prediction()
 
-    updated_state <- ponte_update_bmi(
+    updated_state <- simeq_update_bmi(
       state = state,
       bmi_transition_model = bmi_transition_model,
       bmi_limits = c(
@@ -108,14 +108,14 @@ test_that(
 )
 
 test_that(
-  "ponte_update_bmi validates BMI limits",
+  "simeq_update_bmi validates BMI limits",
   {
-    bmi_transition_model <- ponte_fit_bmi_transition(
+    bmi_transition_model <- simeq_fit_bmi_transition(
       bmi_transitions = make_bmi_transitions_for_model_fit()
     )
 
     expect_error(
-      ponte_update_bmi(
+      simeq_update_bmi(
         state = make_living_state_for_bmi_prediction(),
         bmi_transition_model = bmi_transition_model,
         bmi_limits = c(

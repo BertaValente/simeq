@@ -146,7 +146,7 @@ make_entrant_targets_for_simulation_runner <- function() {
 make_settings_for_simulation_runner <- function(
     n_simulations = 2L
 ) {
-  ponte_settings(
+  simeq_settings(
     initial_year = 2020L,
     projection_end_year = 2022L,
     entry_age = 20L,
@@ -160,11 +160,11 @@ make_settings_for_simulation_runner <- function(
 run_test_simulation <- function(
     n_simulations = 2L
 ) {
-  bmi_transition_model <- ponte_fit_bmi_transition(
+  bmi_transition_model <- simeq_fit_bmi_transition(
     bmi_transitions = make_bmi_transitions_for_model_fit()
   )
 
-  ponte_run_simulation(
+  simeq_run_simulation(
     population = make_population_for_simulation_runner(),
     settings = make_settings_for_simulation_runner(
       n_simulations = n_simulations
@@ -180,7 +180,7 @@ run_test_simulation <- function(
 }
 
 test_that(
-  "ponte_run_simulation returns all years and simulations",
+  "simeq_run_simulation returns all years and simulations",
   {
     simulation_output <- run_test_simulation(
       n_simulations = 2L
@@ -229,7 +229,7 @@ test_that(
 )
 
 test_that(
-  "ponte_run_simulation retains baseline records",
+  "simeq_run_simulation retains baseline records",
   {
     simulation_output <- run_test_simulation(
       n_simulations = 2L
@@ -267,7 +267,7 @@ test_that(
 )
 
 test_that(
-  "ponte_run_simulation creates annual age-20 entrants",
+  "simeq_run_simulation creates annual age-20 entrants",
   {
     simulation_output <- run_test_simulation(
       n_simulations = 2L
@@ -319,7 +319,7 @@ test_that(
 )
 
 test_that(
-  "ponte_run_simulation matches annual entrant-weight targets",
+  "simeq_run_simulation matches annual entrant-weight targets",
   {
     simulation_output <- run_test_simulation(
       n_simulations = 1L
@@ -366,7 +366,7 @@ test_that(
 )
 
 test_that(
-  "ponte_run_simulation produces unique person-year records",
+  "simeq_run_simulation produces unique person-year records",
   {
     simulation_output <- run_test_simulation(
       n_simulations = 2L
@@ -389,7 +389,7 @@ test_that(
 )
 
 test_that(
-  "ponte_run_simulation is reproducible from settings seed",
+  "simeq_run_simulation is reproducible from settings seed",
   {
     output_one <- run_test_simulation(
       n_simulations = 1L
@@ -407,14 +407,14 @@ test_that(
 )
 
 test_that(
-  "ponte_run_simulation requires ponte settings",
+  "simeq_run_simulation requires ponte settings",
   {
-    bmi_transition_model <- ponte_fit_bmi_transition(
+    bmi_transition_model <- simeq_fit_bmi_transition(
       bmi_transitions = make_bmi_transitions_for_model_fit()
     )
 
     expect_error(
-      ponte_run_simulation(
+      simeq_run_simulation(
         population = make_population_for_simulation_runner(),
         settings = list(),
         life_table = make_life_table_for_simulation_runner(),
@@ -425,8 +425,74 @@ test_that(
         entrant_targets =
           make_entrant_targets_for_simulation_runner()
       ),
-      "`settings` must be a `ponte_settings` object.",
+      "`settings` must be a `simeq_settings` object.",
       fixed = TRUE
     )
+  }
+)
+
+test_that(
+  "simeq_run_simulation runs with baseline mortality calibration and by-year BMI periods",
+  {
+    bmi_transition_model <- simeq_fit_bmi_transition(
+      bmi_transitions = make_bmi_transitions_for_model_fit()
+    )
+
+    life_table <- make_life_table_for_simulation_runner()
+    life_table <- rbind(
+      transform(life_table, year = 2020L),
+      transform(life_table, year = 2021L, qx = 0.001)
+    )
+
+    output <- simeq_run_simulation(
+      population = make_population_for_simulation_runner(),
+      settings = make_settings_for_simulation_runner(n_simulations = 1L),
+      life_table = life_table,
+      rr_bmi = make_bmi_risks_for_simulation_runner(),
+      rr_education = make_education_risks_for_simulation_runner(),
+      bmi_transition_model = bmi_transition_model,
+      donor_pool = make_donor_pool_for_simulation_runner(),
+      entrant_targets = make_entrant_targets_for_simulation_runner(),
+      education_source = "existing",
+      mortality_calibration = "baseline",
+      bmi_period = "by_year"
+    )
+
+    expect_equal(sort(unique(output$year)), 2020:2022)
+    expect_true(all(output$survey_weight > 0))
+  }
+)
+
+test_that(
+  "hybrid mortality calibration matches baseline without later life tables",
+  {
+    bmi_transition_model <- simeq_fit_bmi_transition(
+      bmi_transitions = make_bmi_transitions_for_model_fit()
+    )
+
+    run <- function(life_table, calibration) {
+      simeq_run_simulation(
+        population = make_population_for_simulation_runner(),
+        settings = make_settings_for_simulation_runner(n_simulations = 1L),
+        life_table = life_table,
+        rr_bmi = make_bmi_risks_for_simulation_runner(),
+        rr_education = make_education_risks_for_simulation_runner(),
+        bmi_transition_model = bmi_transition_model,
+        donor_pool = make_donor_pool_for_simulation_runner(),
+        entrant_targets = make_entrant_targets_for_simulation_runner(),
+        education_source = "existing",
+        mortality_calibration = calibration
+      )
+    }
+
+    life_table <- make_life_table_for_simulation_runner()
+    expect_identical(run(life_table, "hybrid"), run(life_table, "baseline"))
+
+    life_table_by_year <- rbind(
+      transform(life_table, year = 2020L),
+      transform(life_table, year = 2021L, qx = 0.001)
+    )
+    output <- run(life_table_by_year, "hybrid")
+    expect_equal(sort(unique(output$year)), 2020:2022)
   }
 )

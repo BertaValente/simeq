@@ -51,11 +51,11 @@ make_entrant_targets_for_generation <- function() {
 }
 
 test_that(
-  "ponte_generate_entrants creates valid age-20 living records",
+  "simeq_generate_entrants creates valid age-20 living records",
   {
     set.seed(123)
 
-    entrants <- ponte_generate_entrants(
+    entrants <- simeq_generate_entrants(
       donor_pool = make_donor_pool_for_entrants(),
       entrant_targets = make_entrant_targets_for_generation(),
       entry_year = 2021L,
@@ -104,11 +104,11 @@ test_that(
 )
 
 test_that(
-  "ponte_generate_entrants creates unique person identifiers",
+  "simeq_generate_entrants creates unique person identifiers",
   {
     set.seed(123)
 
-    entrants <- ponte_generate_entrants(
+    entrants <- simeq_generate_entrants(
       donor_pool = make_donor_pool_for_entrants(),
       entrant_targets = make_entrant_targets_for_generation(),
       entry_year = 2021L,
@@ -133,11 +133,11 @@ test_that(
 )
 
 test_that(
-  "ponte_generate_entrants matches sex-specific target weights",
+  "simeq_generate_entrants matches sex-specific target weights",
   {
     set.seed(123)
 
-    entrants <- ponte_generate_entrants(
+    entrants <- simeq_generate_entrants(
       donor_pool = make_donor_pool_for_entrants(),
       entrant_targets = make_entrant_targets_for_generation(),
       entry_year = 2021L,
@@ -170,11 +170,11 @@ test_that(
 )
 
 test_that(
-  "ponte_generate_entrants creates valid BMI-derived variables",
+  "simeq_generate_entrants creates valid BMI-derived variables",
   {
     set.seed(123)
 
-    entrants <- ponte_generate_entrants(
+    entrants <- simeq_generate_entrants(
       donor_pool = make_donor_pool_for_entrants(),
       entrant_targets = make_entrant_targets_for_generation(),
       entry_year = 2021L,
@@ -184,7 +184,7 @@ test_that(
 
     expect_identical(
       entrants$bmi_category,
-      ponte_bmi_category(
+      simeq_bmi_category(
         entrants$bmi
       )
     )
@@ -197,10 +197,10 @@ test_that(
 )
 
 test_that(
-  "ponte_generate_entrants requires at least two microdata entrants",
+  "simeq_generate_entrants requires at least two microdata entrants",
   {
     expect_error(
-      ponte_generate_entrants(
+      simeq_generate_entrants(
         donor_pool = make_donor_pool_for_entrants(),
         entrant_targets = make_entrant_targets_for_generation(),
         entry_year = 2021L,
@@ -213,10 +213,10 @@ test_that(
 )
 
 test_that(
-  "ponte_generate_entrants validates the requested entry year",
+  "simeq_generate_entrants validates the requested entry year",
   {
     expect_error(
-      ponte_generate_entrants(
+      simeq_generate_entrants(
         donor_pool = make_donor_pool_for_entrants(),
         entrant_targets = make_entrant_targets_for_generation(),
         entry_year = 2022L,

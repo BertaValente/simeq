@@ -5,26 +5,34 @@
 #' lived with disability (YLD), and disability-adjusted life years (DALYs).
 #'
 #' @param simulation_output A data frame returned by
-#'   [ponte_run_simulation()].
+#'   [simeq_run_simulation()].
 #' @param rr_bmi A BMI mortality relative-risk table containing `sex`,
 #'   `bmi_category`, and `rr_bmi`.
 #' @param disability_weight Disability weight applied to living people with
-#'   BMI greater than or equal to 30.
-#' @param ref_age Reference age for YLL calculation.
+#'   BMI greater than or equal to 30. Either a single numeric scalar applied
+#'   uniformly to all obesity classes, or a named numeric vector with elements
+#'   `obesity_I`, `obesity_II`, and `obesity_III` for class-specific weights.
+#' @param ref_age Reference life expectancy for YLL calculation. Either a
+#'   single numeric scalar or a named vector `c(men = ..., women = ...)` for
+#'   sex-specific values. Passed directly to [simeq_calculate_yll()].
 #' @param min_age Minimum age included in burden calculations.
 #' @param max_age Maximum age included in burden calculations.
+#' @param ref_life_expectancy Optional remaining life expectancy table
+#'   (`age`, `sex`, `ex`) passed to [simeq_calculate_yll()]. When supplied, it
+#'   replaces `ref_age`.
 #'
 #' @return A list containing annual results by simulation and annual summaries
 #'   averaged across simulations.
 #'
 #' @export
-ponte_calculate_obesity_burden <- function(
+simeq_calculate_obesity_burden <- function(
     simulation_output,
     rr_bmi,
     disability_weight = 0.05,
     ref_age = 75L,
     min_age = 20L,
-    max_age = 84L
+    max_age = 84L,
+    ref_life_expectancy = NULL
 ) {
   required_output_columns <- c(
     "person_id",
@@ -75,29 +83,42 @@ ponte_calculate_obesity_burden <- function(
     )
   }
 
-  if (
-    length(disability_weight) != 1L ||
-    is.na(disability_weight) ||
-    disability_weight < 0 ||
-    disability_weight > 1
-  ) {
-    stop(
-      "`disability_weight` must be one number between 0 and 1.",
-      call. = FALSE
+  obesity_classes <- c("obesity_I", "obesity_II", "obesity_III")
+
+  if (length(disability_weight) == 1L) {
+    if (is.na(disability_weight) || disability_weight < 0 || disability_weight > 1) {
+      stop(
+        "`disability_weight` must be a number between 0 and 1.",
+        call. = FALSE
+      )
+    }
+    disability_weight <- stats::setNames(
+      rep(disability_weight, 3L),
+      obesity_classes
     )
+  } else {
+    if (!identical(sort(names(disability_weight)), sort(obesity_classes))) {
+      stop(
+        "`disability_weight` must be a named vector with elements ",
+        paste(obesity_classes, collapse = ", "), ".",
+        call. = FALSE
+      )
+    }
+    if (any(is.na(disability_weight)) || any(disability_weight < 0) || any(disability_weight > 1)) {
+      stop(
+        "All values in `disability_weight` must be between 0 and 1.",
+        call. = FALSE
+      )
+    }
   }
 
-  obesity_levels <- c(
-    "obesity_I",
-    "obesity_II",
-    "obesity_III"
-  )
+  obesity_levels <- obesity_classes
 
-  simulation_output$bmi_category <- ponte_harmonise_bmi_category(
+  simulation_output$bmi_category <- simeq_harmonise_bmi_category(
     simulation_output$bmi_category
   )
 
-  rr_bmi$bmi_category <- ponte_harmonise_bmi_category(
+  rr_bmi$bmi_category <- simeq_harmonise_bmi_category(
     rr_bmi$bmi_category
   )
 
@@ -163,35 +184,80 @@ ponte_calculate_obesity_burden <- function(
     )
   }
 
-  yll_results <- ponte_calculate_yll(
+  yll_results <- simeq_calculate_yll(
     simulation_output = simulation_output,
     ref_age = ref_age,
     min_age = min_age,
-    max_age = max_age
+    max_age = max_age,
+    ref_life_expectancy = ref_life_expectancy
   )
 
   yll_by_year_sim <- yll_results$by_year_sim
 
-  living_keys <- paste(
-    living_population$simulation,
-    living_population$year,
-    living_population$sex,
-    living_population$education_level,
-    sep = "\r"
+  # Pre-split by group — O(n log n) vs the previous O(n²) which() loop
+  group_indices <- split(
+    seq_len(nrow(living_population)),
+    interaction(
+      living_population$simulation,
+      living_population$year,
+      living_population$sex,
+      living_population$education_level,
+      drop = TRUE
+    )
   )
 
-  group_keys <- unique(living_keys)
+  # Pre-build a fast YLL lookup key rather than scanning yll_by_year_sim
+  # for every group (avoids a second O(n²) search)
+  if (nrow(yll_by_year_sim) > 0L) {
+    yll_key <- paste(
+      yll_by_year_sim$simulation,
+      yll_by_year_sim$death_year,
+      yll_by_year_sim$sex,
+      yll_by_year_sim$education_level,
+      sep = "\r"
+    )
+    yll_lookup <- tapply(
+      yll_by_year_sim$total_yll_weighted,
+      yll_key,
+      sum,
+      na.rm = TRUE
+    )
+  } else {
+    yll_lookup <- NULL
+  }
+
+  # Deaths recorded in year t arise from the t-1 to t transition, with
+  # mortality based on BMI at the start of that transition, so their
+  # attributable share uses the PAF of the year t-1 population.
+  paf_lookup <- vapply(
+    group_indices,
+    function(idx) {
+      .obesity_mortality_paf(
+        living_population[idx, , drop = FALSE],
+        rr_bmi,
+        obesity_levels
+      )
+    },
+    numeric(1)
+  )
+  names(paf_lookup) <- vapply(
+    group_indices,
+    function(idx) {
+      paste(
+        living_population$simulation[idx[1]],
+        living_population$year[idx[1]],
+        living_population$sex[idx[1]],
+        living_population$education_level[idx[1]],
+        sep = "\r"
+      )
+    },
+    character(1)
+  )
 
   burden_rows <- lapply(
-    group_keys,
-    function(key) {
-      index <- which(living_keys == key)
-
-      group_data <- living_population[
-        index,
-        ,
-        drop = FALSE
-      ]
+    group_indices,
+    function(idx) {
+      group_data <- living_population[idx, , drop = FALSE]
 
       N_weighted <- sum(
         group_data$survey_weight,
@@ -210,61 +276,11 @@ ponte_calculate_obesity_burden <- function(
         NA_real_
       }
 
-      rr_keys <- paste(
-        rr_bmi$sex,
-        rr_bmi$bmi_category,
-        sep = "\r"
-      )
-
-      person_rr_keys <- paste(
-        group_data$sex,
-        group_data$bmi_category,
-        sep = "\r"
-      )
-
-      matched_rr <- rr_bmi$rr_bmi[
-        match(person_rr_keys, rr_keys)
-      ]
-
-      rr_for_paf <- rep(
-        1,
-        nrow(group_data)
-      )
-
       obesity_category <- group_data$bmi_category %in%
         obesity_levels
-
-      rr_for_paf[
-        obesity_category &
-          !is.na(matched_rr)
-      ] <- matched_rr[
-        obesity_category &
-          !is.na(matched_rr)
-      ]
-
-      paf_denominator <- sum(
-        group_data$survey_weight * rr_for_paf,
-        na.rm = TRUE
+      paf_obesity <- .obesity_mortality_paf(
+        group_data, rr_bmi, obesity_levels
       )
-
-      paf_numerator <- sum(
-        group_data$survey_weight *
-          (rr_for_paf - 1),
-        na.rm = TRUE
-      )
-
-      paf_obesity <- if (paf_denominator > 0) {
-        max(
-          min(
-            paf_numerator / paf_denominator,
-            1
-          ),
-          0
-        )
-      } else {
-        0
-      }
-
       current_simulation <- group_data$simulation[1]
       current_year <- group_data$year[1]
       current_sex <- group_data$sex[1]
@@ -272,26 +288,14 @@ ponte_calculate_obesity_burden <- function(
 
       yll_total <- 0
 
-      if (nrow(yll_by_year_sim) > 0L) {
-        yll_index <- which(
-          yll_by_year_sim$simulation ==
-            current_simulation &
-            yll_by_year_sim$death_year ==
-            current_year &
-            yll_by_year_sim$sex ==
-            current_sex &
-            yll_by_year_sim$education_level ==
-            current_education
+      if (!is.null(yll_lookup)) {
+        lookup_key <- paste(
+          current_simulation, current_year,
+          current_sex, current_education,
+          sep = "\r"
         )
-
-        if (length(yll_index) > 0L) {
-          yll_total <- sum(
-            yll_by_year_sim$total_yll_weighted[
-              yll_index
-            ],
-            na.rm = TRUE
-          )
-        }
+        hit <- yll_lookup[lookup_key]
+        if (!is.na(hit)) yll_total <- hit
       }
 
       N_obesity_weighted <- sum(
@@ -299,11 +303,23 @@ ponte_calculate_obesity_burden <- function(
         na.rm = TRUE
       )
 
-      yld_obesity_attrib <- N_obesity_weighted *
-        disability_weight
+      obese_rows <- group_data[obesity_category, ]
+      yld_obesity_attrib <- sum(
+        obese_rows$survey_weight *
+          disability_weight[obese_rows$bmi_category],
+        na.rm = TRUE
+      )
 
+      paf_for_deaths <- paf_lookup[paste(
+        current_simulation, current_year - 1L,
+        current_sex, current_education,
+        sep = "\r"
+      )]
+      if (is.na(paf_for_deaths)) {
+        paf_for_deaths <- paf_obesity
+      }
       yll_obesity_attrib_weighted <- yll_total *
-        paf_obesity
+        unname(paf_for_deaths)
 
       daly_obesity_weighted <- yll_obesity_attrib_weighted +
         yld_obesity_attrib
@@ -501,4 +517,64 @@ ponte_calculate_obesity_burden <- function(
     by_year_sim = by_year_sim,
     by_year = by_year
   )
+}
+
+# Obesity all-cause mortality PAF for one group (exposed: obesity I-III).
+.obesity_mortality_paf <- function(group_data, rr_bmi, obesity_levels) {
+  rr_keys <- paste(
+    rr_bmi$sex,
+    rr_bmi$bmi_category,
+    sep = "\r"
+  )
+
+  person_rr_keys <- paste(
+    group_data$sex,
+    group_data$bmi_category,
+    sep = "\r"
+  )
+
+  matched_rr <- rr_bmi$rr_bmi[
+    match(person_rr_keys, rr_keys)
+  ]
+
+  rr_for_paf <- rep(
+    1,
+    nrow(group_data)
+  )
+
+  obesity_category <- group_data$bmi_category %in%
+    obesity_levels
+
+  rr_for_paf[
+    obesity_category &
+      !is.na(matched_rr)
+  ] <- matched_rr[
+    obesity_category &
+      !is.na(matched_rr)
+  ]
+
+  paf_denominator <- sum(
+    group_data$survey_weight * rr_for_paf,
+    na.rm = TRUE
+  )
+
+  paf_numerator <- sum(
+    group_data$survey_weight *
+      (rr_for_paf - 1),
+    na.rm = TRUE
+  )
+
+  paf_obesity <- if (paf_denominator > 0) {
+    max(
+      min(
+        paf_numerator / paf_denominator,
+        1
+      ),
+      0
+    )
+  } else {
+    0
+  }
+
+  paf_obesity
 }

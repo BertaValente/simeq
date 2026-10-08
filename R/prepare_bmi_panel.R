@@ -18,17 +18,17 @@
 #'   bmi = c(22.1, 23.8, 25.4, 24.7)
 #' )
 #'
-#' ponte_prepare_bmi_panel(
+#' simeq_prepare_bmi_panel(
 #'   bmi_panel = bmi_panel
 #' )
-ponte_prepare_bmi_panel <- function(
+simeq_prepare_bmi_panel <- function(
     bmi_panel
 ) {
-  ponte_validate_bmi_panel(
+  simeq_validate_bmi_panel(
     bmi_panel = bmi_panel
   )
 
-  bmi_panel$age_group <- ponte_bmi_age_group(
+  bmi_panel$age_group <- simeq_bmi_age_group(
     age = bmi_panel$age
   )
 

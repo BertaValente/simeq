@@ -6,8 +6,8 @@
 #' National Health Service perspective.
 #'
 #' @return A tibble with cost disease groups and costs in thousands of euros.
-#' @references Borges M, et al. Disease and Economic Burden of Overweight
-#'   and Obesity in Portugal. Obesity Facts. 2025;18:107-120.
+#' @references Borges M, et al. Burden of Disease and Cost of Illness of
+#'   Overweight and Obesity in Portugal. Obesity Facts. 2025;18(2):107-120.
 #'   doi:10.1159/000541781.
 #' @export
 obesity_direct_costs_2018 <- function() {
@@ -36,8 +36,8 @@ obesity_direct_costs_2018 <- function() {
 #' combined overweight and obesity. PAFs are proportions, not percentages.
 #'
 #' @return A tibble containing disease-specific overweight-and-obesity PAFs.
-#' @references Borges M, et al. Disease and Economic Burden of Overweight
-#'   and Obesity in Portugal. Obesity Facts. 2025;18:107-120.
+#' @references Borges M, et al. Burden of Disease and Cost of Illness of
+#'   Overweight and Obesity in Portugal. Obesity Facts. 2025;18(2):107-120.
 #'   doi:10.1159/000541781.
 #' @export
 obesity_overweight_pafs <- function() {

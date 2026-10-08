@@ -1,28 +1,46 @@
-Package: pontept
+Package: simeq
 Title: Portuguese Obesity Trajectory Microsimulation
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R:
     person(
         given = "Berta",
         family = "Valente",
         email = "berta.valente@ispup.up.pt",
-        role = c("aut", "cre")
+        role = c("aut", "cre"),
+        comment = c(ORCID = "0000-0000-0000-0000")
     )
-Description: An individual-level microsimulation package for modelling
-    population demographics, body mass index trajectories, mortality, and
-    obesity-related outcomes among adults in Portugal.
+Description: An individual-level, stochastic, open-cohort microsimulation for
+    modelling population demographics, body mass index (BMI) trajectories,
+    mortality, and obesity-related health and economic outcomes among adults in
+    Portugal over the period 1998–2040. The model comprises three modules:
+    (1) BMI trajectory simulation using empirical transition matrices derived
+    from the Portuguese National Health Survey; (2) health burden estimation
+    (years of life lost, quality-adjusted life years, and disability-adjusted
+    life years); and (3) obesity-attributable healthcare cost projection.
+    The package is designed to support population-level policy analysis,
+    including budget-allocation and targeting scenarios for obesity interventions.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
+URL: https://github.com/BertaValente/simeq
+BugReports: https://github.com/BertaValente/simeq/issues
 Imports:
     dplyr,
+    ggplot2,
+    readxl,
     rlang,
     stats,
+    stringr,
     tibble,
-    tidyr
+    tidyr,
+    utils
 Suggests:
+    data.table,
     devtools,
-    readxl,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    writexl
 Config/testthat/edition: 3
+VignetteBuilder: knitr

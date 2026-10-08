@@ -26,18 +26,18 @@ make_state_for_ageing <- function() {
     )
   )
 
-  ponte_initialise_population(
+  simeq_initialise_population(
     population = population,
-    settings = ponte_settings()
+    settings = simeq_settings()
   )
 }
 
 test_that(
-  "ponte_age_population advances ages below the upper cap",
+  "simeq_age_population advances ages below the upper cap",
   {
     state <- make_state_for_ageing()
 
-    aged_state <- ponte_age_population(state)
+    aged_state <- simeq_age_population(state)
 
     expect_identical(
       aged_state$age[1],
@@ -47,30 +47,30 @@ test_that(
 )
 
 test_that(
-  "ponte_age_population retains people at the upper age cap",
+  "simeq_age_population removes people passing the upper age",
   {
     state <- make_state_for_ageing()
 
-    aged_state <- ponte_age_population(state)
+    aged_state <- simeq_age_population(state)
 
     expect_identical(
-      aged_state$age[2],
-      84L
+      aged_state$person_id,
+      "person_1"
     )
 
     expect_identical(
       nrow(aged_state),
-      2L
+      1L
     )
   }
 )
 
 test_that(
-  "ponte_age_population retains all non-age state values",
+  "simeq_age_population retains all non-age state values",
   {
     state <- make_state_for_ageing()
 
-    aged_state <- ponte_age_population(state)
+    aged_state <- simeq_age_population(state)
 
     unchanged_columns <- setdiff(
       names(state),
@@ -79,20 +79,20 @@ test_that(
 
     expect_identical(
       aged_state[unchanged_columns],
-      state[unchanged_columns]
+      state[1L, unchanged_columns]
     )
   }
 )
 
 test_that(
-  "ponte_age_population validates its input state",
+  "simeq_age_population validates its input state",
   {
     state <- make_state_for_ageing()
 
     state$alive[1] <- FALSE
 
     expect_error(
-      ponte_age_population(state),
+      simeq_age_population(state),
       "`state` must contain only living records"
     )
   }

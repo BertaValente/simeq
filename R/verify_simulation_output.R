@@ -5,7 +5,7 @@
 #' consistency, entrant ages, and optional entrant-target calibration.
 #'
 #' @param simulation_output A data frame returned by
-#'   [ponte_run_simulation()].
+#'   [simeq_run_simulation()].
 #' @param entrant_targets Optional annual entrant-target table.
 #' @param entry_age Integer age at which new entrants join the simulation.
 #' @param max_age Integer maximum represented age.
@@ -13,7 +13,7 @@
 #'
 #' @return A data frame containing one row per verification check.
 #' @export
-ponte_verify_simulation_output <- function(
+simeq_verify_simulation_output <- function(
     simulation_output,
     entrant_targets = NULL,
     entry_age = 20L,
@@ -299,7 +299,7 @@ ponte_verify_simulation_output <- function(
     as.character(
       simulation_output$bmi_category
     ),
-    ponte_bmi_category(
+    simeq_bmi_category(
       simulation_output$bmi
     )
   )
@@ -332,7 +332,7 @@ ponte_verify_simulation_output <- function(
   entrant_weights_match_targets <- NA
 
   if (!is.null(entrant_targets)) {
-    ponte_validate_entrant_targets(
+    simeq_validate_entrant_targets(
       entrant_targets = entrant_targets,
       start_year = min(
         entrant_targets$entry_year

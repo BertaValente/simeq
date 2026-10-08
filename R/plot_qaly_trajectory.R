@@ -1,10 +1,10 @@
 utils::globalVariables(
   c(
     "year",
-    "mean_qaly_per_person",
+    "mean_annual_qaly_per_person",
     "obesity_status",
-    "qaly_lo",
-    "qaly_hi"
+    "qaly_per_person_lo",
+    "qaly_per_person_hi"
   )
 )
 
@@ -13,12 +13,12 @@ utils::globalVariables(
 #' Creates annual QALY trajectories by obesity status, with 95% simulation
 #' interval ribbons. Panels are stratified by sex and education level.
 #'
-#' @param qaly_results A list returned by [ponte_calculate_qalys()].
+#' @param qaly_results A list returned by [simeq_calculate_qalys()].
 #'
 #' @return A ggplot object.
 #'
 #' @export
-ponte_plot_qaly_trajectory <- function(
+simeq_plot_qaly_trajectory <- function(
     qaly_results
 ) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
@@ -46,9 +46,9 @@ ponte_plot_qaly_trajectory <- function(
     "sex",
     "education_level",
     "obesity_status",
-    "mean_qaly_per_person",
-    "qaly_lo",
-    "qaly_hi"
+    "mean_annual_qaly_per_person",
+    "qaly_per_person_lo",
+    "qaly_per_person_hi"
   )
 
   missing_columns <- setdiff(
@@ -69,15 +69,15 @@ ponte_plot_qaly_trajectory <- function(
     trajectory_data,
     ggplot2::aes(
       x = year,
-      y = mean_qaly_per_person,
+      y = mean_annual_qaly_per_person,
       colour = obesity_status,
       fill = obesity_status
     )
   ) +
     ggplot2::geom_ribbon(
       ggplot2::aes(
-        ymin = qaly_lo,
-        ymax = qaly_hi
+        ymin = qaly_per_person_lo,
+        ymax = qaly_per_person_hi
       ),
       alpha = 0.20,
       colour = NA

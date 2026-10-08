@@ -29,18 +29,18 @@ make_state_for_advance_year <- function() {
     )
   )
 
-  ponte_initialise_population(
+  simeq_initialise_population(
     population = population,
-    settings = ponte_settings()
+    settings = simeq_settings()
   )
 }
 
 test_that(
-  "ponte_advance_year advances every record by one year",
+  "simeq_advance_year advances every record by one year",
   {
     state <- make_state_for_advance_year()
 
-    updated_state <- ponte_advance_year(state)
+    updated_state <- simeq_advance_year(state)
 
     expect_identical(
       updated_state$year,
@@ -55,11 +55,11 @@ test_that(
 )
 
 test_that(
-  "ponte_advance_year retains all non-year state values",
+  "simeq_advance_year retains all non-year state values",
   {
     state <- make_state_for_advance_year()
 
-    updated_state <- ponte_advance_year(state)
+    updated_state <- simeq_advance_year(state)
 
     unchanged_columns <- setdiff(
       names(state),
@@ -74,14 +74,14 @@ test_that(
 )
 
 test_that(
-  "ponte_advance_year validates its input state",
+  "simeq_advance_year validates its input state",
   {
     state <- make_state_for_advance_year()
 
     state$alive[1] <- FALSE
 
     expect_error(
-      ponte_advance_year(state),
+      simeq_advance_year(state),
       "`state` must contain only living records"
     )
   }

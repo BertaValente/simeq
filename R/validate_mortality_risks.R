@@ -5,8 +5,12 @@
 #'
 #' @param rr_bmi A data frame with columns `sex`, `bmi_category`, and
 #'   `rr_bmi`.
-#' @param rr_education A data frame with columns `education_level2` and
-#'   `rr_education`.
+#' @param rr_education Either a data frame with columns `education_level2`
+#'   and `rr_education` (one relative risk per education group), or a data
+#'   frame with column `rr_per_year` (relative risk per additional year of
+#'   schooling, applied to the state's `education_years`), optionally with
+#'   `age_min` and `age_max` for age-specific values covering ages without
+#'   overlap.
 #'
 #' @return A list containing the validated `rr_bmi` and `rr_education`
 #'   data frames, invisibly.
@@ -33,11 +37,11 @@
 #'   rr_education = c(1, 1)
 #' )
 #'
-#' ponte_validate_mortality_risks(
+#' simeq_validate_mortality_risks(
 #'   rr_bmi = rr_bmi,
 #'   rr_education = rr_education
 #' )
-ponte_validate_mortality_risks <- function(
+simeq_validate_mortality_risks <- function(
     rr_bmi,
     rr_education
 ) {
@@ -75,10 +79,16 @@ ponte_validate_mortality_risks <- function(
     )
   }
 
-  required_rr_education_columns <- c(
-    "education_level2",
-    "rr_education"
-  )
+  per_year_education <- "rr_per_year" %in% names(rr_education)
+
+  required_rr_education_columns <- if (per_year_education) {
+    "rr_per_year"
+  } else {
+    c(
+      "education_level2",
+      "rr_education"
+    )
+  }
 
   missing_rr_education_columns <- setdiff(
     required_rr_education_columns,
@@ -192,6 +202,19 @@ ponte_validate_mortality_risks <- function(
     )
   }
 
+  if (per_year_education) {
+    .validate_rr_education_per_year(rr_education)
+
+    return(
+      invisible(
+        list(
+          rr_bmi = rr_bmi,
+          rr_education = rr_education
+        )
+      )
+    )
+  }
+
   education_level2 <- as.character(
     rr_education$education_level2
   )
@@ -249,4 +272,49 @@ ponte_validate_mortality_risks <- function(
       rr_education = rr_education
     )
   )
+}
+
+# Checks for the per-year-of-schooling education relative-risk format.
+.validate_rr_education_per_year <- function(rr_education) {
+  rr_per_year <- rr_education$rr_per_year
+
+  if (
+    !is.numeric(rr_per_year) ||
+    anyNA(rr_per_year) ||
+    any(!is.finite(rr_per_year)) ||
+    any(rr_per_year <= 0)
+  ) {
+    stop(
+      "`rr_education$rr_per_year` must contain positive, finite values.",
+      call. = FALSE
+    )
+  }
+
+  has_age_range <- all(c("age_min", "age_max") %in% names(rr_education))
+
+  if (!has_age_range && nrow(rr_education) != 1L) {
+    stop(
+      "`rr_education` needs `age_min` and `age_max` when it has more than ",
+      "one `rr_per_year` row.",
+      call. = FALSE
+    )
+  }
+
+  if (has_age_range) {
+    ordered <- rr_education[order(rr_education$age_min), , drop = FALSE]
+
+    if (
+      anyNA(ordered$age_min) ||
+      anyNA(ordered$age_max) ||
+      any(ordered$age_min > ordered$age_max) ||
+      any(utils::head(ordered$age_max, -1L) >= utils::tail(ordered$age_min, -1L))
+    ) {
+      stop(
+        "`rr_education` age ranges must be increasing and must not overlap.",
+        call. = FALSE
+      )
+    }
+  }
+
+  invisible(rr_education)
 }

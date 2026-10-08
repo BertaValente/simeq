@@ -40,10 +40,10 @@ make_valid_bmi_panel <- function() {
 }
 
 test_that(
-  "ponte_validate_bmi_panel accepts a valid BMI panel",
+  "simeq_validate_bmi_panel accepts a valid BMI panel",
   {
     expect_invisible(
-      ponte_validate_bmi_panel(
+      simeq_validate_bmi_panel(
         bmi_panel = make_valid_bmi_panel()
       )
     )
@@ -51,14 +51,14 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_bmi_panel requires all input columns",
+  "simeq_validate_bmi_panel requires all input columns",
   {
     bmi_panel <- make_valid_bmi_panel()
 
     bmi_panel$bmi <- NULL
 
     expect_error(
-      ponte_validate_bmi_panel(
+      simeq_validate_bmi_panel(
         bmi_panel = bmi_panel
       ),
       "`bmi_panel` is missing required columns: bmi"
@@ -67,14 +67,14 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_bmi_panel requires men and women",
+  "simeq_validate_bmi_panel requires men and women",
   {
     bmi_panel <- make_valid_bmi_panel()
 
     bmi_panel$sex <- "men"
 
     expect_error(
-      ponte_validate_bmi_panel(
+      simeq_validate_bmi_panel(
         bmi_panel = bmi_panel
       ),
       "`bmi_panel$sex` must contain both `men` and `women`",
@@ -83,14 +83,14 @@ test_that(
   }
 )
 test_that(
-  "ponte_validate_bmi_panel rejects ages outside the model range",
+  "simeq_validate_bmi_panel rejects ages outside the model range",
   {
     bmi_panel <- make_valid_bmi_panel()
 
     bmi_panel$age[1L] <- 19L
 
     expect_error(
-      ponte_validate_bmi_panel(
+      simeq_validate_bmi_panel(
         bmi_panel = bmi_panel
       ),
       "`bmi_panel$age` must contain only integer values from 20 to 84",
@@ -100,14 +100,14 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_bmi_panel requires positive survey weights",
+  "simeq_validate_bmi_panel requires positive survey weights",
   {
     bmi_panel <- make_valid_bmi_panel()
 
     bmi_panel$survey_weight[1L] <- 0
 
     expect_error(
-      ponte_validate_bmi_panel(
+      simeq_validate_bmi_panel(
         bmi_panel = bmi_panel
       ),
       "`bmi_panel$survey_weight` must contain only positive finite values",
@@ -117,14 +117,14 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_bmi_panel requires positive BMI values",
+  "simeq_validate_bmi_panel requires positive BMI values",
   {
     bmi_panel <- make_valid_bmi_panel()
 
     bmi_panel$bmi[1L] <- 0
 
     expect_error(
-      ponte_validate_bmi_panel(
+      simeq_validate_bmi_panel(
         bmi_panel = bmi_panel
       ),
       "`bmi_panel$bmi` must contain only positive finite values",

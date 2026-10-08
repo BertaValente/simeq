@@ -1,4 +1,4 @@
-' Generate a fully synthetic PONTE-PT baseline population
+#' Generate a fully synthetic PONTE-PT baseline population
 #'
 #' Generates new simulation agents from POND2-standardized survey weights.
 #' The observed NHS records and their survey weights are used only to estimate
@@ -12,7 +12,7 @@
 #'
 #' @return A tibble of synthetic simulation agents.
 #' @export
-ponte_generate_synthetic_population <- function(
+simeq_generate_synthetic_population <- function(
     population,
     n_agents = 100000L,
     seed = NULL,

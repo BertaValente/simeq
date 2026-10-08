@@ -1,5 +1,5 @@
 test_that(
-  "ponte_prepare_education_level2 maps three education levels",
+  "simeq_prepare_education_level2 maps three education levels",
   {
     state <- data.frame(
       education_level = c(
@@ -9,7 +9,7 @@ test_that(
       )
     )
 
-    updated_state <- ponte_prepare_education_level2(
+    updated_state <- simeq_prepare_education_level2(
       state = state,
       source = "map_3_to_2"
     )
@@ -35,7 +35,7 @@ test_that(
 )
 
 test_that(
-  "ponte_prepare_education_level2 accepts an existing valid variable",
+  "simeq_prepare_education_level2 accepts an existing valid variable",
   {
     state <- data.frame(
       education_level2 = c(
@@ -44,7 +44,7 @@ test_that(
       )
     )
 
-    updated_state <- ponte_prepare_education_level2(
+    updated_state <- simeq_prepare_education_level2(
       state = state,
       source = "existing"
     )
@@ -60,14 +60,14 @@ test_that(
 )
 
 test_that(
-  "ponte_prepare_education_level2 requires the relevant input column",
+  "simeq_prepare_education_level2 requires the relevant input column",
   {
     state <- data.frame(
       education_level = "low"
     )
 
     expect_error(
-      ponte_prepare_education_level2(
+      simeq_prepare_education_level2(
         state = state,
         source = "existing"
       ),
@@ -79,7 +79,7 @@ test_that(
     )
 
     expect_error(
-      ponte_prepare_education_level2(
+      simeq_prepare_education_level2(
         state = state,
         source = "map_3_to_2"
       ),
@@ -89,7 +89,7 @@ test_that(
 )
 
 test_that(
-  "ponte_prepare_education_level2 rejects invalid existing values",
+  "simeq_prepare_education_level2 rejects invalid existing values",
   {
     state <- data.frame(
       education_level2 = c(
@@ -99,7 +99,7 @@ test_that(
     )
 
     expect_error(
-      ponte_prepare_education_level2(
+      simeq_prepare_education_level2(
         state = state,
         source = "existing"
       ),
@@ -109,7 +109,7 @@ test_that(
 )
 
 test_that(
-  "ponte_prepare_education_level2 rejects invalid three-level values",
+  "simeq_prepare_education_level2 rejects invalid three-level values",
   {
     state <- data.frame(
       education_level = c(
@@ -119,7 +119,7 @@ test_that(
     )
 
     expect_error(
-      ponte_prepare_education_level2(
+      simeq_prepare_education_level2(
         state = state,
         source = "map_3_to_2"
       ),
@@ -129,10 +129,10 @@ test_that(
 )
 
 test_that(
-  "ponte_prepare_education_level2 requires a data frame",
+  "simeq_prepare_education_level2 requires a data frame",
   {
     expect_error(
-      ponte_prepare_education_level2(
+      simeq_prepare_education_level2(
         state = c(
           "low",
           "medium"

@@ -14,16 +14,16 @@
 #'   simulation year.
 #' @param seed Integer. Random-number seed.
 #'
-#' @return An object of class `"ponte_settings"`.
+#' @return An object of class `"simeq_settings"`.
 #' @export
 #'
 #' @examples
-#' settings <- ponte_settings(
+#' settings <- simeq_settings(
 #'   initial_year = 2020,
 #'   projection_end_year = 2040,
 #'   n_simulations = 100
 #' )
-ponte_settings <- function(
+simeq_settings <- function(
     initial_year = 2020L,
     projection_end_year = 2040L,
     entry_age = 20L,
@@ -118,12 +118,12 @@ ponte_settings <- function(
       entrant_n_per_year = entrant_n_per_year,
       seed = seed
     ),
-    class = "ponte_settings"
+    class = "simeq_settings"
   )
 }
 
 #' @export
-print.ponte_settings <- function(
+print.simeq_settings <- function(
     x,
     ...
 ) {

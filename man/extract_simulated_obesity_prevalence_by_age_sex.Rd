@@ -7,7 +7,7 @@
 extract_simulated_obesity_prevalence_by_age_sex(
   simulation_output,
   year = 2025L,
-  weight_col = "surveyweight"
+  weight_col = "survey_weight"
 )
 }
 \arguments{

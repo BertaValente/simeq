@@ -127,7 +127,7 @@ extract_simulated_obesity_prevalence <- function(
 extract_simulated_obesity_prevalence_by_age_sex <- function(
     simulation_output,
     year = 2025L,
-    weight_col = "surveyweight"
+    weight_col = "survey_weight"
 ) {
   required_columns <- c(
     "year",
@@ -207,8 +207,12 @@ extract_simulated_obesity_prevalence_by_age_sex <- function(
     ) |>
     dplyr::arrange(sex, age_band)
 
+  # Determine which sexes are actually present after filtering and recoding,
+  # so that sex-specific subsets (e.g. men-only) don't fail the strata check.
+  present_sexes <- unique(prevalence$sex)
+
   expected_strata <- tidyr::expand_grid(
-    sex = c("Males", "Females"),
+    sex = present_sexes,
     age_band = age_band_levels
   )
 

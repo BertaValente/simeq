@@ -31,14 +31,14 @@
 #'   entrant_population = c(50000, 48000)
 #' )
 #'
-#' ponte_generate_entrants(
+#' simeq_generate_entrants(
 #'   donor_pool = donor_pool,
 #'   entrant_targets = entrant_targets,
 #'   entry_year = 2021L,
 #'   simulation = 1L,
 #'   n_entrants = 100L
 #' )
-ponte_generate_entrants <- function(
+simeq_generate_entrants <- function(
     donor_pool,
     entrant_targets,
     entry_year,
@@ -46,7 +46,7 @@ ponte_generate_entrants <- function(
     n_entrants,
     entry_age = 20L
 ) {
-  ponte_validate_entrant_donor_pool(
+  simeq_validate_entrant_donor_pool(
     donor_pool = donor_pool,
     entry_age = entry_age
   )
@@ -68,7 +68,7 @@ ponte_generate_entrants <- function(
     entry_year
   )
 
-  ponte_validate_entrant_targets(
+  simeq_validate_entrant_targets(
     entrant_targets = entrant_targets,
     start_year = entry_year,
     end_year = entry_year
@@ -157,6 +157,9 @@ ponte_generate_entrants <- function(
     n_entrants - n_men
   )
 
+  has_weight <- "weight" %in% names(donor_pool)
+  has_height <- "height" %in% names(donor_pool)
+
   sample_one_sex <- function(
     sex_value,
     n_to_sample,
@@ -181,7 +184,7 @@ ponte_generate_entrants <- function(
       drop = FALSE
     ]
 
-    data.frame(
+    df <- data.frame(
       sex = as.character(sampled_donors$sex),
       education_level = as.character(
         sampled_donors$education_level
@@ -193,6 +196,11 @@ ponte_generate_entrants <- function(
       bmi = as.numeric(sampled_donors$bmi),
       stringsAsFactors = FALSE
     )
+
+    if (has_weight) df$weight <- as.numeric(sampled_donors$weight)
+    if (has_height) df$height <- as.numeric(sampled_donors$height)
+
+    df
   }
 
   sampled_entrants <- rbind(
@@ -208,14 +216,14 @@ ponte_generate_entrants <- function(
     )
   )
 
-  sampled_entrants <- ponte_prepare_education_level2(
+  sampled_entrants <- simeq_prepare_education_level2(
     state = sampled_entrants,
     source = "map_3_to_2"
   )
 
   entrant_bmi <- sampled_entrants$bmi
 
-  data.frame(
+  entrants <- data.frame(
     person_id = paste0(
       "entrant_",
       entry_year,
@@ -245,7 +253,7 @@ ponte_generate_entrants <- function(
     education_level2 = sampled_entrants$education_level2,
     survey_weight = sampled_entrants$survey_weight,
     bmi = entrant_bmi,
-    bmi_category = ponte_bmi_category(
+    bmi_category = simeq_bmi_category(
       entrant_bmi
     ),
     obesity = entrant_bmi >= 30,
@@ -263,4 +271,12 @@ ponte_generate_entrants <- function(
     ),
     stringsAsFactors = FALSE
   )
+
+  if (has_weight) entrants$weight <- sampled_entrants$weight
+  if (has_height) entrants$height <- sampled_entrants$height
+  if ("education_years" %in% names(sampled_entrants)) {
+    entrants$education_years <- sampled_entrants$education_years
+  }
+
+  entrants
 }

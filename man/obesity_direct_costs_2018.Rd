@@ -16,7 +16,7 @@ outpatient, and pharmacological treatment costs from the Portuguese
 National Health Service perspective.
 }
 \references{
-Borges M, et al. Disease and Economic Burden of Overweight
-and Obesity in Portugal. Obesity Facts. 2025;18:107-120.
+Borges M, et al. Burden of Disease and Cost of Illness of
+Overweight and Obesity in Portugal. Obesity Facts. 2025;18(2):107-120.
 doi:10.1159/000541781.
 }

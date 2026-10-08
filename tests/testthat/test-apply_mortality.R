@@ -26,9 +26,9 @@ make_state_for_apply_mortality <- function() {
     )
   )
 
-  ponte_initialise_population(
+  simeq_initialise_population(
     population = population,
-    settings = ponte_settings()
+    settings = simeq_settings()
   )
 }
 
@@ -48,7 +48,7 @@ make_probabilities_for_apply_mortality <- function(
 }
 
 test_that(
-  "ponte_apply_mortality separates deterministic deaths and survivors",
+  "simeq_apply_mortality separates deterministic deaths and survivors",
   {
     state <- make_state_for_apply_mortality()
 
@@ -60,7 +60,7 @@ test_that(
       )
     )
 
-    result <- ponte_apply_mortality(
+    result <- simeq_apply_mortality(
       state = state,
       mortality_probabilities = mortality_probabilities
     )
@@ -86,7 +86,7 @@ test_that(
 )
 
 test_that(
-  "ponte_apply_mortality records death status year and age",
+  "simeq_apply_mortality records death status year and age",
   {
     state <- make_state_for_apply_mortality()
 
@@ -98,7 +98,7 @@ test_that(
       )
     )
 
-    result <- ponte_apply_mortality(
+    result <- simeq_apply_mortality(
       state = state,
       mortality_probabilities = mortality_probabilities
     )
@@ -136,7 +136,7 @@ test_that(
 )
 
 test_that(
-  "ponte_apply_mortality respects an explicit death year",
+  "simeq_apply_mortality respects an explicit death year",
   {
     state <- make_state_for_apply_mortality()
 
@@ -148,7 +148,7 @@ test_that(
       )
     )
 
-    result <- ponte_apply_mortality(
+    result <- simeq_apply_mortality(
       state = state,
       mortality_probabilities = mortality_probabilities,
       death_year = 2025L
@@ -162,7 +162,7 @@ test_that(
 )
 
 test_that(
-  "ponte_apply_mortality retains all records when probabilities are zero",
+  "simeq_apply_mortality retains all records when probabilities are zero",
   {
     state <- make_state_for_apply_mortality()
 
@@ -174,7 +174,7 @@ test_that(
       )
     )
 
-    result <- ponte_apply_mortality(
+    result <- simeq_apply_mortality(
       state = state,
       mortality_probabilities = mortality_probabilities
     )
@@ -192,7 +192,7 @@ test_that(
 )
 
 test_that(
-  "ponte_apply_mortality requires one probability for every person",
+  "simeq_apply_mortality requires one probability for every person",
   {
     state <- make_state_for_apply_mortality()
 
@@ -207,7 +207,7 @@ test_that(
     mortality_probabilities <- mortality_probabilities[1, ]
 
     expect_error(
-      ponte_apply_mortality(
+      simeq_apply_mortality(
         state = state,
         mortality_probabilities = mortality_probabilities
       ),
@@ -217,7 +217,7 @@ test_that(
 )
 
 test_that(
-  "ponte_apply_mortality rejects invalid death probabilities",
+  "simeq_apply_mortality rejects invalid death probabilities",
   {
     state <- make_state_for_apply_mortality()
 
@@ -230,7 +230,7 @@ test_that(
     )
 
     expect_error(
-      ponte_apply_mortality(
+      simeq_apply_mortality(
         state = state,
         mortality_probabilities = mortality_probabilities
       ),

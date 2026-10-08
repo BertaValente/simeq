@@ -1,5 +1,5 @@
 test_that(
-  "ponte_harmonise_bmi_category returns package-standard BMI labels",
+  "simeq_harmonise_bmi_category returns package-standard BMI labels",
 
   {
     input <- c(
@@ -23,26 +23,26 @@ test_that(
     )
 
     expect_equal(
-      ponte_harmonise_bmi_category(input),
+      simeq_harmonise_bmi_category(input),
       expected
     )
   }
 )
 
 test_that(
-  "ponte_harmonise_bmi_category returns NA for unsupported labels",
+  "simeq_harmonise_bmi_category returns NA for unsupported labels",
   {
     input <- c("obesity", "unknown", NA_character_, "")
 
     expect_equal(
-      ponte_harmonise_bmi_category(input),
+      simeq_harmonise_bmi_category(input),
       c(NA_character_, NA_character_, NA_character_, NA_character_)
     )
   }
 )
 
 test_that(
-  "ponte_harmonise_bmi_category preserves canonical labels",
+  "simeq_harmonise_bmi_category preserves canonical labels",
   {
     canonical <- c(
       "underweight",
@@ -54,7 +54,7 @@ test_that(
     )
 
     expect_equal(
-      ponte_harmonise_bmi_category(canonical),
+      simeq_harmonise_bmi_category(canonical),
       canonical
     )
   }

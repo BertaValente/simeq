@@ -2,13 +2,13 @@ test_that("multiplication works", {
   expect_equal(2 * 2, 4)
 })
 test_that(
-  "ponte_settings returns valid default settings",
+  "simeq_settings returns valid default settings",
   {
-    settings <- ponte_settings()
+    settings <- simeq_settings()
 
     expect_s3_class(
       settings,
-      "ponte_settings"
+      "simeq_settings"
     )
 
     expect_identical(
@@ -49,9 +49,9 @@ test_that(
 )
 
 test_that(
-  "ponte_settings accepts valid custom settings",
+  "simeq_settings accepts valid custom settings",
   {
-    settings <- ponte_settings(
+    settings <- simeq_settings(
       initial_year = 2025L,
       projection_end_year = 2035L,
       entry_age = 18L,
@@ -99,10 +99,10 @@ test_that(
 )
 
 test_that(
-  "ponte_settings rejects invalid values",
+  "simeq_settings rejects invalid values",
   {
     expect_error(
-      ponte_settings(
+      simeq_settings(
         initial_year = 2040L,
         projection_end_year = 2020L
       ),
@@ -110,14 +110,14 @@ test_that(
     )
 
     expect_error(
-      ponte_settings(
+      simeq_settings(
         entry_age = -1L
       ),
       "`entry_age` must be zero or greater"
     )
 
     expect_error(
-      ponte_settings(
+      simeq_settings(
         entry_age = 84L,
         max_age = 84L
       ),
@@ -125,21 +125,21 @@ test_that(
     )
 
     expect_error(
-      ponte_settings(
+      simeq_settings(
         n_simulations = 0L
       ),
       "`n_simulations` must be at least 1"
     )
 
     expect_error(
-      ponte_settings(
+      simeq_settings(
         entrant_n_per_year = 1L
       ),
       "`entrant_n_per_year` must be at least 2"
     )
 
     expect_error(
-      ponte_settings(
+      simeq_settings(
         seed = 1.5
       ),
       "must be single finite integers"

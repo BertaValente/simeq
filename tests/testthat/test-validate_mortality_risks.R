@@ -47,12 +47,12 @@ make_mortality_risks_for_validation <- function() {
 }
 
 test_that(
-  "ponte_validate_mortality_risks accepts valid complete risk tables",
+  "simeq_validate_mortality_risks accepts valid complete risk tables",
   {
     risks <- make_mortality_risks_for_validation()
 
     expect_invisible(
-      ponte_validate_mortality_risks(
+      simeq_validate_mortality_risks(
         rr_bmi = risks$rr_bmi,
         rr_education = risks$rr_education
       )
@@ -61,14 +61,14 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_mortality_risks requires BMI risk table columns",
+  "simeq_validate_mortality_risks requires BMI risk table columns",
   {
     risks <- make_mortality_risks_for_validation()
 
     risks$rr_bmi$rr_bmi <- NULL
 
     expect_error(
-      ponte_validate_mortality_risks(
+      simeq_validate_mortality_risks(
         rr_bmi = risks$rr_bmi,
         rr_education = risks$rr_education
       ),
@@ -78,14 +78,14 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_mortality_risks requires education risk table columns",
+  "simeq_validate_mortality_risks requires education risk table columns",
   {
     risks <- make_mortality_risks_for_validation()
 
     risks$rr_education$rr_education <- NULL
 
     expect_error(
-      ponte_validate_mortality_risks(
+      simeq_validate_mortality_risks(
         rr_bmi = risks$rr_bmi,
         rr_education = risks$rr_education
       ),
@@ -95,14 +95,14 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_mortality_risks requires positive finite BMI risks",
+  "simeq_validate_mortality_risks requires positive finite BMI risks",
   {
     risks <- make_mortality_risks_for_validation()
 
     risks$rr_bmi$rr_bmi[1] <- 0
 
     expect_error(
-      ponte_validate_mortality_risks(
+      simeq_validate_mortality_risks(
         rr_bmi = risks$rr_bmi,
         rr_education = risks$rr_education
       ),
@@ -112,14 +112,14 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_mortality_risks requires positive finite education risks",
+  "simeq_validate_mortality_risks requires positive finite education risks",
   {
     risks <- make_mortality_risks_for_validation()
 
     risks$rr_education$rr_education[1] <- -0.1
 
     expect_error(
-      ponte_validate_mortality_risks(
+      simeq_validate_mortality_risks(
         rr_bmi = risks$rr_bmi,
         rr_education = risks$rr_education
       ),
@@ -129,7 +129,7 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_mortality_risks requires all BMI categories",
+  "simeq_validate_mortality_risks requires all BMI categories",
   {
     risks <- make_mortality_risks_for_validation()
 
@@ -140,7 +140,7 @@ test_that(
     ]
 
     expect_error(
-      ponte_validate_mortality_risks(
+      simeq_validate_mortality_risks(
         rr_bmi = risks$rr_bmi,
         rr_education = risks$rr_education
       ),
@@ -150,7 +150,7 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_mortality_risks requires both education levels",
+  "simeq_validate_mortality_risks requires both education levels",
   {
     risks <- make_mortality_risks_for_validation()
 
@@ -161,7 +161,7 @@ test_that(
     ]
 
     expect_error(
-      ponte_validate_mortality_risks(
+      simeq_validate_mortality_risks(
         rr_bmi = risks$rr_bmi,
         rr_education = risks$rr_education
       ),
@@ -171,7 +171,7 @@ test_that(
 )
 
 test_that(
-  "ponte_validate_mortality_risks rejects duplicate BMI risk strata",
+  "simeq_validate_mortality_risks rejects duplicate BMI risk strata",
   {
     risks <- make_mortality_risks_for_validation()
 
@@ -181,7 +181,7 @@ test_that(
     )
 
     expect_error(
-      ponte_validate_mortality_risks(
+      simeq_validate_mortality_risks(
         rr_bmi = risks$rr_bmi,
         rr_education = risks$rr_education
       ),

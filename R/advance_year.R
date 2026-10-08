@@ -20,18 +20,18 @@
 #'   survey_weight = c(1000, 1200)
 #' )
 #'
-#' state <- ponte_initialise_population(
+#' state <- simeq_initialise_population(
 #'   population = population,
-#'   settings = ponte_settings()
+#'   settings = simeq_settings()
 #' )
 #'
-#' ponte_advance_year(state)
-ponte_advance_year <- function(
+#' simeq_advance_year(state)
+simeq_advance_year <- function(
     state,
     entry_age = 20L,
     max_age = 84L
 ) {
-  ponte_validate_living_state(
+  simeq_validate_living_state(
     state = state,
     entry_age = entry_age,
     max_age = max_age

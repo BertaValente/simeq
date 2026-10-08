@@ -18,39 +18,39 @@ make_life_table_for_validation <- function() {
 }
 
 test_that(
-  "ponte_validate_life_table accepts a complete valid life table",
+  "simeq_validate_life_table accepts a complete valid life table",
   {
     life_table <- make_life_table_for_validation()
 
     expect_invisible(
-      ponte_validate_life_table(life_table)
+      simeq_validate_life_table(life_table)
     )
   }
 )
 
 test_that(
-  "ponte_validate_life_table requires age sex and qx",
+  "simeq_validate_life_table requires age sex and qx",
   {
     life_table <- make_life_table_for_validation()
 
     life_table$qx <- NULL
 
     expect_error(
-      ponte_validate_life_table(life_table),
+      simeq_validate_life_table(life_table),
       "`life_table` is missing required columns: qx"
     )
   }
 )
 
 test_that(
-  "ponte_validate_life_table requires valid qx probabilities",
+  "simeq_validate_life_table requires valid qx probabilities",
   {
     life_table <- make_life_table_for_validation()
 
     life_table$qx[1] <- -0.01
 
     expect_error(
-      ponte_validate_life_table(life_table),
+      simeq_validate_life_table(life_table),
       "`qx` must contain finite probabilities from 0 to 1"
     )
 
@@ -59,14 +59,14 @@ test_that(
     life_table$qx[1] <- 1.01
 
     expect_error(
-      ponte_validate_life_table(life_table),
+      simeq_validate_life_table(life_table),
       "`qx` must contain finite probabilities from 0 to 1"
     )
   }
 )
 
 test_that(
-  "ponte_validate_life_table requires both sex groups",
+  "simeq_validate_life_table requires both sex groups",
   {
     life_table <- make_life_table_for_validation()
 
@@ -77,14 +77,14 @@ test_that(
     ]
 
     expect_error(
-      ponte_validate_life_table(life_table),
+      simeq_validate_life_table(life_table),
       "`life_table` must cover every age-sex combination"
     )
   }
 )
 
 test_that(
-  "ponte_validate_life_table requires complete age coverage",
+  "simeq_validate_life_table requires complete age coverage",
   {
     life_table <- make_life_table_for_validation()
 
@@ -98,14 +98,14 @@ test_that(
     ]
 
     expect_error(
-      ponte_validate_life_table(life_table),
+      simeq_validate_life_table(life_table),
       "`life_table` must cover every age-sex combination"
     )
   }
 )
 
 test_that(
-  "ponte_validate_life_table rejects duplicate age-sex records",
+  "simeq_validate_life_table rejects duplicate age-sex records",
   {
     life_table <- make_life_table_for_validation()
 
@@ -115,21 +115,21 @@ test_that(
     )
 
     expect_error(
-      ponte_validate_life_table(life_table),
+      simeq_validate_life_table(life_table),
       "`life_table` must contain one record per age-sex combination"
     )
   }
 )
 
 test_that(
-  "ponte_validate_life_table rejects ages outside model bounds",
+  "simeq_validate_life_table rejects ages outside model bounds",
   {
     life_table <- make_life_table_for_validation()
 
     life_table$age[1] <- 19L
 
     expect_error(
-      ponte_validate_life_table(life_table),
+      simeq_validate_life_table(life_table),
       "`life_table` must cover only ages from 20 to 84"
     )
   }

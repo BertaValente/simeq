@@ -1,8 +1,8 @@
 test_that(
-  "ponte_bmi_age_group assigns expected five-year groups",
+  "simeq_bmi_age_group assigns expected five-year groups",
   {
     expect_identical(
-      ponte_bmi_age_group(
+      simeq_bmi_age_group(
         c(
           20L,
           24L,
@@ -29,10 +29,10 @@ test_that(
 )
 
 test_that(
-  "ponte_bmi_age_group accepts numeric integer values",
+  "simeq_bmi_age_group accepts numeric integer values",
   {
     expect_identical(
-      ponte_bmi_age_group(
+      simeq_bmi_age_group(
         c(
           20,
           45,
@@ -49,10 +49,10 @@ test_that(
 )
 
 test_that(
-  "ponte_bmi_age_group rejects non-integer ages",
+  "simeq_bmi_age_group rejects non-integer ages",
   {
     expect_error(
-      ponte_bmi_age_group(
+      simeq_bmi_age_group(
         c(
           20.5,
           25
@@ -65,10 +65,10 @@ test_that(
 )
 
 test_that(
-  "ponte_bmi_age_group rejects ages below 20",
+  "simeq_bmi_age_group rejects ages below 20",
   {
     expect_error(
-      ponte_bmi_age_group(
+      simeq_bmi_age_group(
         c(
           19L,
           20L
@@ -81,10 +81,10 @@ test_that(
 )
 
 test_that(
-  "ponte_bmi_age_group rejects ages above 84",
+  "simeq_bmi_age_group rejects ages above 84",
   {
     expect_error(
-      ponte_bmi_age_group(
+      simeq_bmi_age_group(
         c(
           84L,
           85L

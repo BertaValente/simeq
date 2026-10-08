@@ -21,13 +21,13 @@
 #'   survey_weight = c(1000, 1200)
 #' )
 #'
-#' state <- ponte_initialise_population(
+#' state <- simeq_initialise_population(
 #'   population = population,
-#'   settings = ponte_settings()
+#'   settings = simeq_settings()
 #' )
 #'
-#' ponte_validate_living_state(state)
-ponte_validate_living_state <- function(
+#' simeq_validate_living_state(state)
+simeq_validate_living_state <- function(
     state,
     entry_age = 20L,
     max_age = 84L
@@ -109,7 +109,7 @@ ponte_validate_living_state <- function(
 
   state_for_population_validation$person_id <- state_identifier
 
-  ponte_validate_population(
+  simeq_validate_population(
     population = state_for_population_validation,
     initial_year = min(state$year),
     entry_age = entry_age,
@@ -155,7 +155,7 @@ ponte_validate_living_state <- function(
     state$bmi_category
   )
 
-  expected_bmi_category <- ponte_bmi_category(
+  expected_bmi_category <- simeq_bmi_category(
     state$bmi
   )
 

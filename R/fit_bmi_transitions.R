@@ -5,16 +5,16 @@
 #' error, the projection-period value, and limits for annual BMI change.
 #'
 #' @param bmi_transitions A data frame created by
-#'   `ponte_build_bmi_synthetic_cohorts()`.
+#'   `simeq_build_bmi_synthetic_cohorts()`.
 #' @param projection_period Integer baseline survey year to use when predicting
 #'   BMI change during the projection. Defaults to the latest available
 #'   baseline survey year.
 #' @param transition_limits Numeric vector of length two giving the lower and
 #'   upper limits for simulated annual BMI change.
 #'
-#' @return An object of class `ponte_bmi_transition_model`.
+#' @return An object of class `simeq_bmi_transition_model`.
 #' @export
-ponte_fit_bmi_transition <- function(
+simeq_fit_bmi_transition <- function(
     bmi_transitions,
     projection_period = NULL,
     transition_limits = c(
@@ -287,6 +287,6 @@ ponte_fit_bmi_transition <- function(
         transition_limits
       )
     ),
-    class = "ponte_bmi_transition_model"
+    class = "simeq_bmi_transition_model"
   )
 }

@@ -72,3 +72,42 @@ test_that("simeq_update_education only upgrades medium education in the age rang
   rates$annual_rate <- 0
   expect_equal(simeq_update_education(state, rates), state)
 })
+
+test_that("simeq_combine_education_upgrade uses the rates of the state's year", {
+  early <- data.frame(sex = c("men", "women"), age_min = 20L, age_max = 24L,
+                      annual_rate = c(0, 0))
+  late <- transform(early, annual_rate = c(1, 1))
+  rates <- simeq_combine_education_upgrade(list(
+    list(from = 1998L, to = 2004L, upgrade = early),
+    list(from = 2005L, to = NA, upgrade = late)
+  ))
+
+  expect_s3_class(rates, "simeq_education_upgrade")
+  expect_equal(nrow(rates), 4L)
+
+  state <- data.frame(
+    year = 2004L,
+    sex = c("men", "women"),
+    age = 22L,
+    education_level = "medium",
+    stringsAsFactors = FALSE
+  )
+  expect_equal(simeq_update_education(state, rates)$education_level,
+               c("medium", "medium"))
+
+  state$year <- 2005L
+  expect_equal(simeq_update_education(state, rates)$education_level,
+               c("high", "high"))
+})
+
+test_that("simeq_combine_education_upgrade rejects overlapping periods", {
+  rates <- data.frame(sex = "men", age_min = 20L, age_max = 24L,
+                      annual_rate = 0.1)
+  expect_error(
+    simeq_combine_education_upgrade(list(
+      list(from = 1998L, to = 2005L, upgrade = rates),
+      list(from = 2005L, to = NA, upgrade = rates)
+    )),
+    "overlap"
+  )
+})

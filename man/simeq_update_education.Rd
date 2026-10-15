@@ -19,4 +19,7 @@ simeq_update_education(state, education_upgrade)
 Each living person with medium education whose sex and age match a row of
 \code{education_upgrade} moves to high education with that row's annual
 probability. Two-level education is updated to \code{"higher"} when present.
+When \code{education_upgrade} has \code{year_min} and \code{year_max} columns (see
+\code{\link[=simeq_combine_education_upgrade]{simeq_combine_education_upgrade()}}), only the rows whose range contains
+the year of \code{state} are used.
 }

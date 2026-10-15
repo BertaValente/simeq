@@ -496,3 +496,52 @@ test_that(
     expect_equal(sort(unique(output$year)), 2020:2022)
   }
 )
+
+test_that(
+  "last_observed_year keeps hybrid calibration fixed over projected tables",
+  {
+    bmi_transition_model <- simeq_fit_bmi_transition(
+      bmi_transitions = make_bmi_transitions_for_model_fit()
+    )
+
+    run <- function(life_table, ...) {
+      simeq_run_simulation(
+        population = make_population_for_simulation_runner(),
+        settings = make_settings_for_simulation_runner(n_simulations = 1L),
+        life_table = life_table,
+        rr_bmi = make_bmi_risks_for_simulation_runner(),
+        rr_education = make_education_risks_for_simulation_runner(),
+        bmi_transition_model = bmi_transition_model,
+        donor_pool = make_donor_pool_for_simulation_runner(),
+        entrant_targets = make_entrant_targets_for_simulation_runner(),
+        education_source = "existing",
+        mortality_calibration = "hybrid",
+        ...
+      )
+    }
+
+    life_table <- make_life_table_for_simulation_runner()
+    observed_only <- transform(life_table, year = 2020L)
+    with_projection <- rbind(
+      observed_only,
+      transform(life_table, year = 2021L)
+    )
+
+    expect_identical(
+      run(with_projection, last_observed_year = 2020L),
+      run(observed_only)
+    )
+    lower_projection <- rbind(
+      observed_only,
+      transform(life_table, year = 2021L, qx = 0.001)
+    )
+    expect_false(identical(
+      run(lower_projection, last_observed_year = 2020L),
+      run(observed_only)
+    ))
+    expect_error(
+      run(with_projection, last_observed_year = c(2020L, 2021L)),
+      "`last_observed_year` must be one integer year"
+    )
+  }
+)

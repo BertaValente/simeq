@@ -45,6 +45,13 @@
 #'   hazard every year so deaths in each age-sex stratum match the life table;
 #'   changes in BMI then change who dies but not how many (the behaviour
 #'   before this version).
+#' @param last_observed_year Optional integer. Last calendar year whose life
+#'   table is observed rather than projected. Hybrid calibration rescales
+#'   every year up to this year and then fixes the scaling. Defaults to the
+#'   last `year` in `life_table`. Set it when `life_table` also holds
+#'   projected years (for example, a Lee-Carter projection), so projected
+#'   tables change baseline mortality without switching annual calibration
+#'   back on.
 #' @param bmi_period For `bmi_update_method = "legacy"` or `"percentile"`:
 #'   `"latest"` (default)
 #'   or `"by_year"`; see [simeq_advance_one_year()].
@@ -73,6 +80,7 @@ simeq_run_simulation <- function(
     education_source = c("existing", "map_3_to_2"),
     bmi_limits = c(10, 80),
     mortality_calibration = c("hybrid", "baseline", "annual"),
+    last_observed_year = NULL,
     bmi_period = c("latest", "by_year"),
     bmi_percentile_model = NULL,
     education_upgrade = NULL
@@ -164,7 +172,16 @@ simeq_run_simulation <- function(
   mortality_calibration_rr <- NULL
 
   # Last calendar year with an observed life table (hybrid calibration).
-  last_life_table_year <- if ("year" %in% names(life_table)) {
+  last_life_table_year <- if (!is.null(last_observed_year)) {
+    if (
+      length(last_observed_year) != 1L ||
+      is.na(last_observed_year) ||
+      last_observed_year != as.integer(last_observed_year)
+    ) {
+      stop("`last_observed_year` must be one integer year.", call. = FALSE)
+    }
+    as.integer(last_observed_year)
+  } else if ("year" %in% names(life_table)) {
     max(as.integer(life_table$year))
   } else {
     as.integer(settings$initial_year)

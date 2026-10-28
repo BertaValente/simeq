@@ -14,7 +14,7 @@ The model comprises three modules:
 | Module | Description |
 |--------|-------------|
 | **I — BMI trajectories** | Simulates annual BMI change with percentile-specific transition models fitted to synthetic cohorts from the Portuguese National Health Survey (1998, 2005, 2014, 2019), combined with ageing, education upgrading, mortality and new entrants |
-| **II — Health outcomes** | Estimates quality-adjusted life years (QALYs), years of life lost (YLL), years lived with disability (YLD) and disability-adjusted life years (DALYs) attributable to obesity |
+| **II — Health outcomes** | Estimates quality-adjusted life years (QALYs), obesity-attributable QALY loss and years of life lost (YLL); functions for years lived with disability (YLD) and disability-adjusted life years (DALYs) are also included but are not used in SIMEQ-PT |
 | **III — Economic costs** | Projects direct healthcare costs attributable to high BMI and obesity |
 
 ## Installation

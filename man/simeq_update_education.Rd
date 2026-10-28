@@ -8,9 +8,10 @@ simeq_update_education(state, education_upgrade)
 }
 \arguments{
 \item{state}{A living population state with \code{sex}, \code{age} and
-\code{education_level}.}
+\code{education_level} (and \code{year} when rates are period-specific).}
 
-\item{education_upgrade}{Output from \code{\link[=simeq_fit_education_upgrade]{simeq_fit_education_upgrade()}}.}
+\item{education_upgrade}{Output from \code{\link[=simeq_fit_education_upgrade]{simeq_fit_education_upgrade()}} or
+\code{\link[=simeq_combine_education_upgrade]{simeq_combine_education_upgrade()}}.}
 }
 \value{
 \code{state} with updated \code{education_level} (and \code{education_level2}).
@@ -19,4 +20,7 @@ simeq_update_education(state, education_upgrade)
 Each living person with medium education whose sex and age match a row of
 \code{education_upgrade} moves to high education with that row's annual
 probability. Two-level education is updated to \code{"higher"} when present.
+When \code{education_upgrade} has \code{year_min} and \code{year_max} columns (see
+\code{\link[=simeq_combine_education_upgrade]{simeq_combine_education_upgrade()}}), only the rows whose range contains
+the year of \code{state} are used.
 }

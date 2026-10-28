@@ -1,9 +1,37 @@
-.Rproj.user
+# R project artefacts
+.Rproj.user/
 .Rhistory
 .RData
 .httr-oauth
 .DS_Store
 .quarto
 
+# Data: never commit survey microdata or anything derived from it
+*.rds
+*.rda
+!data/simeq_synthetic_pop.rda
+*.sav
+*.dta
+data-raw/national_health_surveys/
+data-raw/old_files/
+data-raw/backup_*/
+# Life tables derived from the Human Mortality Database (HMD terms do not
+# allow redistribution); regenerate with mortality_lc/ and life_table_from_hmd
+data/life_tables/
+
+# Generated outputs
 results/
-data-raw/
+logs/
+result_cards/
+*.html
+*_files/
+*_cache/
+*.docx
+*.pdf
+Rplots.pdf
+*.tar.gz
+
+# Local drafts
+thesis_framework_*
+script_workflow.qmd
+simeq_analysis_clean_lc_v5b.qmd

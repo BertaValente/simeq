@@ -2,5 +2,8 @@
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^data-raw$
+^analysis$
+^mortality_lc$
+^results$
 ^README\.md$
 ^NEWS\.md$

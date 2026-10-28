@@ -18,7 +18,7 @@ calculate_annual_obesity_costs(
   unit_cost_annual_growth = 0,
   cpi_2026 = 117.22,
   cpi_table = NULL,
-  discount_rate = 0.03,
+  discount_rate = 0.04,
   discount_base_year = 2026L,
   include_direct_costs = TRUE,
   direct_cost_group = "obesity_overweight",
@@ -69,7 +69,7 @@ takes precedence over \code{cpi_2026} for the \code{total_keur_2026_nominal}
 column; otherwise \code{cpi_2026} is used as the fallback.}
 
 \item{discount_rate}{Annual discount rate applied after \code{discount_base_year}.
-Default 0.03.}
+Default 0.04.}
 
 \item{discount_base_year}{Year from which future costs are discounted.
 Default 2026L.}

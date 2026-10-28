@@ -1,0 +1,272 @@
+---
+title: "subset_2025"
+format: html
+editor: visual
+---
+```{r}
+
+installed.packages("rio")
+library(rio)
+library(dplyr)
+nhs_2025 <- import(here::here("data-raw", "national_health_surveys", "INS2025_QC_Fins Científicos_14-09-2026.sav")) 
+
+
+
+# The calibration equations and recoding helpers are taken from
+# prepare_model_inputs.R, so both scripts always use identical definitions.
+helper_names <- c(
+  "age_band_to_age",
+  "education_3_level",
+  "education_2_level",
+  "region_calibration",
+  "calibrate_anthropometry"
+)
+
+prepare_script <- parse(here::here("data-raw", "prepare_model_inputs.R"))
+
+for (expression in prepare_script) {
+  if (
+    is.call(expression) &&
+    identical(expression[[1L]], as.name("<-")) &&
+    as.character(expression[[2L]]) %in% helper_names
+  ) {
+    eval(expression, envir = globalenv())
+  }
+}
+
+missing_helpers <- helper_names[!vapply(helper_names, exists, logical(1))]
+
+if (length(missing_helpers) > 0L) {
+  stop(
+    "Helpers not found in prepare_model_inputs.R: ",
+    paste(missing_helpers, collapse = ", "),
+    call. = FALSE
+  )
+}
+
+# -----------------------------------------------------------------------------
+# Read and recode (same steps as the 2019 cleaning code)
+# -----------------------------------------------------------------------------
+
+read_survey <- function(path) {
+  switch(
+    tools::file_ext(path),
+    sav = haven::read_sav(path),
+    dta = haven::read_dta(path),
+    csv = readr::read_csv(path, show_col_types = FALSE),
+    stop("Unsupported file type: ", path, call. = FALSE)
+  )
+}
+
+ins_2025_qc <- read_survey(raw_file_qc)
+ins_2025_mc <- read_survey(raw_file_mc)
+
+# Variables in both files are taken from the QC file, which holds the BMI
+# measurements and their weight WGT.
+ins_2025 <- ins_2025_qc |>
+  left_join(
+    ins_2025_mc |>
+      select(PID, dplyr::all_of(setdiff(names(ins_2025_mc), names(ins_2025_qc)))),
+    by = "PID"
+  )
+
+message(
+  "QC file: ", nrow(ins_2025_qc), " rows; MC file: ", nrow(ins_2025_mc),
+  " rows; matched on PID: ", sum(ins_2025_qc$PID %in% ins_2025_mc$PID), "."
+)
+
+# Education: ISCED11 in 2025 (HATLEVEL in 2019), same codes:
+# -1 no answer, 0 none, 1 basic 1st-2nd cycle, 2 basic 3rd cycle,
+# 3 secondary, 4 post-secondary, 5 CTeSP, 6 bachelor/licenciatura,
+# 7 pre-Bologna licenciatura or master, 8 doctorate.
+education_variable <- "ISCED11"
+
+if (!education_variable %in% names(ins_2025)) {
+  stop(
+    "Education variable `", education_variable, "` not found. Candidates: ",
+    paste(
+      grep("HAT|EDU|ISCED|ESC|ENS", names(ins_2025), value = TRUE, ignore.case = TRUE),
+      collapse = ", "
+    ),
+    call. = FALSE
+  )
+}
+
+# CHECK 2b: the other 2025 variable names.
+label_or_value <- function(x) {
+  as.character(if (inherits(x, "haven_labelled")) haven::as_factor(x) else x)
+}
+
+nhs_2025 <- ins_2025 |>
+  transmute(
+    id = PID,
+    survey_year = as.integer(REFYEAR),
+    sex_code = as.integer(SEX),
+    age_value = as.integer(AGE_COD),
+    edu_code = as.integer(.data[[education_variable]]),
+    region_code = as.character(if (inherits(NUTS2_24, "haven_labelled")) haven::zap_labels(NUTS2_24) else NUTS2_24),
+    region_label = label_or_value(NUTS2_24),
+    height = as.numeric(BM1),
+    weight = as.numeric(BM2),
+    POND2 = as.numeric(WGT)
+  )
+
+# AGE_COD: single years of age, or the 16 five-year band codes used in
+# 2019 (1 = 15-17, ..., 15 = 80-84, 16 = 85+). Detected from the values.
+age_is_band_code <- max(nhs_2025$age_value, na.rm = TRUE) <= 16L
+message(
+  "AGE_COD read as ",
+  if (age_is_band_code) "five-year band codes." else "single years of age."
+)
+
+age_bands <- c(
+  "15-17", "18-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49",
+  "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-84", ">=85"
+)
+
+
+
+# Lisbon metropolitan area and Oeste e Vale do Tejo to Centro, as under the
+# NUTS 2013 boundaries used to fit the equations.
+nhs_2025 <- nhs_2025 |>
+  mutate(
+    year = 2025L,
+    sex = case_when(sex_code == 1L ~ "men", sex_code == 2L ~ "women"),
+    age_single = if (age_is_band_code) {
+      NA_integer_
+    } else {
+      age_value
+    },
+    age = if (age_is_band_code) age_bands[age_value] else NA_character_,
+    edu = case_when(
+      edu_code == 0L ~ "none",
+      edu_code == 1L ~ "grade_6",
+      edu_code == 2L ~ "grade_9",
+      # 4-5 grouped with secondary, as in the 2019 cleaning code.
+      edu_code %in% 3:5 ~ "grade_12",
+      edu_code %in% 6:8 ~ "higher"
+    ),
+    nut = {
+      label <- stringr::str_to_lower(region_label)
+      # Codes may come with or without the "PT" prefix (11, 1A, ...).
+      code <- sub("^PT", "", stringr::str_to_upper(stringr::str_trim(region_code)))
+      case_when(
+        # NUTS 2024 codes. PT1D Oeste e Vale do Tejo was mostly Centro under
+        # NUTS 2013 (the boundaries of the calibration equations), and
+        # PT1A/PT1B were the Lisbon metropolitan area.
+        code == "11" ~ "norte",
+        code %in% c("19", "16", "1D") ~ "centro",
+        code %in% c("1A", "1B", "17") ~ "lvt",
+        code %in% c("1C", "18") ~ "alentejo",
+        code == "15" ~ "algarve",
+        code == "20" ~ "acores",
+        code == "30" ~ "madeira",
+        stringr::str_detect(label, "norte") ~ "norte",
+        stringr::str_detect(label, "algarve") ~ "algarve",
+        stringr::str_detect(label, "alentejo") ~ "alentejo",
+        stringr::str_detect(label, "a\u00e7ores|acores|azores") ~ "acores",
+        stringr::str_detect(label, "madeira") ~ "madeira",
+        stringr::str_detect(label, "lisboa|set\u00fabal|setubal|lisbon") ~ "lvt",
+        stringr::str_detect(label, "centro|oeste|vale do tejo") ~ "centro"
+      )
+    },
+    height = if_else(height < 0, NA_real_, height),
+    weight = if_else(weight < 0, NA_real_, weight),
+    bmi = weight / (height / 100)^2
+  )
+
+unmapped <- nhs_2025 |>
+  filter(is.na(sex) | is.na(edu) | is.na(nut)) |>
+  count(sex_code, edu_code, region_code, region_label)
+
+if (nrow(unmapped) > 0L) {
+  message("Rows with unmapped codes (dropped below):")
+  print(unmapped, n = Inf)
+}
+
+# Complete-case subset after cleaning, all ages, in the same layout as the
+# earlier subsets (subset_2019.csv). Kept next to the raw file.
+subset_2025 <- nhs_2025 |>
+  select(id, year, sex, age, age_single, edu, nut, height, weight, bmi, POND2) |>
+  filter(
+    !is.na(sex), !is.na(age) | !is.na(age_single), !is.na(edu), !is.na(nut),
+    !is.na(height), !is.na(weight), !is.na(POND2)
+  )
+
+message(
+  "Complete cases: ", nrow(subset_2025), " of ", nrow(nhs_2025), " respondents."
+)
+
+readr::write_csv(
+  subset_2025,
+  file.path(survey_dir, "subset_2025.csv"),
+  na = ""
+)
+
+# -----------------------------------------------------------------------------
+# Same filters and calibration as prepare_model_inputs.R
+# -----------------------------------------------------------------------------
+
+set.seed(20251001L)
+
+nhs_2025_validation <- nhs_2025 |>
+  mutate(
+    age_single = if (age_is_band_code) age_band_to_age(age) else age_single,
+    education_level = education_3_level(edu),
+    education_level2 = education_2_level(edu),
+    region = region_calibration(nut),
+    survey_weight = POND2,
+    bmi_self_reported = bmi,
+    calibration = calibrate_anthropometry(
+      sex = sex,
+      age = age_single,
+      height_sr_cm = height,
+      weight_sr_kg = weight,
+      region = region,
+      education_level = education_level
+    )
+  ) |>
+  tidyr::unnest_wider(calibration) |>
+  filter(
+    age_single >= 20L,
+    age_single <= 84L,
+    sex %in% c("men", "women"),
+    !is.na(education_level),
+    !is.na(region),
+    !is.na(survey_weight),
+    survey_weight > 0,
+    !is.na(bmi_calibrated),
+    bmi_calibrated >= 10,
+    bmi_calibrated <= 80
+  ) |>
+  transmute(
+    id,
+    year,
+    sex,
+    age = as.integer(age_single),
+    education_level,
+    education_level2,
+    region,
+    survey_weight,
+    bmi = bmi_calibrated,
+    bmi_self_reported
+  )
+
+if (any(nhs_2025$survey_year != 2025L, na.rm = TRUE)) {
+  message("REFYEAR values: ", paste(sort(unique(nhs_2025$survey_year)), collapse = ", "))
+}
+
+# Quick look: obesity prevalence by sex, calibrated and self-reported.
+nhs_2025_validation |>
+  group_by(sex) |>
+  summarise(
+    n = n(),
+    obesity_calibrated = weighted.mean(bmi >= 30, survey_weight),
+    obesity_self_reported = weighted.mean(bmi_self_reported >= 30, survey_weight),
+    .groups = "drop"
+  ) |>
+  print()
+
+saveRDS(nhs_2025_validation, output_file)
+message("Saved: ", output_file)
+

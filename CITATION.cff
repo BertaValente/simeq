@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "simeq: Simulation for Equity, a dynamic microsimulation of BMI, health and economic outcomes"
+type: software
+authors:
+  - family-names: Valente
+    given-names: Berta
+    affiliation: "EPIUnit, Institute of Public Health, University of Porto (ISPUP)"
+version: 1.0.0
+license: MIT
+repository-code: "https://github.com/BertaValente/simeq"
+keywords:
+  - microsimulation
+  - obesity
+  - body mass index
+  - health inequalities
+  - R

@@ -407,7 +407,7 @@ test_that(
 )
 
 test_that(
-  "simeq_run_simulation requires ponte settings",
+  "simeq_run_simulation requires simeq settings",
   {
     bmi_transition_model <- simeq_fit_bmi_transition(
       bmi_transitions = make_bmi_transitions_for_model_fit()

@@ -1,4 +1,4 @@
-#' ponte: Portuguese Obesity Trajectories, Health and Economics
+#' simeq: Simulation for Equity, a dynamic microsimulation of BMI, health and economic outcomes
 #'
 #' SIMEQ is an individual-level dynamic microsimulation model
 #' of the Portuguese population. It projects obesity trajectories,

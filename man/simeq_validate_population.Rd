@@ -2,7 +2,7 @@
 % Please edit documentation in R/validate_population.R
 \name{simeq_validate_population}
 \alias{simeq_validate_population}
-\title{Validate a PONTE-PT-O baseline population}
+\title{Validate a SIMEQ baseline population}
 \usage{
 simeq_validate_population(
   population,
@@ -26,7 +26,7 @@ The input \code{population}, invisibly, if all checks pass.
 }
 \description{
 Checks whether a baseline population contains the minimum variables
-and valid values required to initialise a PONTE-PT-O simulation.
+and valid values required to initialise a SIMEQ simulation.
 }
 \examples{
 population <- data.frame(

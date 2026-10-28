@@ -1,4 +1,4 @@
-#' Validate a PONTE-PT-O life table
+#' Validate a SIMEQ life table
 #'
 #' Validates a long-format life table containing annual probabilities of death
 #' by exact age and sex. The `qx` value is the probability that a person aged

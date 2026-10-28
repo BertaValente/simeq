@@ -25,5 +25,5 @@ A tibble with \code{year}, \code{sex}, \code{age_band}, \code{population_n}, and
 \description{
 Summarises a microsimulation output into weighted obesity prevalence and
 represented population counts by sex and five-year age bands. The function
-is designed for PONTE-PT simulations covering adults aged 20 to 84 years.
+is designed for SIMEQ-PT simulations covering adults aged 20 to 84 years.
 }

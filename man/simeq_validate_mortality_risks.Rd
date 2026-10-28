@@ -2,7 +2,7 @@
 % Please edit documentation in R/validate_mortality_risks.R
 \name{simeq_validate_mortality_risks}
 \alias{simeq_validate_mortality_risks}
-\title{Validate PONTE-PT-O mortality relative-risk tables}
+\title{Validate SIMEQ mortality relative-risk tables}
 \usage{
 simeq_validate_mortality_risks(rr_bmi, rr_education)
 }
@@ -23,7 +23,7 @@ data frames, invisibly.
 }
 \description{
 Validates the BMI-category and education relative-risk tables used to
-adjust life-table annual death probabilities in the PONTE-PT-O model.
+adjust life-table annual death probabilities in the SIMEQ model.
 }
 \examples{
 rr_bmi <- expand.grid(

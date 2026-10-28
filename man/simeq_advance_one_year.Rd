@@ -28,7 +28,7 @@ simeq_advance_one_year(
 )
 }
 \arguments{
-\item{state}{A valid living PONTE-PT-O population state for one simulation
+\item{state}{A valid living SIMEQ population state for one simulation
 and one calendar year.}
 
 \item{life_table}{A validated life table with \code{age}, \code{sex}, and \code{qx}.}

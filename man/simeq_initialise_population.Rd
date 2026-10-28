@@ -2,7 +2,7 @@
 % Please edit documentation in R/initialise_population.R
 \name{simeq_initialise_population}
 \alias{simeq_initialise_population}
-\title{Initialise a PONTE-PT-O population state}
+\title{Initialise a SIMEQ population state}
 \usage{
 simeq_initialise_population(population, settings)
 }
@@ -18,7 +18,7 @@ A baseline simulation-state data frame.
 }
 \description{
 Converts a validated baseline population into the standard person-level
-state used by the PONTE-PT-O simulation engine. Additional baseline
+state used by the SIMEQ simulation engine. Additional baseline
 variables, such as region or an alternative education variable, are
 retained in the returned state.
 }

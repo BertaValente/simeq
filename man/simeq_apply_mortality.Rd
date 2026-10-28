@@ -13,7 +13,7 @@ simeq_apply_mortality(
 )
 }
 \arguments{
-\item{state}{A valid living PONTE-PT-O population state.}
+\item{state}{A valid living SIMEQ population state.}
 
 \item{mortality_probabilities}{A data frame with \code{person_id}, \code{simulation},
 and \code{p_die}, typically produced by

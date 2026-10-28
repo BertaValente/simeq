@@ -6,7 +6,7 @@
 \alias{simeq-package}
 \title{ponte: Portuguese Obesity Trajectories, Health and Economics}
 \description{
-PONTE-O is an individual-level dynamic microsimulation model
+SIMEQ is an individual-level dynamic microsimulation model
 of the Portuguese population. It projects obesity trajectories,
 long-term obesity-related health outcomes, and associated economic
 consequences.

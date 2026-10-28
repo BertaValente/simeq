@@ -12,7 +12,7 @@ simeq_mortality_calibration_rr(
 )
 }
 \arguments{
-\item{state}{A valid living PONTE-PT-O population state.}
+\item{state}{A valid living SIMEQ population state.}
 
 \item{rr_bmi}{A validated BMI mortality relative-risk table.}
 

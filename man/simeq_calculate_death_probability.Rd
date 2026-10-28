@@ -16,7 +16,7 @@ simeq_calculate_death_probability(
 )
 }
 \arguments{
-\item{state}{A valid living PONTE-PT-O population state.}
+\item{state}{A valid living SIMEQ population state.}
 
 \item{life_table}{A validated life table with \code{age}, \code{sex}, and \code{qx}.}
 
@@ -41,7 +41,7 @@ A data frame with \code{person_id}, \code{simulation}, and \code{p_die}.
 }
 \description{
 Calculates an individual annual probability of death for every record in a
-living PONTE-PT-O population state. The life-table hazard is recalibrated
+living SIMEQ population state. The life-table hazard is recalibrated
 within each age-sex stratum so that the population-weighted mean individual
 hazard equals the life-table hazard for that stratum. Individual hazards are
 then scaled by the product of the BMI and education relative risks.

@@ -1,10 +1,10 @@
-#' Validate a living PONTE-PT-O population state
+#' Validate a living SIMEQ population state
 #'
 #' Checks whether a person-level population state is valid for an annual
-#' PONTE-PT-O simulation update. All records must represent people who are
+#' SIMEQ simulation update. All records must represent people who are
 #' alive at the start of the update.
 #'
-#' @param state A data frame containing a living PONTE-PT-O population state.
+#' @param state A data frame containing a living SIMEQ population state.
 #' @param entry_age Integer. Minimum eligible age.
 #' @param max_age Integer. Maximum represented age.
 #'

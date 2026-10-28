@@ -2,7 +2,7 @@
 % Please edit documentation in R/settings.R
 \name{simeq_settings}
 \alias{simeq_settings}
-\title{Create PONTE-O simulation settings}
+\title{Create SIMEQ simulation settings}
 \usage{
 simeq_settings(
   initial_year = 2020L,
@@ -37,7 +37,7 @@ simulation year.}
 An object of class \code{"simeq_settings"}.
 }
 \description{
-Creates a validated settings object for a PONTE-O simulation.
+Creates a validated settings object for a SIMEQ simulation.
 }
 \examples{
 settings <- simeq_settings(

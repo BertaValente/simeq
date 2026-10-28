@@ -1,7 +1,7 @@
 #' Create or validate two-level education classification
 #'
 #' Returns a population state with an `education_level2` variable suitable for
-#' the PONTE-PT-O mortality model. The two supported categories are `lower`
+#' the SIMEQ mortality model. The two supported categories are `lower`
 #' and `higher`.
 #'
 #' @param state A data frame containing population or simulation-state data.

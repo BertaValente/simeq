@@ -2,7 +2,7 @@
 % Please edit documentation in R/run_simulation.R
 \name{simeq_run_simulation}
 \alias{simeq_run_simulation}
-\title{Run a PONTE-PT-O microsimulation}
+\title{Run a SIMEQ microsimulation}
 \usage{
 simeq_run_simulation(
   population,

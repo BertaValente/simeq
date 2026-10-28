@@ -14,7 +14,7 @@ A character vector of BMI categories.
 }
 \description{
 Classifies adult body mass index (BMI) values into the six BMI categories
-used by the PONTE-PT-O mortality and health-outcomes models.
+used by the SIMEQ mortality and health-outcomes models.
 }
 \examples{
 simeq_bmi_category(

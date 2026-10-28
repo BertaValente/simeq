@@ -2,7 +2,7 @@
 % Please edit documentation in R/update_bmi_hayes.R
 \name{simeq_update_bmi_hayes}
 \alias{simeq_update_bmi_hayes}
-\title{Update BMI using the PONTE-PT Hayes-style transition model}
+\title{Update BMI using the SIMEQ-PT Hayes-style transition model}
 \usage{
 simeq_update_bmi_hayes(
   population,
@@ -27,5 +27,5 @@ simeq_update_bmi_hayes(
 Synthetic population with updated BMI.
 }
 \description{
-Update BMI using the PONTE-PT Hayes-style transition model
+Update BMI using the SIMEQ-PT Hayes-style transition model
 }

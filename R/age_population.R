@@ -5,7 +5,7 @@
 #' last modelled year has already been applied at `max_age`. The calendar
 #' year is updated separately by [simeq_advance_year()].
 #'
-#' @param state A living PONTE-PT population state.
+#' @param state A living SIMEQ-PT population state.
 #' @param entry_age Integer minimum represented age.
 #' @param max_age Integer maximum represented age.
 #'

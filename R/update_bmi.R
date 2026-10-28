@@ -3,7 +3,7 @@
 #' Applies simulated annual BMI changes to a living population state, limits
 #' BMI to a plausible range, and recalculates BMI category and obesity status.
 #'
-#' @param state A valid living PONTE-PT-O population state containing
+#' @param state A valid living SIMEQ population state containing
 #'   `education_level2`.
 #' @param bmi_transition_model A `simeq_bmi_transition_model` object returned
 #'   by [simeq_fit_bmi_transition()].

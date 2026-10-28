@@ -16,7 +16,7 @@ simeq_update_mortality(
 )
 }
 \arguments{
-\item{state}{A valid living PONTE-PT-O population state.}
+\item{state}{A valid living SIMEQ population state.}
 
 \item{life_table}{A validated life table with \code{age}, \code{sex}, and \code{qx}.}
 

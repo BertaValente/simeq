@@ -19,7 +19,7 @@ The input \code{entrant_targets}, invisibly, if all checks pass.
 }
 \description{
 Validates annual sex-specific population targets used to weight age-20
-entrants in the open PONTE-PT-O cohort.
+entrants in the open SIMEQ cohort.
 }
 \examples{
 entrant_targets <- expand.grid(

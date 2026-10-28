@@ -2,7 +2,7 @@
 % Please edit documentation in R/verify_simulation_output.R
 \name{simeq_verify_simulation_output}
 \alias{simeq_verify_simulation_output}
-\title{Verify a PONTE-PT-O simulation output}
+\title{Verify a SIMEQ simulation output}
 \usage{
 simeq_verify_simulation_output(
   simulation_output,

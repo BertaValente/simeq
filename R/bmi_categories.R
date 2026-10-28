@@ -1,7 +1,7 @@
 #' Classify BMI values
 #'
 #' Classifies adult body mass index (BMI) values into the six BMI categories
-#' used by the PONTE-PT-O mortality and health-outcomes models.
+#' used by the SIMEQ mortality and health-outcomes models.
 #'
 #' @param bmi Numeric vector of body mass index values in kg/m^2.
 #'

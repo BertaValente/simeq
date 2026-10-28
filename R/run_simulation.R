@@ -1,4 +1,4 @@
-#' Run a PONTE-PT-O microsimulation
+#' Run a SIMEQ microsimulation
 #'
 #' Runs one or more annual open-cohort microsimulations from an initial
 #' population through the requested projection end year.

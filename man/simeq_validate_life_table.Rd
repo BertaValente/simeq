@@ -2,7 +2,7 @@
 % Please edit documentation in R/validate_life_table.R
 \name{simeq_validate_life_table}
 \alias{simeq_validate_life_table}
-\title{Validate a PONTE-PT-O life table}
+\title{Validate a SIMEQ life table}
 \usage{
 simeq_validate_life_table(life_table, entry_age = 20L, max_age = 84L)
 }

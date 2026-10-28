@@ -1,7 +1,7 @@
 #' Calculate years of life lost
 #'
 #' Calculates individual and weighted years of life lost (YLL) from
-#' PONTE-PT-O microsimulation output.
+#' SIMEQ microsimulation output.
 #'
 #' YLL is calculated using a reference life expectancy:
 #'

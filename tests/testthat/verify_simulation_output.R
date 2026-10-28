@@ -1,4 +1,4 @@
-#' Verify a PONTE-PT-O simulation output
+#' Verify a SIMEQ simulation output
 #'
 #' Performs structural checks on person-year simulation output, including
 #' person-year uniqueness, death-record consistency, age progression, BMI

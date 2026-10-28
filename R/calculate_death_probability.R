@@ -1,7 +1,7 @@
 #' Calculate annual probability of death
 #'
 #' Calculates an individual annual probability of death for every record in a
-#' living PONTE-PT-O population state. The life-table hazard is recalibrated
+#' living SIMEQ population state. The life-table hazard is recalibrated
 #' within each age-sex stratum so that the population-weighted mean individual
 #' hazard equals the life-table hazard for that stratum. Individual hazards are
 #' then scaled by the product of the BMI and education relative risks.
@@ -16,7 +16,7 @@
 #' If `life_table` has a `year` column, the table for the state's year is
 #' used (see [simeq_select_life_table_year()]).
 #'
-#' @param state A valid living PONTE-PT-O population state.
+#' @param state A valid living SIMEQ population state.
 #' @param life_table A validated life table with `age`, `sex`, and `qx`.
 #' @param rr_bmi A validated BMI mortality relative-risk table.
 #' @param rr_education A validated education mortality relative-risk table.

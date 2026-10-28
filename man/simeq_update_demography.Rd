@@ -7,7 +7,7 @@
 simeq_update_demography(state, entry_age = 20L, max_age = 84L)
 }
 \arguments{
-\item{state}{A valid living PONTE-PT-O population state.}
+\item{state}{A valid living SIMEQ population state.}
 
 \item{entry_age}{Integer. Minimum supported age.}
 
@@ -17,7 +17,7 @@ simeq_update_demography(state, entry_age = 20L, max_age = 84L)
 An updated living population state.
 }
 \description{
-Advances a living PONTE-PT-O population state through its non-mortality
+Advances a living SIMEQ population state through its non-mortality
 demographic update. Each person ages by one year, people passing \code{max_age}
 leave the modelled population, and the simulation calendar advances by one
 year.

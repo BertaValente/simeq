@@ -1,4 +1,4 @@
-#' Update BMI using the PONTE-PT Hayes-style transition model
+#' Update BMI using the SIMEQ-PT Hayes-style transition model
 #'
 #' @param population Synthetic population.
 #' @param hayes_bmi_model Fitted object from simeq_fit_bmi_transition_hayes().

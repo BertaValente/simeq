@@ -1,7 +1,7 @@
-#' Validate PONTE-PT-O mortality relative-risk tables
+#' Validate SIMEQ mortality relative-risk tables
 #'
 #' Validates the BMI-category and education relative-risk tables used to
-#' adjust life-table annual death probabilities in the PONTE-PT-O model.
+#' adjust life-table annual death probabilities in the SIMEQ model.
 #'
 #' @param rr_bmi A data frame with columns `sex`, `bmi_category`, and
 #'   `rr_bmi`.

@@ -18,7 +18,7 @@ A data frame containing a valid \code{education_level2} column.
 }
 \description{
 Returns a population state with an \code{education_level2} variable suitable for
-the PONTE-PT-O mortality model. The two supported categories are \code{lower}
+the SIMEQ mortality model. The two supported categories are \code{lower}
 and \code{higher}.
 }
 \examples{

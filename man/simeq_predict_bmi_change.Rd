@@ -7,7 +7,7 @@
 simeq_predict_bmi_change(state, bmi_transition_model, period = NULL)
 }
 \arguments{
-\item{state}{A valid living PONTE-PT-O population state containing
+\item{state}{A valid living SIMEQ population state containing
 \code{education_level2}.}
 
 \item{bmi_transition_model}{A \code{simeq_bmi_transition_model} object returned

@@ -2,7 +2,7 @@
 % Please edit documentation in R/generate_synthetic_population.R
 \name{simeq_generate_synthetic_population}
 \alias{simeq_generate_synthetic_population}
-\title{Generate a fully synthetic PONTE-PT baseline population}
+\title{Generate a fully synthetic SIMEQ-PT baseline population}
 \usage{
 simeq_generate_synthetic_population(
   population,

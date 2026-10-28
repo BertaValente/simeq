@@ -4,7 +4,7 @@
 #' deaths from surviving people. Deaths are removed from the active living
 #' state and returned in a separate data frame.
 #'
-#' @param state A valid living PONTE-PT-O population state.
+#' @param state A valid living SIMEQ population state.
 #' @param mortality_probabilities A data frame with `person_id`, `simulation`,
 #'   and `p_die`, typically produced by
 #'   `simeq_calculate_death_probability()`.

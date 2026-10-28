@@ -1,24 +1,26 @@
 Package: simeq
-Title: Portuguese Obesity Trajectory Microsimulation
-Version: 0.1.0
+Title: Simulation for Equity: Dynamic Microsimulation of BMI, Health and Economic Outcomes
+Version: 1.0.0
 Authors@R:
     person(
         given = "Berta",
         family = "Valente",
         email = "berta.valente@ispup.up.pt",
-        role = c("aut", "cre"),
-        comment = c(ORCID = "0000-0000-0000-0000")
+        role = c("aut", "cre")
     )
-Description: An individual-level, stochastic, open-cohort microsimulation for
-    modelling population demographics, body mass index (BMI) trajectories,
-    mortality, and obesity-related health and economic outcomes among adults in
-    Portugal over the period 1998–2040. The model comprises three modules:
-    (1) BMI trajectory simulation using empirical transition matrices derived
-    from the Portuguese National Health Survey; (2) health burden estimation
-    (years of life lost, quality-adjusted life years, and disability-adjusted
-    life years); and (3) obesity-attributable healthcare cost projection.
-    The package is designed to support population-level policy analysis,
-    including budget-allocation and targeting scenarios for obesity interventions.
+Description: An individual-level, stochastic, open-cohort dynamic
+    microsimulation of adult body mass index (BMI) trajectories and their
+    health and economic consequences, stratified by sex and educational
+    attainment. The package separates a reusable simulation engine from
+    setting-specific inputs and provides functions for input preparation,
+    population initialisation, percentile-specific synthetic-cohort BMI
+    transitions estimated from repeated cross-sectional surveys, mortality with
+    BMI and education relative risks, education transitions, entrant
+    generation, outcome estimation (quality-adjusted life years, obesity-
+    attributable QALY loss and years of life lost, and high-BMI- and
+    obesity-attributable direct medical costs) and diagnostics. The Portuguese
+    reference implementation (SIMEQ-PT) simulates adults aged 20-84 years from
+    1998 to 2040.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

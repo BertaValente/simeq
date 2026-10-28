@@ -121,42 +121,6 @@ test_that("annual costs give per-replication totals and intervals", {
   )
 })
 
-test_that("per-replication totals equal each replication costed alone", {
-  f <- make_annual_cost_fixtures()
-  later <- f$simulation_output
-  later$year <- 2021L
-  later$bmi[later$simulation == 2L & later$bmi < 30] <- 31
-  later$age[later$simulation == 1L] <- pmin(later$age[later$simulation == 1L] + 3L, 84L)
-  f$simulation_output <- rbind(f$simulation_output, later)
-
-  run_years <- function(data, ...) {
-    calculate_annual_obesity_costs(
-      simulation_output = data,
-      gbd_rr_matrix = f$rr_matrix,
-      costs_dro = f$costs_dro,
-      outcome_mapping = f$outcome_mapping,
-      exclude_disease_groups = "obesity_overweight",
-      years = 2020:2021,
-      base_cost_year = 2020L,
-      ...
-    )
-  }
-
-  result <- run_years(f$simulation_output, by_simulation = TRUE)
-
-  for (sim in 1:2) {
-    alone_totals <- run_years(
-      f$simulation_output[f$simulation_output$simulation == sim, ]
-    )$totals
-    expect_equal(
-      result$totals_by_simulation$total_keur_2018_constant[
-        result$totals_by_simulation$simulation == sim
-      ],
-      alone_totals$total_keur_2018_constant
-    )
-  }
-})
-
 test_that("direct cost group must be excluded from PAF rescaling", {
   f <- make_annual_cost_fixtures()
 

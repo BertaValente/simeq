@@ -1,3 +1,19 @@
+# simeq (development version): SIMEQ-PT v10
+
+- `simeq_run_simulation()` gains `last_observed_year`: hybrid mortality
+  calibration rescales each year up to this year and then keeps the scaling,
+  so a life table that also holds projected years (e.g. Lee-Carter) changes
+  baseline mortality without switching annual calibration back on.
+- New `simeq_combine_education_upgrade()` stacks education upgrade rates by
+  calendar period.
+- `calculate_annual_obesity_costs()`: default `discount_rate` is now 0.04;
+  the simulation output is reduced to living person-years and the needed
+  columns before costing.
+- `analysis/simeq_pt_analysis_v10.qmd`: SIMEQ-PT v10 analysis (50
+  replications, Lee-Carter mortality, BMI calibration revision 1). The
+  `data-raw/` and `mortality_lc/` scripts rebuild its inputs; the National
+  Health Survey microdata and HMD-derived life tables are not distributed.
+
 # simeq (development version)
 
 Changes made in response to the paper I reviewer comments and the function
@@ -11,13 +27,6 @@ review.
   year of living person-years at a time and skips the unused sex split in
   the per-replication runs. Results are unchanged; the 50-replication cost
   runs take minutes instead of hours.
-- `calculate_annual_obesity_costs()` now reads the simulation output once:
-  population and relative-risk sums are computed per replication, year and
-  sex x age stratum with integer keys, and the pooled, by-sex and
-  per-replication PAFs are built from those sums. It no longer copies or
-  splits the simulation output, so memory use stays close to the size of the
-  input. Results are identical; with 50 replications one exposure takes
-  about a minute.
 
 ### Changed results (defaults)
 

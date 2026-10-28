@@ -144,21 +144,97 @@ simeq_fit_education_upgrade <- function(
   rates
 }
 
+#' Combine education upgrade rates by calendar period
+#'
+#' Stacks several [simeq_fit_education_upgrade()] results, each used for a
+#' range of calendar years, so that upgrading can follow the period in which
+#' it happens (for example rates from the 1998 to 2005 waves for 1998 to 2004
+#' and rates pooled from later waves afterwards).
+#'
+#' @param periods A list of lists, each with `from` (first calendar year),
+#'   `to` (last calendar year, `NA` for open-ended) and `upgrade` (output from
+#'   [simeq_fit_education_upgrade()]). Ranges must not overlap.
+#'
+#' @return A `simeq_education_upgrade` data frame with `year_min` and
+#'   `year_max` added. The year is the calendar year at the start of the
+#'   annual cycle (the year of `state`).
+#' @export
+#'
+#' @examples
+#' early <- data.frame(sex = c("men", "women"), age_min = 20L, age_max = 24L,
+#'                     annual_rate = c(0.01, 0.02))
+#' late <- transform(early, annual_rate = c(0.02, 0.04))
+#' simeq_combine_education_upgrade(list(
+#'   list(from = 1998L, to = 2004L, upgrade = early),
+#'   list(from = 2005L, to = NA, upgrade = late)
+#' ))
+simeq_combine_education_upgrade <- function(periods) {
+  if (!is.list(periods) || length(periods) == 0L) {
+    stop("`periods` must be a non-empty list.", call. = FALSE)
+  }
+
+  rows <- lapply(periods, function(p) {
+    if (!all(c("from", "upgrade") %in% names(p))) {
+      stop("Each period needs `from` and `upgrade`.", call. = FALSE)
+    }
+    to <- if (is.null(p$to) || is.na(p$to)) Inf else as.numeric(p$to)
+    if (to < p$from) {
+      stop("`to` must not be earlier than `from`.", call. = FALSE)
+    }
+    out <- as.data.frame(p$upgrade)[, c("sex", "age_min", "age_max", "annual_rate")]
+    out$year_min <- as.numeric(p$from)
+    out$year_max <- to
+    out
+  })
+
+  rates <- do.call(rbind, rows)
+  ranges <- unique(rates[, c("year_min", "year_max")])
+  ranges <- ranges[order(ranges$year_min), , drop = FALSE]
+  if (nrow(ranges) > 1L &&
+      any(ranges$year_min[-1L] <= ranges$year_max[-nrow(ranges)])) {
+    stop("Period year ranges must not overlap.", call. = FALSE)
+  }
+
+  rownames(rates) <- NULL
+  class(rates) <- c("simeq_education_upgrade", "data.frame")
+  rates
+}
+
 #' Move people from medium to high education
 #'
 #' Each living person with medium education whose sex and age match a row of
 #' `education_upgrade` moves to high education with that row's annual
 #' probability. Two-level education is updated to `"higher"` when present.
+#' When `education_upgrade` has `year_min` and `year_max` columns (see
+#' [simeq_combine_education_upgrade()]), only the rows whose range contains
+#' the year of `state` are used.
 #'
 #' @param state A living population state with `sex`, `age` and
-#'   `education_level`.
-#' @param education_upgrade Output from [simeq_fit_education_upgrade()].
+#'   `education_level` (and `year` when rates are period-specific).
+#' @param education_upgrade Output from [simeq_fit_education_upgrade()] or
+#'   [simeq_combine_education_upgrade()].
 #'
 #' @return `state` with updated `education_level` (and `education_level2`).
 #' @export
 simeq_update_education <- function(state, education_upgrade) {
   if (nrow(state) == 0L) {
     return(state)
+  }
+
+  if (all(c("year_min", "year_max") %in% names(education_upgrade))) {
+    state_year <- unique(as.integer(state$year))
+    if (length(state_year) != 1L) {
+      stop(
+        "`state` must contain one calendar year for period-specific rates.",
+        call. = FALSE
+      )
+    }
+    education_upgrade <- education_upgrade[
+      education_upgrade$year_min <= state_year &
+        education_upgrade$year_max >= state_year,
+      ,
+      drop = FALSE
+    ]
   }
 
   rate <- numeric(nrow(state))

@@ -55,7 +55,7 @@
 #'   takes precedence over `cpi_2026` for the `total_keur_2026_nominal`
 #'   column; otherwise `cpi_2026` is used as the fallback.
 #' @param discount_rate Annual discount rate applied after `discount_base_year`.
-#'   Default 0.03.
+#'   Default 0.04.
 #' @param discount_base_year Year from which future costs are discounted.
 #'   Default 2026L.
 #' @param include_direct_costs Logical. If `TRUE` (default), the published
@@ -103,7 +103,7 @@ calculate_annual_obesity_costs <- function(
     unit_cost_annual_growth = 0,
     cpi_2026                = 117.22,
     cpi_table               = NULL,
-    discount_rate           = 0.03,
+    discount_rate           = 0.04,
     discount_base_year      = 2026L,
     include_direct_costs    = TRUE,
     direct_cost_group       = "obesity_overweight",
@@ -111,6 +111,18 @@ calculate_annual_obesity_costs <- function(
 ) {
   exposure <- match.arg(exposure)
   exposure_min_bmi <- if (identical(exposure, "obesity")) 30 else 25
+
+  # Disease PAFs from individual BMI for one data set and year.
+  .pafs_for_year <- function(sim_data, yr, min_bmi = exposure_min_bmi) {
+    calculate_obesity_pafs_individual(
+      simulation_output = sim_data,
+      year              = yr,
+      rr_matrix         = gbd_rr_matrix,
+      bmi_reference     = bmi_reference,
+      exposure_min_bmi  = min_bmi,
+      weight_col        = weight_col
+    )
+  }
 
   # ── Input validation ────────────────────────────────────────────────────────
   required_sim_cols <- c("year", "age", "sex", "bmi", "alive", weight_col)
@@ -196,11 +208,22 @@ calculate_annual_obesity_costs <- function(
   }
   years <- as.integer(years)
 
+  # Keep only the living person-years and columns the cost calculation uses.
+  # Every helper below filters by year, so working on this reduced copy (and
+  # one year at a time) gives the same results much faster.
+  keep_columns <- intersect(
+    c("simulation", required_sim_cols),
+    names(simulation_output)
+  )
+  simulation_output <- simulation_output[
+    !is.na(simulation_output$alive) & simulation_output$alive &
+      simulation_output$year %in% c(years, as.integer(base_cost_year)),
+    keep_columns,
+    drop = FALSE
+  ]
+
   sexes <- c("men", "women")
   cost_columns <- c("inpatient", "outpatient", "pharmacological", "total")
-  cost_groups <- as.character(costs_dro$disease_group[
-    !as.character(costs_dro$disease_group) %in% exclude_disease_groups
-  ])
 
   .grow_costs <- function(yr) {
     unit_growth_factor <- (1 + unit_cost_annual_growth)^
@@ -215,6 +238,7 @@ calculate_annual_obesity_costs <- function(
     list(costs = costs_yr, unit_growth_factor = unit_growth_factor)
   }
 
+  # Direct treatment costs, included at 100% attribution.
   # Direct treatment costs scaled by the exposure-prevalence ratio `factor`.
   .direct_rows <- function(costs_yr, factor = 1) {
     costs_yr |>
@@ -230,203 +254,188 @@ calculate_annual_obesity_costs <- function(
       )
   }
 
-  # PAF-rescaled attributable costs by disease group (same columns as
-  # calculate_obesity_costs_age_sex()$costs_by_group).
-  .group_cost_rows <- function(costs_yr, paf, reference) {
-    rows <- costs_yr[
-      !as.character(costs_yr$disease_group) %in% exclude_disease_groups,
-      ,
-      drop = FALSE
-    ]
-    group <- as.character(rows$disease_group)
-    rows$paf_obesity <- unname(paf[group])
-    rows$paf_reference <- unname(reference[group])
-    rows |>
-      dplyr::mutate(
-        paf_ratio               = paf_obesity / paf_reference,
-        inpatient_obesity       = inpatient       * paf_ratio,
-        outpatient_obesity      = outpatient      * paf_ratio,
-        pharmacological_obesity = pharmacological * paf_ratio,
-        total_obesity           = total           * paf_ratio
-      )
-  }
-
-  # ── Relative-risk sums, computed once ───────────────────────────────────────
-  # The PAF of a stratum depends on the data only through two sums: the
-  # weighted population and the weighted excess relative risk of each GBD
-  # outcome. Both are computed once per replication x year with integer
-  # keys; pooled, by-sex and per-replication PAFs then come from adding these
-  # sums, so the large simulation output is read only once and never copied.
-  per_simulation <- isTRUE(by_simulation) &&
-    "simulation" %in% names(simulation_output)
-  has_simulation <- "simulation" %in% names(simulation_output)
-  simulation_ids <- if (has_simulation) {
-    sort(unique(simulation_output$simulation))
-  } else {
-    1L
-  }
-  n_simulations <- length(simulation_ids)
-  base_cost_year <- as.integer(base_cost_year)
-
-  rr <- .cost_rr_strata(gbd_rr_matrix, outcome_mapping, cost_groups)
-
-  .people_rows <- function(year_values) {
-    weight <- simulation_output[[weight_col]]
-    which(
-      simulation_output$year %in% year_values &
-        !is.na(simulation_output$alive) & simulation_output$alive &
-        !is.na(simulation_output$age) &
-        simulation_output$age >= 20L &
-        simulation_output$age <= 84L &
-        !is.na(simulation_output$bmi) &
-        !is.na(weight) &
-        weight > 0 &
-        simulation_output$sex %in% sexes
-    )
-  }
-  .simulation_index <- function(rows) {
-    if (has_simulation) {
-      match(simulation_output$simulation[rows], simulation_ids)
-    } else {
-      rep(1L, length(rows))
+  # Weighted national prevalence of the costed exposure.
+  .exposure_prevalence <- function(prev) {
+    exposed <- prev$p_obesity
+    if (identical(exposure, "high_bmi")) {
+      exposed <- exposed + prev$p_overweight
     }
+    sum(prev$population_n * exposed) / sum(prev$population_n)
   }
 
-  # Base year, by replication: high-BMI reference PAFs (min BMI 25) and the
-  # exposure prevalence used to scale direct costs.
-  base_rows <- .people_rows(base_cost_year)
-  base_simulation <- .simulation_index(base_rows)
-  missing_base <- setdiff(seq_len(n_simulations), base_simulation)
-  if (length(base_rows) == 0L || (per_simulation && length(missing_base) > 0L)) {
-    stop(
-      "`simulation_output` has no living people in `base_cost_year` (",
-      base_cost_year, "), needed for the base-year reference.",
-      call. = FALSE
+  # High-BMI PAF by cost group in the base year of one data set.
+  .base_year_reference <- function(sim_data) {
+    prev_base <- extract_simulated_obesity_prevalence_by_age_sex(
+      simulation_output = sim_data,
+      year              = as.integer(base_cost_year),
+      weight_col        = weight_col
     )
-  }
-  base_sums <- .cost_rr_sums(
-    simulation_output, base_rows, base_simulation, n_simulations,
-    rr, bmi_reference, min_bmi = 25, prevalence_min_bmi = exposure_min_bmi,
-    weight_col = weight_col
-  )
-
-  # Costed years, by replication x year.
-  year_rows <- .people_rows(years)
-  year_key <- (.simulation_index(year_rows) - 1L) * length(years) +
-    match(simulation_output$year[year_rows], years)
-  year_sums <- .cost_rr_sums(
-    simulation_output, year_rows, year_key, n_simulations * length(years),
-    rr, bmi_reference, min_bmi = exposure_min_bmi,
-    prevalence_min_bmi = exposure_min_bmi, weight_col = weight_col
-  )
-  key_simulation <- rep(seq_len(n_simulations), each = length(years))
-  key_year <- rep(years, times = n_simulations)
-
-  # ── Pooled costs (all replications) by year, with the sex allocation ───────
-  pooled_reference <- .cost_group_pafs(
-    .add_rr_sums(base_sums, rep(1L, n_simulations), 1L), rr
-  )[1L, ]
-  .check_group_pafs(pooled_reference, cost_groups)
-  if (any(pooled_reference <= 0)) {
-    stop(
-      "The simulated base-year PAF is zero for: ",
-      paste(cost_groups[pooled_reference <= 0], collapse = ", "),
-      ". Exclude these groups.",
-      call. = FALSE
+    pafs_base <- .pafs_for_year(
+      sim_data, as.integer(base_cost_year), min_bmi = 25
     )
-  }
-  pooled_base_prevalence <- sum(base_sums$exposed) / sum(base_sums$population)
-
-  pooled_year_sums <- .add_rr_sums(
-    year_sums, match(key_year, years), length(years)
-  )
-  pooled_paf <- .cost_group_pafs(pooled_year_sums, rr)
-  pooled_paf_sex <- lapply(
-    stats::setNames(seq_along(sexes), sexes),
-    function(sex_index) .cost_group_pafs(pooled_year_sums, rr, sex_index)
-  )
-
-  year_results <- lapply(seq_along(years), function(i) {
-    yr <- years[[i]]
-    grown <- .grow_costs(yr)
-
-    if (sum(pooled_year_sums$population[i, ]) == 0) {
-      stop("No living simulated people in year ", yr, ".", call. = FALSE)
-    }
-    paf_yr <- pooled_paf[i, ]
-    .check_group_pafs(paf_yr, cost_groups)
-
-    national <- .group_cost_rows(grown$costs, paf_yr, pooled_reference)
-    if (isTRUE(include_direct_costs)) {
-      direct_factor <- (sum(pooled_year_sums$exposed[i, ]) /
-        sum(pooled_year_sums$population[i, ])) / pooled_base_prevalence
-      national <- dplyr::bind_rows(
-        national,
-        .direct_rows(grown$costs, direct_factor)
+    groups <- calculate_obesity_costs_age_sex(
+      paf_by_outcome         = pafs_base$paf_by_outcome,
+      outcome_mapping        = outcome_mapping,
+      costs_dro              = costs_dro,
+      reference_paf_by_group = NULL,
+      exclude_disease_groups = exclude_disease_groups
+    )$costs_by_group
+    if (any(groups$paf_obesity <= 0)) {
+      stop(
+        "The simulated base-year PAF is zero for: ",
+        paste(groups$disease_group[groups$paf_obesity <= 0], collapse = ", "),
+        ". Exclude these groups.",
+        call. = FALSE
       )
     }
-    national <- national |>
-      dplyr::mutate(year = yr, unit_growth_factor = grown$unit_growth_factor)
+    list(
+      reference = data.frame(
+        disease_group = groups$disease_group,
+        paf_reference = groups$paf_obesity,
+        stringsAsFactors = FALSE
+      ),
+      exposure_prevalence = .exposure_prevalence(prev_base)
+    )
+  }
 
-    # Sex allocation weights: PAF × weighted population for PAF-based
-    # groups; weighted exposed population for direct costs.
-    sex_weights <- lapply(seq_along(sexes), function(sex_index) {
-      sex_strata <- rr$strata_sex == sex_index
-      population_sex <- sum(pooled_year_sums$population[i, sex_strata])
-      if (population_sex == 0) {
-        stop("No living simulated people in year ", yr, ".", call. = FALSE)
+  # ── Costs for one data set (all replications pooled, or one replication) ───
+  # `with_sex = FALSE` skips the sex allocation, which the per-replication
+  # totals do not use.
+  .costs_for_data <- function(sim_data, with_sex = TRUE) {
+    if (!as.integer(base_cost_year) %in% sim_data$year[sim_data$alive]) {
+      stop(
+        "`simulation_output` has no living people in `base_cost_year` (",
+        base_cost_year, "), needed for the base-year reference.",
+        call. = FALSE
+      )
+    }
+    base <- .base_year_reference(sim_data)
+    reference_used <- base$reference
+
+    data_by_year <- split(sim_data, sim_data$year)
+
+    year_results <- lapply(years, function(yr) {
+      grown <- .grow_costs(yr)
+      year_data <- data_by_year[[as.character(yr)]]
+      if (is.null(year_data)) {
+        year_data <- sim_data[0L, , drop = FALSE]
       }
 
-      weights <- data.frame(
-        disease_group = cost_groups,
-        sex = sexes[[sex_index]],
-        allocation_weight = unname(pooled_paf_sex[[sex_index]][i, ]) *
-          population_sex,
-        stringsAsFactors = FALSE
+      # Age-sex BMI prevalence for year yr (overall)
+      prev_yr <- extract_simulated_obesity_prevalence_by_age_sex(
+        simulation_output = year_data,
+        year              = yr,
+        weight_col        = weight_col
       )
 
+      # Disease-specific PAFs from GBD RRs × simulated prevalence
+      pafs_yr <- .pafs_for_year(year_data, yr)
+
+      # Ratio-rescaled attributable costs
+      costs_out <- calculate_obesity_costs_age_sex(
+        paf_by_outcome         = pafs_yr$paf_by_outcome,
+        outcome_mapping        = outcome_mapping,
+        costs_dro              = grown$costs,
+        reference_paf_by_group = reference_used,
+        exclude_disease_groups = exclude_disease_groups
+      )
+
+      national <- costs_out$costs_by_group
       if (isTRUE(include_direct_costs)) {
-        weights <- rbind(
-          weights,
-          data.frame(
-            disease_group = direct_cost_group,
-            sex = sexes[[sex_index]],
-            allocation_weight = sum(pooled_year_sums$exposed[i, sex_strata]),
-            stringsAsFactors = FALSE
+        direct_factor <- .exposure_prevalence(prev_yr) /
+          base$exposure_prevalence
+        national <- dplyr::bind_rows(
+          national,
+          .direct_rows(grown$costs, direct_factor)
+        )
+      }
+      national <- national |>
+        dplyr::mutate(year = yr, unit_growth_factor = grown$unit_growth_factor)
+
+      if (!with_sex) {
+        return(list(national = national, by_sex = NULL))
+      }
+
+      # Sex allocation weights: PAF × weighted population for PAF-based
+      # groups; weighted exposed population for direct costs.
+      sex_weights <- lapply(sexes, function(sx) {
+        prev_sex <- extract_simulated_obesity_prevalence_by_age_sex(
+          simulation_output = year_data[year_data$sex == sx, , drop = FALSE],
+          year       = yr,
+          weight_col = weight_col
+        )
+
+        pafs_sex <- .pafs_for_year(
+          year_data[year_data$sex == sx, , drop = FALSE], yr
+        )
+
+        paf_sex <- calculate_obesity_costs_age_sex(
+          paf_by_outcome         = pafs_sex$paf_by_outcome,
+          outcome_mapping        = outcome_mapping,
+          costs_dro              = grown$costs,
+          reference_paf_by_group = reference_used,
+          exclude_disease_groups = exclude_disease_groups
+        )$costs_by_group
+
+        population_sex <- sum(prev_sex$population_n)
+        exposed_sex <- population_sex * .exposure_prevalence(prev_sex)
+
+        weights <- data.frame(
+          disease_group = paf_sex$disease_group,
+          sex = sx,
+          allocation_weight = paf_sex$paf_obesity * population_sex,
+          stringsAsFactors = FALSE
+        )
+
+        if (isTRUE(include_direct_costs)) {
+          weights <- rbind(
+            weights,
+            data.frame(
+              disease_group = direct_cost_group,
+              sex = sx,
+              allocation_weight = exposed_sex,
+              stringsAsFactors = FALSE
+            )
+          )
+        }
+
+        weights
+      }) |>
+        dplyr::bind_rows() |>
+        dplyr::group_by(disease_group) |>
+        dplyr::mutate(
+          sex_share = if (sum(allocation_weight) > 0) {
+            allocation_weight / sum(allocation_weight)
+          } else {
+            rep(1 / dplyr::n(), dplyr::n())
+          }
+        ) |>
+        dplyr::ungroup() |>
+        dplyr::select(disease_group, sex, sex_share)
+
+      by_sex <- national |>
+        dplyr::inner_join(sex_weights, by = "disease_group",
+                          relationship = "one-to-many") |>
+        dplyr::mutate(
+          dplyr::across(
+            c(inpatient_obesity, outpatient_obesity,
+              pharmacological_obesity, total_obesity),
+            \(x) x * sex_share
           )
         )
-      }
 
-      weights
-    }) |>
-      dplyr::bind_rows() |>
-      dplyr::group_by(disease_group) |>
-      dplyr::mutate(
-        sex_share = if (sum(allocation_weight) > 0) {
-          allocation_weight / sum(allocation_weight)
-        } else {
-          rep(1 / dplyr::n(), dplyr::n())
-        }
-      ) |>
-      dplyr::ungroup() |>
-      dplyr::select(disease_group, sex, sex_share)
+      list(national = national, by_sex = by_sex)
+    })
 
-    by_sex <- national |>
-      dplyr::inner_join(sex_weights, by = "disease_group",
-                        relationship = "one-to-many") |>
-      dplyr::mutate(
-        dplyr::across(
-          c(inpatient_obesity, outpatient_obesity,
-            pharmacological_obesity, total_obesity),
-          \(x) x * sex_share
-        )
-      )
+    list(
+      by_year_disease = dplyr::bind_rows(lapply(year_results, `[[`, "national")),
+      by_sex_disease  = dplyr::bind_rows(lapply(year_results, `[[`, "by_sex"))
+    )
+  }
 
-    list(national = national, by_sex = by_sex)
-  })
-
-  by_year_disease <- dplyr::bind_rows(lapply(year_results, `[[`, "national"))
-  by_sex_disease <- dplyr::bind_rows(lapply(year_results, `[[`, "by_sex"))
+  pooled <- .costs_for_data(simulation_output)
+  by_year_disease <- pooled$by_year_disease
+  by_sex_disease <- pooled$by_sex_disease
 
   # ── Helper: attach year-specific CPI and discounting ────────────────────────
   .add_monetary_cols <- function(df, group_vars) {
@@ -476,49 +485,24 @@ calculate_annual_obesity_costs <- function(
   )
 
   # ── Per-replication totals and 95% Monte Carlo simulation intervals ─────────
-  # Same formulas as the pooled costs, from each replication's own sums.
-  if (per_simulation) {
-    reference <- .cost_group_pafs(base_sums, rr)
-    .check_group_pafs(reference, cost_groups)
-    if (any(reference <= 0)) {
-      stop(
-        "The simulated base-year PAF is zero for: ",
-        paste(cost_groups[colSums(reference <= 0) > 0L], collapse = ", "),
-        ". Exclude these groups.",
-        call. = FALSE
+  if (isTRUE(by_simulation) && "simulation" %in% names(simulation_output)) {
+    simulation_ids <- sort(unique(simulation_output$simulation))
+    split_output <- split(simulation_output, simulation_output$simulation)
+
+    totals_by_simulation <- lapply(simulation_ids, function(sim_id) {
+      sim_costs <- .costs_for_data(
+        split_output[[as.character(sim_id)]],
+        with_sex = FALSE
       )
-    }
-
-    present <- rowSums(year_sums$population) > 0
-    paf <- .cost_group_pafs(year_sums, rr)[present, , drop = FALSE]
-    .check_group_pafs(paf, cost_groups)
-    sim_index <- key_simulation[present]
-
-    group_totals <- as.numeric(
-      costs_dro$total[match(cost_groups, costs_dro$disease_group)]
-    )
-    growth <- (1 + unit_cost_annual_growth)^(key_year[present] - base_cost_year)
-    total <- growth * as.vector(
-      (paf / reference[sim_index, , drop = FALSE]) %*% group_totals
-    )
-
-    if (isTRUE(include_direct_costs)) {
-      direct_total <- sum(as.numeric(
-        costs_dro$total[costs_dro$disease_group == direct_cost_group]
-      ))
-      prevalence <- rowSums(year_sums$exposed[present, , drop = FALSE]) /
-        rowSums(year_sums$population[present, , drop = FALSE])
-      base_prevalence <- rowSums(base_sums$exposed) /
-        rowSums(base_sums$population)
-      total <- total + growth * direct_total * prevalence /
-        base_prevalence[sim_index]
-    }
-
-    totals_by_simulation <- tibble::tibble(
-      simulation = simulation_ids[sim_index],
-      year = key_year[present],
-      total_keur_2018_constant = total
-    )
+      sim_costs$by_year_disease |>
+        dplyr::group_by(year) |>
+        dplyr::summarise(
+          total_keur_2018_constant = sum(total_obesity, na.rm = TRUE),
+          .groups = "drop"
+        ) |>
+        dplyr::mutate(simulation = sim_id, .before = 1L)
+    }) |>
+      dplyr::bind_rows()
 
     intervals <- totals_by_simulation |>
       dplyr::group_by(year) |>
@@ -537,186 +521,4 @@ calculate_annual_obesity_costs <- function(
   }
 
   result
-}
-
-
-# ── Internal helpers for calculate_annual_obesity_costs() ────────────────────
-
-.cost_sex_labels <- c("Males", "Females")
-.cost_age_bands <- paste0(seq(20L, 80L, by = 5L), "-", seq(24L, 84L, by = 5L))
-
-# GBD relative risks arranged by stratum (sex x five-year age band, 26
-# strata numbered sex-major) and outcome, plus the outcome-to-cost-group map.
-.cost_rr_strata <- function(gbd_rr_matrix, outcome_mapping, cost_groups) {
-  rr_sex <- dplyr::recode(
-    as.character(gbd_rr_matrix$sex),
-    men   = "Males",  Male   = "Males",  male   = "Males",
-    women = "Females", Female = "Females", female = "Females"
-  )
-  rr_stratum <- (match(rr_sex, .cost_sex_labels) - 1L) *
-    length(.cost_age_bands) +
-    match(as.character(gbd_rr_matrix$age_band), .cost_age_bands)
-  outcomes <- unique(as.character(gbd_rr_matrix$disease))
-  n_strata <- length(.cost_sex_labels) * length(.cost_age_bands)
-
-  # log RR per 5 units; NA where an outcome has no RR for a stratum.
-  log_rr <- matrix(NA_real_, n_strata, length(outcomes))
-  matched <- !is.na(rr_stratum)
-  log_rr[cbind(
-    rr_stratum[matched],
-    match(as.character(gbd_rr_matrix$disease[matched]), outcomes)
-  )] <- log(as.numeric(gbd_rr_matrix$rr_per_5[matched]))
-
-  mapping_outcome <- tolower(as.character(outcome_mapping$outcome_pattern))
-  group_outcomes <- lapply(cost_groups, function(group) {
-    columns <- match(
-      mapping_outcome[outcome_mapping$disease_group == group],
-      tolower(outcomes)
-    )
-    columns[!is.na(columns)]
-  })
-
-  list(
-    log_rr = log_rr,
-    outcomes = outcomes,
-    strata_sex = rep(seq_along(.cost_sex_labels), each = length(.cost_age_bands)),
-    group_outcomes = group_outcomes,
-    cost_groups = cost_groups
-  )
-}
-
-# Weighted population, exposed population and excess relative-risk sums by
-# key and stratum for the people in `rows` of `simulation_output`.
-.cost_rr_sums <- function(
-    simulation_output, rows, key, n_keys, rr, bmi_reference, min_bmi,
-    prevalence_min_bmi, weight_col, bmi_cap = 50, chunk_size = 250000L
-) {
-  n_strata <- nrow(rr$log_rr)
-  n_outcomes <- ncol(rr$log_rr)
-  population <- matrix(0, n_keys, n_strata)
-  exposed <- population
-  excess <- array(0, c(n_keys, n_strata, n_outcomes))
-
-  for (start in seq.int(1L, max(length(rows), 1L), by = chunk_size)) {
-    if (length(rows) == 0L) break
-    chunk <- seq.int(start, min(start + chunk_size - 1L, length(rows)))
-    r <- rows[chunk]
-    k <- key[chunk]
-    age <- as.integer(simulation_output$age[r])
-    stratum <- (match(simulation_output$sex[r], c("men", "women")) - 1L) *
-      length(.cost_age_bands) + (age - 20L) %/% 5L + 1L
-    weight <- simulation_output[[weight_col]][r]
-    bmi <- simulation_output$bmi[r]
-    cell <- (stratum - 1L) * n_keys + k
-
-    population <- population +
-      matrix(.tabulate_weights(cell, weight, n_keys * n_strata), n_keys)
-    exposed <- exposed + matrix(
-      .tabulate_weights(cell, weight * (bmi >= prevalence_min_bmi),
-                       n_keys * n_strata),
-      n_keys
-    )
-
-    units <- ifelse(
-      bmi >= min_bmi,
-      pmax(pmin(bmi, bmi_cap) - bmi_reference, 0) / 5,
-      0
-    )
-    is_exposed <- units > 0
-    if (!any(is_exposed)) next
-    log_rr <- rr$log_rr[stratum[is_exposed], , drop = FALSE]
-    terms <- weight[is_exposed] * (exp(units[is_exposed] * log_rr) - 1)
-    terms[is.na(terms)] <- 0
-    sums <- rowsum(terms, cell[is_exposed], reorder = FALSE)
-    cells <- as.integer(rownames(sums))
-    for (o in seq_len(n_outcomes)) {
-      excess[, , o][cells] <- excess[, , o][cells] + sums[, o]
-    }
-  }
-
-  list(population = population, exposed = exposed, excess = excess)
-}
-
-.tabulate_weights <- function(cell, weight, n) {
-  out <- numeric(n)
-  sums <- rowsum(weight, cell, reorder = FALSE)
-  out[as.integer(rownames(sums))] <- sums[, 1L]
-  out
-}
-
-# Adds relative-risk sums over keys: `map[k]` is the new key of old key `k`.
-.add_rr_sums <- function(sums, map, n_keys) {
-  add <- function(x) {
-    out <- rowsum(x, map, reorder = TRUE)
-    full <- matrix(0, n_keys, ncol(x))
-    full[as.integer(rownames(out)), ] <- out
-    full
-  }
-  dims <- dim(sums$excess)
-  excess <- add(matrix(sums$excess, dims[1L]))
-  list(
-    population = add(sums$population),
-    exposed = add(sums$exposed),
-    excess = array(excess, c(n_keys, dims[2L], dims[3L]))
-  )
-}
-
-# Cost-group PAFs by key from relative-risk sums: stratum PAFs from the mean
-# RR, population-weighted over strata for each outcome (strata with RRs and
-# people only), then averaged over the outcomes mapped to each cost group.
-# `sex_index` restricts the strata to one sex.
-.cost_group_pafs <- function(sums, rr, sex_index = NULL) {
-  n_keys <- nrow(sums$population)
-  strata <- seq_len(nrow(rr$log_rr))
-  if (!is.null(sex_index)) {
-    strata <- strata[rr$strata_sex == sex_index]
-  }
-
-  paf_sum <- matrix(0, n_keys, length(rr$outcomes))
-  weight_sum <- paf_sum
-  for (st in strata) {
-    population <- sums$population[, st]
-    has_people <- population > 0
-    if (!any(has_people)) next
-    outcomes <- which(!is.na(rr$log_rr[st, ]))
-    if (length(outcomes) == 0L) next
-    mean_rr <- 1 + sums$excess[has_people, st, outcomes, drop = FALSE] /
-      population[has_people]
-    mean_rr <- matrix(mean_rr, sum(has_people))
-    paf <- pmax((mean_rr - 1) / mean_rr, 0)
-    paf_sum[has_people, outcomes] <- paf_sum[has_people, outcomes] +
-      paf * population[has_people]
-    weight_sum[has_people, outcomes] <- weight_sum[has_people, outcomes] +
-      population[has_people]
-  }
-  paf_by_outcome <- paf_sum / weight_sum
-
-  group_paf <- matrix(
-    NA_real_, n_keys, length(rr$cost_groups),
-    dimnames = list(NULL, rr$cost_groups)
-  )
-  for (g in seq_along(rr$cost_groups)) {
-    columns <- rr$group_outcomes[[g]]
-    if (length(columns) > 0L) {
-      group_paf[, g] <- rowMeans(
-        paf_by_outcome[, columns, drop = FALSE], na.rm = TRUE
-      )
-    }
-  }
-  group_paf[is.nan(group_paf)] <- NA_real_
-  group_paf
-}
-
-# Stops when a cost group has no simulated PAF (no GBD outcome mapped to it
-# had relative risks for the simulated strata).
-.check_group_pafs <- function(paf, groups) {
-  paf <- matrix(paf, ncol = length(groups))
-  if (anyNA(paf)) {
-    stop(
-      "No simulated PAF available for non-excluded disease group(s): ",
-      paste(groups[colSums(is.na(paf)) > 0L], collapse = ", "),
-      call. = FALSE
-    )
-  }
-  invisible(TRUE)
 }

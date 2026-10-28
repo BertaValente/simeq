@@ -21,6 +21,7 @@ simeq_run_simulation(
   education_source = c("existing", "map_3_to_2"),
   bmi_limits = c(10, 80),
   mortality_calibration = c("hybrid", "baseline", "annual"),
+  last_observed_year = NULL,
   bmi_period = c("latest", "by_year"),
   bmi_percentile_model = NULL,
   education_upgrade = NULL
@@ -81,6 +82,14 @@ population for all years. `"annual" rescales the life-table
 hazard every year so deaths in each age-sex stratum match the life table;
 changes in BMI then change who dies but not how many (the behaviour
 before this version).}
+
+\item{last_observed_year}{Optional integer. Last calendar year whose life
+table is observed rather than projected. Hybrid calibration rescales
+every year up to this year and then fixes the scaling. Defaults to the
+last \code{year} in \code{life_table}. Set it when \code{life_table} also holds
+projected years (for example, a Lee-Carter projection), so projected
+tables change baseline mortality without switching annual calibration
+back on.}
 
 \item{bmi_period}{For \code{bmi_update_method = "legacy"} or \code{"percentile"}:
 \code{"latest"} (default)

@@ -1,6 +1,6 @@
-#' Create PONTE-O simulation settings
+#' Create SIMEQ simulation settings
 #'
-#' Creates a validated settings object for a PONTE-O simulation.
+#' Creates a validated settings object for a SIMEQ simulation.
 #'
 #' @param initial_year Integer. First year represented in the baseline
 #'   population.
@@ -127,7 +127,7 @@ print.simeq_settings <- function(
     x,
     ...
 ) {
-  cat("PONTE-O simulation settings\n")
+  cat("SIMEQ simulation settings\n")
   cat(
     "  Projection years: ",
     x$initial_year,

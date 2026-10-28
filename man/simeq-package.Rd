@@ -4,9 +4,9 @@
 \name{simeq-package}
 \alias{simeq}
 \alias{simeq-package}
-\title{ponte: Portuguese Obesity Trajectories, Health and Economics}
+\title{simeq: Simulation for Equity, a dynamic microsimulation of BMI, health and economic outcomes}
 \description{
-PONTE-O is an individual-level dynamic microsimulation model
+SIMEQ is an individual-level dynamic microsimulation model
 of the Portuguese population. It projects obesity trajectories,
 long-term obesity-related health outcomes, and associated economic
 consequences.

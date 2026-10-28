@@ -1,0 +1,14 @@
+{
+  "title": "simeq: Simulation for Equity, a dynamic microsimulation of BMI, health and economic outcomes",
+  "description": "SIMEQ is an open-source R package for individual-level, stochastic, open-cohort dynamic microsimulation of adult body mass index (BMI) trajectories and their health and economic consequences, stratified by sex and educational attainment. This release (1.0.0) includes the Portuguese reference implementation SIMEQ-PT (v10) analysis workflow and input-preparation scripts; survey microdata are not included.",
+  "upload_type": "software",
+  "creators": [
+    {
+      "name": "Valente, Berta",
+      "affiliation": "EPIUnit, Institute of Public Health, University of Porto (ISPUP)"
+    }
+  ],
+  "license": "MIT",
+  "keywords": ["microsimulation", "obesity", "body mass index", "health inequalities", "education", "health economics", "R"],
+  "access_right": "open"
+}

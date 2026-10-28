@@ -1,7 +1,7 @@
-#' Initialise a PONTE-PT-O population state
+#' Initialise a SIMEQ population state
 #'
 #' Converts a validated baseline population into the standard person-level
-#' state used by the PONTE-PT-O simulation engine. Additional baseline
+#' state used by the SIMEQ simulation engine. Additional baseline
 #' variables, such as region or an alternative education variable, are
 #' retained in the returned state.
 #'

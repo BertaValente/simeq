@@ -1,9 +1,9 @@
-#' Advance a living PONTE-PT-O state by one calendar year
+#' Advance a living SIMEQ state by one calendar year
 #'
 #' Advances the simulation calendar by one year. This function does not yet
 #' change age, BMI, mortality, or population membership.
 #'
-#' @param state A valid living PONTE-PT-O population state.
+#' @param state A valid living SIMEQ population state.
 #' @param entry_age Integer. Minimum eligible age.
 #' @param max_age Integer. Maximum represented age.
 #'

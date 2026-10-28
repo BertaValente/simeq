@@ -31,7 +31,7 @@ A data frame containing valid living state records for the new
 entrants.
 }
 \description{
-Generates new age-20 PONTE-PT-O population records by sampling, with
+Generates new age-20 SIMEQ population records by sampling, with
 replacement, from historical age 20 to 24 donor records. Sampling is
 performed separately by sex using donor survey weights. Entrant weights are
 calibrated to sex-specific annual entrant population targets.

@@ -6,7 +6,7 @@
 #' form the next living population state. Deaths are recorded with their
 #' start-of-year BMI.
 #'
-#' @param state A valid living PONTE-PT-O population state for one simulation
+#' @param state A valid living SIMEQ population state for one simulation
 #'   and one calendar year.
 #' @param life_table A validated life table with `age`, `sex`, and `qx`.
 #' @param rr_bmi A validated BMI mortality relative-risk table.

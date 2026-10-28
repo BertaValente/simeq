@@ -1,11 +1,11 @@
 #' Update the annual demographic state
 #'
-#' Advances a living PONTE-PT-O population state through its non-mortality
+#' Advances a living SIMEQ population state through its non-mortality
 #' demographic update. Each person ages by one year, people passing `max_age`
 #' leave the modelled population, and the simulation calendar advances by one
 #' year.
 #'
-#' @param state A valid living PONTE-PT-O population state.
+#' @param state A valid living SIMEQ population state.
 #' @param entry_age Integer. Minimum supported age.
 #' @param max_age Integer. Maximum represented age.
 #'

@@ -2,12 +2,12 @@
 % Please edit documentation in R/advance_year.R
 \name{simeq_advance_year}
 \alias{simeq_advance_year}
-\title{Advance a living PONTE-PT-O state by one calendar year}
+\title{Advance a living SIMEQ state by one calendar year}
 \usage{
 simeq_advance_year(state, entry_age = 20L, max_age = 84L)
 }
 \arguments{
-\item{state}{A valid living PONTE-PT-O population state.}
+\item{state}{A valid living SIMEQ population state.}
 
 \item{entry_age}{Integer. Minimum eligible age.}
 

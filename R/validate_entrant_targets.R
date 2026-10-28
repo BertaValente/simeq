@@ -1,7 +1,7 @@
 #' Validate annual entrant population targets
 #'
 #' Validates annual sex-specific population targets used to weight age-20
-#' entrants in the open PONTE-PT-O cohort.
+#' entrants in the open SIMEQ cohort.
 #'
 #' @param entrant_targets A data frame with `entry_year`, `sex`, and
 #'   `entrant_population`.

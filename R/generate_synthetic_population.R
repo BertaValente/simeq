@@ -1,4 +1,4 @@
-#' Generate a fully synthetic PONTE-PT baseline population
+#' Generate a fully synthetic SIMEQ-PT baseline population
 #'
 #' Generates new simulation agents from POND2-standardized survey weights.
 #' The observed NHS records and their survey weights are used only to estimate

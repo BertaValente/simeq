@@ -1,7 +1,7 @@
 #' Validate an entrant donor pool
 #'
 #' Validates historical age 20 to 24 records used as a donor pool for
-#' generating new age-20 entrants in the open PONTE-PT-O cohort.
+#' generating new age-20 entrants in the open SIMEQ cohort.
 #'
 #' @param donor_pool A data frame containing historical donor records.
 #' @param entry_age Integer. Model entry age.

@@ -1,7 +1,7 @@
-#' Validate a PONTE-PT-O baseline population
+#' Validate a SIMEQ baseline population
 #'
 #' Checks whether a baseline population contains the minimum variables
-#' and valid values required to initialise a PONTE-PT-O simulation.
+#' and valid values required to initialise a SIMEQ simulation.
 #'
 #' @param population A data frame with one row per person at baseline.
 #' @param initial_year Integer. The year represented by the baseline

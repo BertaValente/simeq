@@ -16,7 +16,7 @@ The input \code{donor_pool}, invisibly, if all checks pass.
 }
 \description{
 Validates historical age 20 to 24 records used as a donor pool for
-generating new age-20 entrants in the open PONTE-PT-O cohort.
+generating new age-20 entrants in the open SIMEQ cohort.
 }
 \examples{
 donor_pool <- data.frame(

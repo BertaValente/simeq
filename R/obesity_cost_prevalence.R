@@ -114,7 +114,7 @@ extract_simulated_obesity_prevalence <- function(
 #'
 #' Summarises a microsimulation output into weighted obesity prevalence and
 #' represented population counts by sex and five-year age bands. The function
-#' is designed for PONTE-PT simulations covering adults aged 20 to 84 years.
+#' is designed for SIMEQ-PT simulations covering adults aged 20 to 84 years.
 #'
 #' @param simulation_output A data frame containing individual-level simulation
 #'   output.

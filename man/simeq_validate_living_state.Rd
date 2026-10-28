@@ -2,12 +2,12 @@
 % Please edit documentation in R/validate_state.R
 \name{simeq_validate_living_state}
 \alias{simeq_validate_living_state}
-\title{Validate a living PONTE-PT-O population state}
+\title{Validate a living SIMEQ population state}
 \usage{
 simeq_validate_living_state(state, entry_age = 20L, max_age = 84L)
 }
 \arguments{
-\item{state}{A data frame containing a living PONTE-PT-O population state.}
+\item{state}{A data frame containing a living SIMEQ population state.}
 
 \item{entry_age}{Integer. Minimum eligible age.}
 
@@ -18,7 +18,7 @@ The input \code{state}, invisibly, if all checks pass.
 }
 \description{
 Checks whether a person-level population state is valid for an annual
-PONTE-PT-O simulation update. All records must represent people who are
+SIMEQ simulation update. All records must represent people who are
 alive at the start of the update.
 }
 \examples{

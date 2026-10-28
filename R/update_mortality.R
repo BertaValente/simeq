@@ -4,7 +4,7 @@
 #' BMI and education relative risks, then draws deaths and separates survivors
 #' from death records.
 #'
-#' @param state A valid living PONTE-PT-O population state.
+#' @param state A valid living SIMEQ population state.
 #' @param life_table A validated life table with `age`, `sex`, and `qx`.
 #' @param rr_bmi A validated BMI mortality relative-risk table.
 #' @param rr_education A validated education mortality relative-risk table.

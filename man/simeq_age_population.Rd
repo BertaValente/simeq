@@ -7,7 +7,7 @@
 simeq_age_population(state, entry_age = 20L, max_age = 84L)
 }
 \arguments{
-\item{state}{A living PONTE-PT population state.}
+\item{state}{A living SIMEQ-PT population state.}
 
 \item{entry_age}{Integer minimum represented age.}
 

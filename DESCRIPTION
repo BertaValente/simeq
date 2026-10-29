@@ -1,6 +1,6 @@
 Package: simeq
 Title: Simulation for Equity: Dynamic Microsimulation of BMI, Health and Economic Outcomes
-Version: 1.0.0
+Version: 1.0.1
 Authors@R:
     person(
         given = "Berta",

@@ -1,10 +1,13 @@
-# simeq 1.0.0 (SIMEQ-PT v10)
+# simeq 1.0.1
 
 - New `simeq_synthetic_panel`: four fully synthetic survey waves (1998,
   2005, 2014, 2019) with the structure of the National Health Survey panel,
   generated from parametric distributions (`data-raw/create_synthetic_panel.R`).
 - New vignette `vignette("synthetic-example")` runs Modules I-III end to end
   on the synthetic panel.
+
+# simeq 1.0.0 (SIMEQ-PT v10)
+
 - `simeq_run_simulation()` gains `last_observed_year`: hybrid mortality
   calibration rescales each year up to this year and then keeps the scaling,
   so a life table that also holds projected years (e.g. Lee-Carter) changes

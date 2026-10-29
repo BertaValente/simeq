@@ -115,7 +115,7 @@ simeq/
 
 ## Citation
 
-> Valente B (2026). *simeq: Simulation for Equity: Dynamic Microsimulation of BMI, Health and Economic Outcomes*. R package version 1.0.0. <https://github.com/BertaValente/simeq>
+> Valente B (2026). *simeq: Simulation for Equity: Dynamic Microsimulation of BMI, Health and Economic Outcomes*. R package version 1.0.1. <https://github.com/BertaValente/simeq>
 
 ## License
 

@@ -6298,7 +6298,7 @@ flextable::save_as_docx(
 
 ## Package Availability
 
-This report was produced with simeq 1.0.0, released at <https://github.com/BertaValente/simeq> under the MIT licence. The release is archived on Zenodo, which gives it a citable DOI. The `data-raw/` and `mortality_lc/` scripts rebuild the model inputs. The National Health Survey microdata (available from INE and INSA on request) and the life tables derived from the Human Mortality Database are not distributed.
+This report was produced with simeq 1.0.1, released at <https://github.com/BertaValente/simeq> under the MIT licence. The release is archived on Zenodo, which gives it a citable DOI. The `data-raw/` and `mortality_lc/` scripts rebuild the model inputs. The National Health Survey microdata (available from INE and INSA on request) and the life tables derived from the Human Mortality Database are not distributed.
 
 ```{r}
 #| label: session-info

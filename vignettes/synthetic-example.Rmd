@@ -1,0 +1,247 @@
+---
+title: "Running simeq end to end with synthetic data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Running simeq end to end with synthetic data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 4)
+```
+
+This vignette runs the three simeq modules on `simeq_synthetic_panel`, four
+fully synthetic survey waves (1998, 2005, 2014 and 2019) with the same
+structure as the Portuguese National Health Survey (NHS) data used by
+SIMEQ-PT. The data are drawn from simple parametric distributions
+(`data-raw/create_synthetic_panel.R`); no survey record is used. **The results
+below are illustrative only and are not SIMEQ-PT estimates.** The full
+SIMEQ-PT analysis is `analysis/simeq_pt_analysis_v10.qmd` in the source
+repository.
+
+To keep the vignette fast it uses two replications, 2,000 sampled entrants a
+year and a projection to 2030; SIMEQ-PT uses 50 replications to 2040.
+
+```{r setup, message = FALSE}
+library(simeq)
+library(dplyr)
+
+panel <- simeq_synthetic_panel
+count(panel, year)
+```
+
+## Inputs
+
+The 1998 wave is the baseline population, and respondents aged 20-24 in each
+wave form the donor pools from which new 20-year-olds are sampled.
+
+```{r inputs}
+population_1998 <- panel |>
+  filter(year == 1998L) |>
+  select(person_id, age, sex, education_level, education_level2, bmi,
+         survey_weight, weight, height)
+
+donor_pool <- function(wave) {
+  panel |>
+    filter(year == wave, age >= 20L, age <= 24L) |>
+    select(sex, age, education_level, bmi, survey_weight, weight, height)
+}
+
+donor_pools <- list(
+  list(from = 1999L, to = 2004L, pool = donor_pool(1998L)),
+  list(from = 2005L, to = 2013L, pool = donor_pool(2005L)),
+  list(from = 2014L, to = 2018L, pool = donor_pool(2014L)),
+  list(from = 2019L, to = 2030L, pool = donor_pool(2019L))
+)
+```
+
+Mortality uses the bundled Portuguese life table, all-cause relative risks
+by BMI category (Global BMI Mortality Collaboration) and a relative risk of
+0.981 per year of education (IHME-CHAIN), as in SIMEQ-PT.
+
+```{r mortality}
+life_table_raw <- readxl::read_excel(
+  system.file("extdata", "prob_dying_qx.xlsx", package = "simeq")
+)
+
+# Remaining life expectancy (the YLL reference) from qx at ages 0-100
+life_expectancy <- function(qx) {
+  lx <- cumprod(c(1, 1 - qx))[seq_along(qx)]
+  Lx <- (lx + c(lx[-1], 0)) / 2
+  Lx[length(qx)] <- lx[length(qx)] / -log(1 - qx[length(qx)])
+  rev(cumsum(rev(Lx))) / lx
+}
+
+life_table <- bind_rows(
+  transmute(life_table_raw, age = as.integer(age), sex = "men",
+            qx = as.numeric(qx_m) / 1000),
+  transmute(life_table_raw, age = as.integer(age), sex = "women",
+            qx = as.numeric(qx_w) / 1000)
+) |>
+  mutate(ex = life_expectancy(qx), .by = sex) |>
+  filter(age >= 20L, age <= 84L)
+
+ref_life_expectancy <- select(life_table, age, sex, ex)
+life_table <- select(life_table, age, sex, qx)
+
+rr_bmi <- tidyr::crossing(
+  sex = c("men", "women"),
+  tibble::tribble(
+    ~bmi_category,   ~rr_bmi,
+    "underweight",   1.47,
+    "normal_weight", 1.00,
+    "overweight",    1.11,
+    "obesity_I",     1.44,
+    "obesity_II",    1.92,
+    "obesity_III",   2.71
+  )
+)
+
+years_of_education <- c(low = 6, medium = 12, high = 16)
+rr_education <- population_1998 |>
+  summarise(
+    mean_years = weighted.mean(years_of_education[education_level],
+                               survey_weight),
+    .by = education_level2
+  ) |>
+  transmute(education_level2, rr_education = 0.981^mean_years)
+
+simeq_validate_life_table(life_table)
+simeq_validate_mortality_risks(rr_bmi = rr_bmi, rr_education = rr_education)
+```
+
+## Module I: BMI trajectories
+
+BMI change is estimated for each percentile (10th to 90th) of synthetic
+cohorts followed between consecutive waves, and education upgrading from
+secondary to higher education after entry is estimated the same way.
+
+```{r transitions}
+bmi_percentile_model <- simeq_fit_bmi_transition_percentile(
+  panel,
+  probs = seq(0.1, 0.9, by = 0.1),
+  sex_interactions = TRUE,
+  life_table = life_table,
+  rr_bmi = rr_bmi,
+  rr_education = rr_education
+)
+
+education_upgrade <- simeq_combine_education_upgrade(list(
+  list(from = 1998L, to = 2004L,
+       upgrade = simeq_fit_education_upgrade(panel, periods = 1998L)),
+  list(from = 2005L, to = 2013L,
+       upgrade = simeq_fit_education_upgrade(panel, periods = 2005L)),
+  list(from = 2014L, to = NA,
+       upgrade = simeq_fit_education_upgrade(panel, periods = 2014L))
+))
+```
+
+Each year's entrants match the weighted number of 20-year-olds in the
+nearest wave.
+
+```{r entrants}
+settings <- simeq_settings(
+  initial_year = 1998L,
+  projection_end_year = 2030L,
+  entry_age = 20L,
+  max_age = 84L,
+  n_simulations = 2L,
+  entrant_n_per_year = 100L,
+  seed = 2026L
+)
+
+entrants_by_wave <- panel |>
+  filter(age == 20L) |>
+  summarise(entrant_population = sum(survey_weight), .by = c(year, sex)) |>
+  rename(wave = year)
+
+entrant_targets <- tidyr::expand_grid(entry_year = 1999:2030,
+                                      sex = c("men", "women")) |>
+  mutate(wave = case_when(entry_year <= 2004L ~ 1998L,
+                          entry_year <= 2013L ~ 2005L,
+                          entry_year <= 2018L ~ 2014L,
+                          TRUE ~ 2019L)) |>
+  left_join(entrants_by_wave, by = c("wave", "sex")) |>
+  transmute(entry_year = as.integer(entry_year), sex,
+            entrant_population = as.numeric(entrant_population))
+```
+
+```{r simulate}
+simulation <- simeq_run_simulation(
+  population = population_1998,
+  settings = settings,
+  life_table = life_table,
+  rr_bmi = rr_bmi,
+  rr_education = rr_education,
+  donor_pool = donor_pool(1998L),
+  donor_pools = donor_pools,
+  entrant_targets = entrant_targets,
+  bmi_update_method = "percentile",
+  bmi_percentile_model = bmi_percentile_model,
+  bmi_period = "by_year",
+  education_upgrade = education_upgrade
+)
+```
+
+Simulated obesity prevalence by sex, compared with the synthetic waves:
+
+```{r obesity}
+simulated <- simulation |>
+  filter(alive) |>
+  summarise(obesity = weighted.mean(bmi >= 30, survey_weight),
+            .by = c(simulation, year, sex)) |>
+  summarise(obesity = mean(obesity), .by = c(year, sex))
+
+observed <- panel |>
+  summarise(obesity = weighted.mean(bmi >= 30, survey_weight),
+            .by = c(year, sex))
+
+library(ggplot2)
+ggplot(simulated, aes(year, 100 * obesity, colour = sex)) +
+  geom_line() +
+  geom_point(data = observed, size = 2) +
+  labs(x = NULL, y = "Obesity prevalence (%)", colour = NULL,
+       caption = "Lines: simulation; points: synthetic survey waves") +
+  theme_minimal()
+```
+
+## Module II: health outcomes
+
+```{r module2}
+qalys <- simeq_calculate_qalys(simulation_output = simulation,
+                               min_age = 20L, max_age = 84L)
+head(qalys$by_year)
+
+burden <- simeq_calculate_obesity_burden(
+  simulation_output = simulation,
+  rr_bmi = rr_bmi,
+  ref_life_expectancy = ref_life_expectancy,
+  min_age = 20L,
+  max_age = 84L
+)
+head(burden$by_year)
+```
+
+## Module III: costs
+
+Direct medical costs attributable to high BMI, using the bundled 2018
+Portuguese cost matrix and GBD 2019 relative risks:
+
+```{r module3}
+gbd_rr <- read_gbd_bmi_rr()
+
+costs <- calculate_annual_obesity_costs(
+  simulation_output = simulation,
+  gbd_rr_matrix = gbd_rr,
+  costs_dro = obesity_direct_costs_2018(),
+  outcome_mapping = obesity_cost_outcome_mapping(),
+  exclude_disease_groups = c("obesity_overweight", "depression"),
+  years = c(2018L, 2030L),
+  exposure = "high_bmi",
+  weight_col = "survey_weight"
+)
+
+# Thousands of 2018 euros, all included disease groups
+summarise(costs$by_year, attributable_cost = sum(total_obesity), .by = year)
+```

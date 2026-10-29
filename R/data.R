@@ -30,3 +30,40 @@
 #'
 #' @source Generated synthetically; see `data-raw/create_synthetic_population.R`.
 "simeq_synthetic_pop"
+
+#' Synthetic survey panel for running simeq end to end
+#'
+#' Four fully synthetic repeated cross-sectional survey waves (1998, 2005,
+#' 2014 and 2019) with the same columns as the Portuguese National Health
+#' Survey panel used by SIMEQ-PT, so that Modules I-III can be run without
+#' the survey microdata (see `vignette("synthetic-example", package =
+#' "simeq")`).
+#'
+#' Every value is drawn from simple parametric distributions: age from a
+#' Normal distribution that shifts older over time; education from
+#' birth-cohort-specific probabilities, with higher education completed
+#' between ages 20 and 29; BMI from a log-normal distribution whose mean
+#' depends on sex, age, education and wave and whose spread widens over time;
+#' height from sex- and birth-cohort-specific Normal distributions; and
+#' unequal survey weights summing to an approximate adult population. No real
+#' survey record, weight or summary is used. Results obtained with these data
+#' are illustrative only and are not SIMEQ-PT estimates.
+#'
+#' @format A tibble with 20 000 rows (5 000 per wave) and 10 columns:
+#' \describe{
+#'   \item{person_id}{Character. Unique record identifier.}
+#'   \item{year}{Integer. Survey wave: 1998, 2005, 2014 or 2019.}
+#'   \item{sex}{Character. `"men"` or `"women"`.}
+#'   \item{age}{Integer. Age in years (20-84).}
+#'   \item{education_level}{Character. `"low"`, `"medium"` or `"high"`.}
+#'   \item{education_level2}{Character. `"lower"` (low or medium) or
+#'     `"higher"` (high).}
+#'   \item{survey_weight}{Numeric. Survey weight; each wave sums to an
+#'     approximate adult population aged 20-84.}
+#'   \item{bmi}{Numeric. Body mass index in kg/m² (15-60).}
+#'   \item{height}{Numeric. Height in cm.}
+#'   \item{weight}{Numeric. Weight in kg, consistent with `bmi` and `height`.}
+#' }
+#'
+#' @source Generated synthetically; see `data-raw/create_synthetic_panel.R`.
+"simeq_synthetic_panel"

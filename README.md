@@ -2,6 +2,7 @@
 
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23761443.svg)](https://doi.org/10.5281/zenodo.23761443)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
 
@@ -115,7 +116,9 @@ simeq/
 
 ## Citation
 
-> Valente B (2026). *simeq: Simulation for Equity: Dynamic Microsimulation of BMI, Health and Economic Outcomes*. R package version 1.0.1. <https://github.com/BertaValente/simeq>
+> Valente B (2026). *simeq: Simulation for Equity, a dynamic microsimulation of BMI, health and economic outcomes* (version 1.0.1) [software]. Zenodo. <https://doi.org/10.5281/zenodo.23761443>
+
+The DOI above is for version 1.0.1; <https://doi.org/10.5281/zenodo.23761442> always resolves to the latest version.
 
 ## License
 

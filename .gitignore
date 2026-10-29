@@ -10,6 +10,7 @@
 *.rds
 *.rda
 !data/simeq_synthetic_pop.rda
+!data/simeq_synthetic_panel.rda
 *.sav
 *.dta
 data-raw/national_health_surveys/

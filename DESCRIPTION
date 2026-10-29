@@ -20,7 +20,8 @@ Description: An individual-level, stochastic, open-cohort dynamic
     attributable QALY loss and years of life lost, and high-BMI- and
     obesity-attributable direct medical costs) and diagnostics. The Portuguese
     reference implementation (SIMEQ-PT) simulates adults aged 20-84 years from
-    1998 to 2040.
+    1998 to 2040. A fully synthetic four-wave survey panel and a vignette run
+    all three modules end to end without access to survey microdata.
 Depends:
     R (>= 4.1.0)
 License: MIT + file LICENSE
@@ -48,3 +49,4 @@ Suggests:
     rmarkdown,
     writexl
 Config/testthat/edition: 3
+VignetteBuilder: knitr

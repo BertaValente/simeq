@@ -1,7 +1,7 @@
 # Paper figures from the SIMEQ-PT v10 results (status quo, 50 replications).
 #   Figure 2:  simulated mean BMI by sex and education, 1998-2040
 #   Figure S1: obesity-attributable YLL per 100,000 by sex and education, 1999-2040
-# Same plotting code as simeq_analysis_clean_lc_v6.qmd. Writes PNG (200 dpi) and
+# Same plotting code as analysis/simeq_pt_analysis_v10.qmd. Writes PNG (200 dpi) and
 # TIFF (300 dpi) to results/paper_figures_v10/. Run from the package root.
 suppressPackageStartupMessages({ library(data.table); library(ggplot2) })
 

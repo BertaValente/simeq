@@ -29,7 +29,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Berta Valente \email{berta.valente@ispup.up.pt} (\href{https://orcid.org/0000-0000-0000-0000}{ORCID})
+\strong{Maintainer}: Berta Valente \email{berta.valente@ispup.up.pt}
 
 }
 \keyword{internal}

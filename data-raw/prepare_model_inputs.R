@@ -49,8 +49,8 @@ nhs_file <- here::here(
 )
 
 life_table_file <- here::here(
-  "data-raw",
-  "mortality",
+  "inst",
+  "extdata",
   "prob_dying_qx.xlsx"
 )
 

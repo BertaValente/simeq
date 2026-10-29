@@ -9,12 +9,10 @@ simeq_initialise_population(population, settings)
 \arguments{
 \item{population}{A validated baseline population data frame.}
 
-\item{settings}{A \code{simeq_settings} object.}
+\item{settings}{A \code{simeq_settings} object created by \code{\link[=simeq_settings]{simeq_settings()}}.}
 }
 \value{
 A data frame containing the initial state of each simulated person.
-
-A baseline simulation-state data frame.
 }
 \description{
 Converts a validated baseline population into the standard person-level
@@ -38,6 +36,4 @@ simeq_initialise_population(
   population = population,
   settings = settings
 )
-Initialise the baseline simulated population
-
 }

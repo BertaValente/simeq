@@ -68,6 +68,7 @@ The SIMEQ-PT results reported in the paper were produced with this version of th
 |------|---------|
 | `data-raw/prepare_model_inputs.R` | Builds the model inputs from the National Health Survey waves, with self-reported height and weight corrected by the calibration equations (revision 1) |
 | `data-raw/clean_2025.qmd`, `data-raw/prepare_nhs_2025_validation.R` | Prepare the 2025 survey used for out-of-sample validation |
+| `data-raw/prepare_life_tables.R` | Builds the 1998–2024 year-specific life tables from Human Mortality Database-format tables |
 | `mortality_lc/project_life_table_lee_carter_v1.R` | Projects the Portuguese life tables to 2040 (Lee-Carter) |
 | `analysis/simeq_pt_analysis_v10.qmd` | Runs modules I–III (50 replications, 1998–2040) and produces all tables and figures |
 | `data-raw/compare_v9_v10.R`, `data-raw/diagnose_bmi_distribution_v10.R`, `data-raw/test_transition_tails*.R`, `data-raw/paper_figures_v10.R` | Comparison with the previous version, distribution diagnostics, sensitivity tests of the BMI transitions, and paper figures |
@@ -76,8 +77,10 @@ Steps:
 
 1. Place the survey files in `data-raw/national_health_surveys/` (not distributed).
 2. Run `data-raw/prepare_model_inputs.R` and `data-raw/prepare_nhs_2025_validation.R`.
-3. Build the life tables with `mortality_lc/` (Human Mortality Database data are not redistributed; see `mortality_lc/how_to_use_lee_carter_v1.md`).
+3. Download the Portuguese period life tables (Human Mortality Database, 1x1, by sex; not redistributed), save them as `data/life_tables/pt_life_tables_1998_2024_men.csv` and `..._women.csv`, run `data-raw/prepare_life_tables.R`, then `mortality_lc/project_life_table_lee_carter_v1.R` (see `mortality_lc/how_to_use_lee_carter_v1.md`).
 4. Render `analysis/simeq_pt_analysis_v10.qmd` from the project root (`quarto render analysis/simeq_pt_analysis_v10.qmd`). Simulation results are written to `results/`.
+
+The analysis also uses the R packages broom, data.table, devtools, flextable, gt, here, knitr, officer, patchwork, purrr, readr, scales and stringr, and Quarto.
 
 ## Repository structure
 

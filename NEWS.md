@@ -1,4 +1,4 @@
-# simeq (development version): SIMEQ-PT v10
+# simeq 1.0.0 (SIMEQ-PT v10)
 
 - `simeq_run_simulation()` gains `last_observed_year`: hybrid mortality
   calibration rescales each year up to this year and then keeps the scaling,
@@ -14,7 +14,7 @@
   `data-raw/` and `mortality_lc/` scripts rebuild its inputs; the National
   Health Survey microdata and HMD-derived life tables are not distributed.
 
-# simeq (development version)
+## Earlier changes since 0.1.0
 
 Changes made in response to the paper I reviewer comments and the function
 review.

@@ -75,6 +75,20 @@ utils::globalVariables(
     "weighted_yll",
     "year_t",
     "year_t1",
-    "yll"
+    "yll",
+    # Cost, PAF, YLL and transition helpers
+    "age",
+    "alive",
+    "allocation_weight",
+    "mean_rr",
+    "paf_obesity",
+    "paf_ratio",
+    "paf_reference",
+    "population_n",
+    "sex_share",
+    "total_keur_2018_constant",
+    "total_keur_2026_nominal",
+    "transition_weight",
+    "years_remaining"
   )
 )

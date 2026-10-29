@@ -29,7 +29,7 @@ Temporary life expectancy from age 20 to 85:
 | Men | 57.4 years | 59.2 years |
 | Women | 61.1 years | 62.2 years |
 
-## 2. Software paper (`simeq_analysis_clean.qmd`)
+## 2. Software paper (`analysis/simeq_pt_analysis_v10.qmd`)
 
 Change the life-table chunk to read the new file:
 

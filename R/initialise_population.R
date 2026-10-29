@@ -27,13 +27,6 @@
 #'   population = population,
 #'   settings = settings
 #' )
-#' Initialise the baseline simulated population
-#'
-#' @param population A validated baseline population data frame.
-#' @param settings A `simeq_settings` object.
-#'
-#' @return A baseline simulation-state data frame.
-#' @export
 simeq_initialise_population <- function(
     population,
     settings

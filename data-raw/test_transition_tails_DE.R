@@ -11,7 +11,7 @@
 # for the same cohort, and the 2005 education composition.
 # Run from the package root: Rscript data-raw/test_transition_tails_DE.R
 fence <- strrep(intToUtf8(96), 3)
-lines <- readLines("simeq_analysis_clean_lc_v6.qmd", encoding = "UTF-8")
+lines <- readLines("analysis/simeq_pt_analysis_v10.qmd", encoding = "UTF-8")
 chunk_code <- function(label) {
   s <- which(lines == paste0("#| label: ", label))
   e <- which(trimws(lines) == fence); e <- e[e > s][1]

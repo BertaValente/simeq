@@ -3801,8 +3801,8 @@ In this analysis, each simulated person's own BMI enters the relative-risk funct
 
 gbd_rr_path <- file.path(
   project_root,
-  "data-raw",
-  "GBD_RR_2019",
+  "inst",
+  "extdata",
   "gbd_rr_2019.xlsx"
 )
 
@@ -3810,7 +3810,7 @@ if (!file.exists(gbd_rr_path)) {
   stop(
     "GBD relative-risk workbook not found at:\n",
     gbd_rr_path,
-    "\nEnsure it is available in data-raw/GBD_RR_2019/.",
+    "\nIt is bundled with the package in inst/extdata/.",
     call. = FALSE
   )
 }

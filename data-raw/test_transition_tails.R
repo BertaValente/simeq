@@ -10,7 +10,7 @@
 # 2005, 2014, 2019 in sample and 2025 out of sample.
 # Run from the package root: Rscript data-raw/test_transition_tails.R
 fence <- strrep(intToUtf8(96), 3)
-lines <- readLines("simeq_analysis_clean_lc_v6.qmd", encoding = "UTF-8")
+lines <- readLines("analysis/simeq_pt_analysis_v10.qmd", encoding = "UTF-8")
 chunk_code <- function(label) {
   s <- which(lines == paste0("#| label: ", label))
   e <- which(trimws(lines) == fence); e <- e[e > s][1]

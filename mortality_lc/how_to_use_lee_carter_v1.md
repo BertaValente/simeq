@@ -29,9 +29,9 @@ Temporary life expectancy from age 20 to 85:
 | Men | 57.4 years | 59.2 years |
 | Women | 61.1 years | 62.2 years |
 
-## 2. Software paper (`analysis/simeq_pt_analysis_v10.qmd`)
+## 2. Using the table in a simulation
 
-Change the life-table chunk to read the new file:
+`analysis/simeq_pt_analysis_v10.qmd` reads the projected table:
 
 ```r
 life_table_all <- utils::read.csv(
@@ -41,31 +41,14 @@ life_table <- life_table_all[, c("year", "age", "sex", "qx")]
 ref_life_expectancy <- subset(life_table_all, year == 2019L)[, c("age", "sex", "ex")]
 ```
 
-Then add `last_observed_year = 2024L` to every `simeq_run_simulation()` call. Without it, the
-hybrid calibration would treat 2025–2040 as observed and recalibrate every year, so BMI change
-would stop changing the number of deaths.
+Every `simeq_run_simulation()` call sets `last_observed_year = 2024L`. Without it, the hybrid
+calibration would treat 2025–2040 as observed and recalibrate every year, so BMI change would
+stop changing the number of deaths. `simeq_select_life_table_year()` picks the projected table
+for each year from 2025.
 
-## 3. Budget paper (`fixed_budget_obesity_allocation_v30.qmd`)
+## 3. Input data
 
-Replace
-
-```r
-last_life_table_year <- max(as.integer(life_table$year))
-if (last_life_table_year != 2024L) stop(...)
-```
-
-with
-
-```r
-last_life_table_year <- 2024L   # last observed table; 2025+ are Lee-Carter projections
-```
-
-The calibration stays fixed on the 2024 population as before. `simeq_select_life_table_year()`
-now picks the projected table for each year from 2025.
-
-## 4. Text to change after rerunning
-
-- Methods and Table 1: "2024 thereafter" becomes "projected to 2040 with a Lee-Carter model
-  fitted to 1998–2024 (excluding 2020–2021)".
-- The qmd sentence "the 2024 table is carried forward for later projection years" needs the
-  same change.
+The observed 1998–2024 tables (`data/life_tables/pt_life_table_model_input_1998_2024.csv`) are
+built by `data-raw/prepare_life_tables.R` from Human Mortality Database period life tables. HMD
+terms do not allow redistribution, so `data/life_tables/` is not in the repository; download the
+Portuguese tables from <https://www.mortality.org> and run that script first.

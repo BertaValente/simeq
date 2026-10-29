@@ -410,7 +410,7 @@ if (length(missing_inputs) > 0L) {
 population_1998 <- inputs$population_1998
 bmi_panel <- inputs$bmi_panel
 # Sex-specific Portuguese life tables by calendar year, ages 20-84: observed
-# 1998-2024 (built from the INE/HMD tables Berta supplied) and projected
+# 1998-2024 (built by data-raw/prepare_life_tables.R) and projected
 # 2025-2040 with a Lee-Carter model fitted to 1998-2024, excluding 2020-2021
 # (mortality_lc/project_life_table_lee_carter_v1.R). The model uses each
 # year's table.
@@ -6296,12 +6296,13 @@ flextable::save_as_docx(
 
 * * *
 
-## Package Availability and Release Status
+## Package Availability
 
-simeq remains under active development. This report used the development state of the version-controlled source repository.
+This report was produced with simeq 1.0.0, released at <https://github.com/BertaValente/simeq> under the MIT licence. The release is archived on Zenodo, which gives it a citable DOI. The `data-raw/` and `mortality_lc/` scripts rebuild the model inputs. The National Health Survey microdata (available from INE and INSA on request) and the life tables derived from the Human Mortality Database are not distributed.
 
-Before a formal release, project documentation will specify the package version and Git commit identifier; R version and operating system; package dependencies and versions; input-data sources, cleaning procedures, and linkage decisions; simulation settings; and automated test results.
+```{r}
+#| label: session-info
+#| echo: false
 
-Following development and review, the simeq source code is intended to be made publicly available through GitHub under an appropriate open-source licence. The version used for any published analysis will be archived in a persistent repository and assigned a citable identifier.
-
-* * *
+sessionInfo()
+```

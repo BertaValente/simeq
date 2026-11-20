@@ -2,7 +2,7 @@
 
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23761443.svg)](https://doi.org/10.5281/zenodo.23761443)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24393302.svg)](https://doi.org/10.5281/zenodo.24393302)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
 
@@ -116,9 +116,9 @@ simeq/
 
 ## Citation
 
-> Valente B (2026). *simeq: Simulation for Equity, a dynamic microsimulation of BMI, health and economic outcomes* (version 1.0.2) [software]. Zenodo. <https://doi.org/10.5281/zenodo.23761442>
+> Valente B (2026). *simeq: Simulation for Equity, a dynamic microsimulation of BMI, health and economic outcomes* (version 1.0.2) [software]. Zenodo. <https://doi.org/10.5281/zenodo.24393302>
 
-The DOI above always resolves to the latest version. Version 1.0.1 has its own DOI, <https://doi.org/10.5281/zenodo.23761443>.
+The DOI above is for version 1.0.2; <https://doi.org/10.5281/zenodo.23761442> always resolves to the latest version, and version 1.0.1 is <https://doi.org/10.5281/zenodo.23761443>.
 
 ## License
 

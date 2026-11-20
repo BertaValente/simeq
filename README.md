@@ -116,9 +116,9 @@ simeq/
 
 ## Citation
 
-> Valente B (2026). *simeq: Simulation for Equity, a dynamic microsimulation of BMI, health and economic outcomes* (version 1.0.1) [software]. Zenodo. <https://doi.org/10.5281/zenodo.23761443>
+> Valente B (2026). *simeq: Simulation for Equity, a dynamic microsimulation of BMI, health and economic outcomes* (version 1.0.2) [software]. Zenodo. <https://doi.org/10.5281/zenodo.23761442>
 
-The DOI above is for version 1.0.1; <https://doi.org/10.5281/zenodo.23761442> always resolves to the latest version.
+The DOI above always resolves to the latest version. Version 1.0.1 has its own DOI, <https://doi.org/10.5281/zenodo.23761443>.
 
 ## License
 

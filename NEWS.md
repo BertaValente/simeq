@@ -1,4 +1,4 @@
-# simeq (development version)
+# simeq 1.0.2
 
 - SIMEQ-PT analysis (`analysis/simeq_pt_analysis_v10.qmd`): new chunk
   `obesity-cost-by-education` reproduces the obesity-attributable costs by

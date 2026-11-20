@@ -1,3 +1,16 @@
+# simeq (development version)
+
+- SIMEQ-PT analysis (`analysis/simeq_pt_analysis_v10.qmd`): new chunk
+  `obesity-cost-by-education` reproduces the obesity-attributable costs by
+  sex and education reported in the methods paper (Table 5), allocating the
+  national obesity-attributable total by each group's survey-weighted number
+  of adults with obesity (BMI >= 30), for 2000, 2020 and 2040.
+- `DESCRIPTION` now requires dplyr >= 1.1.0 (the analysis uses `.by`).
+- Clarified the comment on direct treatment costs in
+  `calculate_annual_obesity_costs()`: they are not PAF-adjusted (100%
+  attributable) and are scaled by the exposure prevalence relative to the
+  base year.
+
 # simeq 1.0.1
 
 - New `simeq_synthetic_panel`: four fully synthetic survey waves (1998,

@@ -238,8 +238,8 @@ calculate_annual_obesity_costs <- function(
     list(costs = costs_yr, unit_growth_factor = unit_growth_factor)
   }
 
-  # Direct treatment costs, included at 100% attribution.
-  # Direct treatment costs scaled by the exposure-prevalence ratio `factor`.
+  # Direct treatment costs: not PAF-adjusted (100% attributable), scaled by
+  # the exposure-prevalence ratio `factor` relative to the base year.
   .direct_rows <- function(costs_yr, factor = 1) {
     costs_yr |>
       dplyr::filter(disease_group == direct_cost_group) |>

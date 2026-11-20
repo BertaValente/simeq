@@ -4794,6 +4794,82 @@ strat_intervals_2group <- strat_by_simulation |>
 ```
 
 ```{r}
+#| label: obesity-cost-by-education
+#| include: false
+
+# Obesity-attributable direct medical costs by sex x education (manuscript
+# Table 5), 2000, 2020 and 2040.
+#
+# GBD 2019 has no education-specific BMI-disease relative risks, so the
+# national obesity-attributable total of each replication (PAF numerator
+# counting BMI >= 30 only; constant 2018 euros; the 2000-2017 values are
+# model-based back-casts under the 2018 cost structure) is allocated to
+# sex x education groups in proportion to each group's survey-weighted
+# number of adults with obesity:
+#
+#   share(g, t) = sum_{i in g} w_i * 1[BMI_i >= 30] / sum_i w_i * 1[BMI_i >= 30]
+#
+# i.e. obesity prevalence x population size of the group, divided by the
+# national total. This differs from the high-BMI tables above, which
+# allocate the high-BMI (BMI >= 25) total by the number of adults with
+# BMI >= 25. Using the BMI >= 25 share for obesity-attributable costs would
+# shift cost towards groups with more pre-obesity (men, higher education).
+# Shares and allocated costs are computed within each replication; the table
+# reports the mean and 95% simulation interval across replications.
+obesity_cost_years <- c(2000L, 2020L, 2040L)
+
+obesity_cost_by_edu_sim <- simulation_historical |>
+  dplyr::filter(alive, year %in% obesity_cost_years) |>
+  dplyr::summarise(
+    obesity_weight    = sum(survey_weight * (bmi >= 30), na.rm = TRUE),
+    population_weight = sum(survey_weight, na.rm = TRUE),
+    .by = c(simulation, year, sex, education_level)
+  ) |>
+  dplyr::mutate(
+    obesity_share = obesity_weight / sum(obesity_weight),
+    .by = c(simulation, year)
+  ) |>
+  dplyr::left_join(
+    cost_totals_by_sim_all_obesity |>
+      dplyr::select(simulation, year, total_keur_2018_constant),
+    by = c("simulation", "year")
+  ) |>
+  dplyr::mutate(
+    cost_meur_2018 = total_keur_2018_constant * obesity_share / 1000
+  )
+
+obesity_cost_by_edu <- obesity_cost_by_edu_sim |>
+  dplyr::summarise(
+    obesity_share_mean  = mean(obesity_share),
+    cost_meur_2018_mean = mean(cost_meur_2018),
+    cost_meur_2018_lo   = q_lo(cost_meur_2018),
+    cost_meur_2018_hi   = q_hi(cost_meur_2018),
+    .by = c(year, sex, education_level)
+  ) |>
+  dplyr::mutate(
+    education_level = factor(education_level, levels = c("low", "medium", "high")),
+    cost_meur_2018_formatted = format_interval(
+      cost_meur_2018_mean, cost_meur_2018_lo, cost_meur_2018_hi
+    )
+  ) |>
+  dplyr::arrange(sex, education_level, year)
+
+# Check: allocated costs add up to the national total in every replication.
+obesity_cost_check <- obesity_cost_by_edu_sim |>
+  dplyr::summarise(
+    allocated = sum(cost_meur_2018),
+    total = dplyr::first(total_keur_2018_constant) / 1000,
+    .by = c(simulation, year)
+  )
+stopifnot(isTRUE(all.equal(obesity_cost_check$allocated, obesity_cost_check$total)))
+
+write_result_csv(
+  obesity_cost_by_edu,
+  "module3_obesity_costs_by_sex_education.csv"
+)
+```
+
+```{r}
 #| label: tbl-stratified-cost-2018-2040
 #| echo: false
 #| tbl-cap: "High-BMI-attributable direct medical cost scenarios for 2018 and 2040, stratified by sex and education level. Costs are allocated from the combined annual total in proportion to each group's simulated disease-burden share. All costs in constant 2018 euros (thousands). Mean across simulation replications (95% simulation interval)."

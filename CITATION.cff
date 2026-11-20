@@ -6,9 +6,9 @@ authors:
   - family-names: Valente
     given-names: Berta
     affiliation: "EPIUnit, Institute of Public Health, University of Porto (ISPUP)"
-version: 1.0.1
-doi: 10.5281/zenodo.23761443
-date-released: 2026-10-29
+version: 1.0.2
+doi: 10.5281/zenodo.23761442
+date-released: 2026-11-20
 license: MIT
 repository-code: "https://github.com/BertaValente/simeq"
 keywords:
